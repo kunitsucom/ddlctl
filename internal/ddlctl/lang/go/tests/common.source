@@ -1,0 +1,70 @@
+package main
+
+type (
+	// User is a user.
+	//
+	// spanddl:      table: `Users`
+	// spanddl: constraint: CONSTRAINT AgeGTEZero CHECK(Age >= 0)
+	// spanddl:      index: CREATE INDEX `IndexUsersByName` ON Users(`Name`)
+	User struct {
+		// UserID is a user ID.
+		UserID string `dbtest:"UserId" spanddl:"STRING(36)  NOT NULL" pkey:"true"`
+		// Name is a user name.
+		Name string   `dbtest:"Name"   spanddl:"STRING(255) NOT NULL"`
+		// Email is a user email.
+		Email string  `dbtest:"Email"  spanddl:"STRING(255) NOT NULL"`
+		// Age is a user age.
+		Age int       `dbtest:"Age"    spanddl:"INT64       NOT NULL"`
+		// Ignore is a ignore field.
+		Ignore string `dbtest:"-"      spanddl:"-"`
+	}
+
+	// Users is a user array.
+	// This type is expected not to be detected.
+	//
+	// spanddl: table: `UserArrays`
+	Users []*User
+
+	// UserGroup is a user group.
+	//
+	// spanddl:table:
+	UserGroup struct {
+		// ID is a group ID.
+		ID string   `dbtest:"Id"   spanddl:"STRING(36)  NOT NULL"`
+		// Name is a group name.
+		Name string `dbtest:"Name" spanddl:"STRING(255) NOT NULL"`
+	}
+
+	// Author is a author.
+	// spanddl:
+	Author struct {
+		// ID is a author ID.
+		AuthorID string `dbtest:"Id"     spanddl:"STRING(36)  NOT NULL"`
+		// Name is a author name.
+		Name string     `dbtest:"Name"   spanddl:"STRING(255) NOT NULL"`
+	}
+
+	// Book is a book.
+	//
+	// spanddl:table:`Books`
+	// spanddl:option: INTERLEAVE IN PARENT `Author` ON DELETE CASCADE
+	Book struct {
+		// AuthorID is a book author.
+		AuthorID string `spanddl:"STRING(255) NOT NULL" pkey:"true"`
+		// ID is a book ID.
+		ID string       `spanddl:"STRING(36)  NOT NULL" pkey:"true"`
+		// Title is a book title.
+		Title string    `spanddl:"STRING(255) NOT NULL"`
+	}
+
+	// Store
+	// spanddl: table: CREATE TABLE `Stores`
+	Store struct {
+		// ID is a store ID.
+		ID string   `dbtest:"Id" pkey:"false"`
+		// Name is a store name.
+		Name string `dbtest:"Name"`
+	}
+)
+
+// spanddl: index: CREATE INDEX `IndexBooksByTitle` ON Books(`Title`)

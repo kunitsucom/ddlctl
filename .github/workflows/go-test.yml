@@ -1,0 +1,160 @@
+name: go-test
+#     ^^^^^^^
+# https://github.com/organization/repository/workflows/go-test/badge.svg
+#                                                      ^^^^^^^
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '.github/dependabot.yml'
+      - '.github/pull_request_template.md'
+      - '.github/release.yml'
+      - '.github/workflows/label-checker.yml'
+      - '.github/workflows/task-list-checker.yml'
+      - '**.md'
+  pull_request:
+    paths-ignore:
+      - '.github/dependabot.yml'
+      - '.github/pull_request_template.md'
+      - '.github/release.yml'
+      - '.github/workflows/label-checker.yml'
+      - '.github/workflows/task-list-checker.yml'
+      - '**.md'
+  workflow_dispatch:
+    inputs:
+      COVER:
+        description: "Run go test with coverage"
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
+  schedule:
+    - cron: '0 2 * * *' # NOTE: Run daily at 11:00 JST
+
+# NOTE: If commit & push continuously, cancel the workflow other than the latest commit.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.base_ref }}-${{ github.head_ref }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  DOCKER_BUILD_CACHE_FROM: /tmp/.docker-build-buildx-cache-from
+  DOCKER_BUILD_CACHE_TO: /tmp/.docker-build-buildx-cache-to
+  WORKDIR: .
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  go-test: # NOTE: for Branch protection rule `Status checks that are required.`
+    name: Run go test
+    runs-on: ubuntu-latest # ref. https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
+    steps:
+      - uses: actions/checkout@v4
+      - name: DEBUG
+        shell: bash
+        run: |
+          cat <<'DEBUG_DOC'
+          == DEBUG =======================================================
+          github.ref: ${{ github.ref }}
+          github.event_name: ${{ github.event_name }}
+          -- toJSON(github.event.inputs) ---------------------------------
+          ${{ toJSON(github.event.inputs) }}
+          -- toJSON(github) ----------------------------------------------
+          ${{ toJSON(github) }}
+          ================================================================
+          DEBUG_DOC
+      - name: actions/cache for versenv
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/versenv
+          key: versenv-${{ runner.os }}-${{ hashFiles('**/.versenv.env') }}
+          restore-keys: |
+            versenv-${{ runner.os }}-
+      - name: Add GITHUB_PATH, GITHUB_ENV
+        run: |
+          # Update GITHUB_PATH
+          cat <<GITHUB_PATH >> $GITHUB_PATH
+          ${PWD}/.local/bin
+          ${PWD}/${{ env.WORKDIR }}/.local/bin
+          ${PWD}/.bin
+          GITHUB_PATH
+          # Update GITHUB_ENV
+          grep -Ev '^\s*$|^\s*#' .versenv.env >> $GITHUB_ENV
+      - name: Setup versenv
+        run: |
+          # Setup versenv
+          direnv allow ${{ env.WORKDIR }}
+          make versenv
+      - uses: actions/setup-go@v4 # ref. https://github.com/actions/setup-go#usage
+        id: setup-go
+        with:
+          cache: false
+          go-version-file: ${{ env.WORKDIR }}/go.mod
+      - name: Get Golang info
+        id: golang-info
+        shell: bash
+        run: |
+          echo "GOVERSION=$(go version | cut -d' ' -f3)" >> "$GITHUB_OUTPUT"
+          echo "GOCACHE=$(go env GOCACHE)" >> "$GITHUB_OUTPUT"
+      - name: actions/cache for go
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/go/pkg/mod
+            ${{ steps.golang-info.outputs.GOCACHE }}
+          key: ${{ runner.os }}-go-${{ steps.golang-info.outputs.GOVERSION }}-${{ hashFiles('**/go.sum') }}-${{ hashFiles('**/*.go') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ steps.golang-info.outputs.GOVERSION }}-${{ hashFiles('**/go.sum') }}-
+            ${{ runner.os }}-go-${{ steps.golang-info.outputs.GOVERSION }}-
+            ${{ runner.os }}-go-
+      # MEMO: Enable docker compose layer cache from here
+      - name: Set up Buildx for docker build cache
+        uses: docker/setup-buildx-action@v3
+      - name: Use docker build cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.DOCKER_BUILD_CACHE_FROM }}
+          key: docker-build-buildx-${{ github.sha }}
+          restore-keys: |
+            docker-build-buildx-
+      # MEMO: Enable docker compose layer cache until here
+      - name: Run go test
+        env:
+          DEBIAN_FRONTEND: noninteractive
+          # for docker build cache
+          GHA_CACHE_OPTS: --cache-from type=local,src=${{ env.DOCKER_BUILD_CACHE_FROM }} --cache-to type=local,dest=${{ env.DOCKER_BUILD_CACHE_TO }},mode=max
+          # GITHUB_TOKEN: ${{ secrets.GH_BOT_TOKEN }}
+        working-directory: ${{ env.WORKDIR }}
+        run: |
+          set -Eeux -o pipefail
+          direnv allow .
+          if [ -n "${GITHUB_TOKEN-}" ]; then
+            direnv exec . bash -Eeux -o pipefail -c 'echo "${GOPRIVATE:-}${GOPRIVATE+,}" | while read -d , -r LINE; do echo "set git config: ${LINE}"; git config --global url."https://${GITHUB_TOKEN}:x-oauth-basic@${LINE}".insteadOf "https://${LINE}"; done'
+          fi
+          if [ "${{ github.event_name == 'schedule' || github.event.inputs.COVER == 'true' }}" = "true" ]; then
+            direnv exec . make test-cover
+          else
+            direnv exec . make test
+          fi
+      - uses: codecov/codecov-action@v3 # ref. https://github.com/codecov/codecov-action#example-workflowyml-with-codecov-action
+        if: github.event_name == 'schedule' || github.event.inputs.COVER == 'true'
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ${{ env.WORKDIR }}/coverage.txt
+      - name: Move docker build cache (workaround)
+        if: always()
+        run: |
+          if [[ -d ${{ env.DOCKER_BUILD_CACHE_TO }} ]]; then
+            rm -rf ${{ env.DOCKER_BUILD_CACHE_FROM }}
+            mv ${{ env.DOCKER_BUILD_CACHE_TO }} ${{ env.DOCKER_BUILD_CACHE_FROM }}
+          fi
+        shell: bash

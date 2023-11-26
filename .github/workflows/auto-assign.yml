@@ -1,0 +1,24 @@
+# ref. https://zenn.dev/snowcait/articles/d6bc5eafd8ab75
+name: 'Auto Assign'
+
+on:
+  pull_request:
+    types:
+      - opened
+      - ready_for_review
+      - reopened
+
+jobs:
+  assign:
+    name: Auto Assign
+    if: github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - if: ${{ toJSON(github.event.pull_request.assignees) == '[]' }}
+        run: gh pr edit "${NUMBER}" --add-assignee "${ASSIGNEE}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.pull_request.number }}
+          ASSIGNEE: ${{ github.event.pull_request.user.login }}

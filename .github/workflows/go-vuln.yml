@@ -1,0 +1,117 @@
+name: go-vuln
+#     ^^^^^^^
+# https://github.com/organization/repository/workflows/go-vuln/badge.svg
+#                                                      ^^^^^^^
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '.github/dependabot.yml'
+      - '.github/pull_request_template.md'
+      - '.github/release.yml'
+      - '.github/workflows/label-checker.yml'
+      - '.github/workflows/task-list-checker.yml'
+      - '**.md'
+  pull_request:
+    paths-ignore:
+      - '.github/dependabot.yml'
+      - '.github/pull_request_template.md'
+      - '.github/release.yml'
+      - '.github/workflows/label-checker.yml'
+      - '.github/workflows/task-list-checker.yml'
+      - '**.md'
+  workflow_dispatch:
+    inputs: {}
+
+# NOTE: If commit & push continuously, cancel the workflow other than the latest commit.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.base_ref }}-${{ github.head_ref }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  WORKDIR: .
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  go-vuln: # NOTE: for Branch protection rule `Status checks that are required.`
+    name: Check Golang vulnerability
+    runs-on: ubuntu-latest # ref. https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
+    steps:
+      - uses: actions/checkout@v4
+      - name: DEBUG
+        shell: bash
+        run: |
+          cat <<'DEBUG_DOC'
+          == DEBUG =======================================================
+          github.ref: ${{ github.ref }}
+          github.ref_name: ${{ github.ref_name }}
+          github.event_name: ${{ github.event_name }}
+          -- toJSON(github.event.inputs) ---------------------------------
+          ${{ toJSON(github.event.inputs) }}
+          -- toJSON(github) ----------------------------------------------
+          ${{ toJSON(github) }}
+          ================================================================
+          DEBUG_DOC
+      - name: actions/cache for versenv
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/versenv
+          key: versenv-${{ runner.os }}-${{ hashFiles('**/.versenv.env') }}
+          restore-keys: |
+            versenv-${{ runner.os }}-
+      - name: Add GITHUB_PATH, GITHUB_ENV
+        shell: bash
+        run: |
+          # Update GITHUB_PATH
+          cat <<GITHUB_PATH >> $GITHUB_PATH
+          ${PWD}/.local/bin
+          ${PWD}/${{ env.WORKDIR }}/.local/bin
+          ${PWD}/.bin
+          GITHUB_PATH
+          # Update GITHUB_ENV
+          grep -Ev '^\s*$|^\s*#' .versenv.env >> $GITHUB_ENV
+      - name: Setup versenv
+        shell: bash
+        run: |
+          # Setup versenv
+          direnv allow ${{ env.WORKDIR }}
+          make versenv
+      - uses: actions/setup-go@v4 # ref. https://github.com/actions/setup-go#usage
+        id: setup-go
+        with:
+          cache: false
+          go-version-file: ${{ env.WORKDIR }}/go.mod
+      - name: Get Golang info
+        id: golang-info
+        shell: bash
+        run: |
+          echo "GOVERSION=$(go version | cut -d' ' -f3)" >> "$GITHUB_OUTPUT"
+          echo "GOCACHE=$(go env GOCACHE)" >> "$GITHUB_OUTPUT"
+      - name: actions/cache for go
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/go/pkg/mod
+            ${{ steps.golang-info.outputs.GOCACHE }}
+          key: ${{ runner.os }}-go-${{ steps.golang-info.outputs.GOVERSION }}-${{ hashFiles('**/go.sum') }}-${{ hashFiles('**/*.go') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ steps.golang-info.outputs.GOVERSION }}-${{ hashFiles('**/go.sum') }}-
+            ${{ runner.os }}-go-${{ steps.golang-info.outputs.GOVERSION }}-
+            ${{ runner.os }}-go-
+      - id: govulncheck
+        uses: golang/govulncheck-action@v1
+        with:
+          work-dir: ${{ env.WORKDIR }}
+          go-version-file: ${{ env.WORKDIR }}/go.mod
+          go-package: ./...
+          repo-checkout: false
