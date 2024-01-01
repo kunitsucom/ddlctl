@@ -1,0 +1,69 @@
+package main
+
+type (
+	// User is a user.
+	//
+	// myddl:      table: `users`
+	// myddl: constraint: UNIQUE(`name`)
+	// myddl:      index: CREATE INDEX `index_users_by_name` ON `users` (`name`)
+	User struct {
+		// UserID is a user ID.
+		UserID string `dbtest:"user_id" myddl:"VARCHAR(36)  NOT NULL" pkey:"true"`
+		// Name is a user name.
+		Name string   `dbtest:"name"    myddl:"VARCHAR(255) NOT NULL"`
+		// Email is a user email.
+		Email string  `dbtest:"email"   myddl:"VARCHAR(255) NOT NULL"`
+		// Age is a user age.
+		Age int       `dbtest:"age"     myddl:"INT          NOT NULL"`
+		// Ignore is a ignore field.
+		Ignore string `dbtest:"-"       myddl:"-"`
+	}
+
+	// Users is a user array.
+	// This type is expected not to be detected.
+	//
+	// myddl: table: `UserArrays`
+	Users []*User
+
+	// UserGroup is a user group.
+	//
+	// myddl:table:
+	UserGroup struct {
+		// ID is a group ID.
+		ID string   `dbtest:"id"   myddl:"VARCHAR(36)  NOT NULL"`
+		// Name is a group name.
+		Name string `dbtest:"name" myddl:"VARCHAR(255) NOT NULL"`
+	}
+
+	// Author is a author.
+	// myddl:
+	Author struct {
+		// ID is a author ID.
+		AuthorID string `dbtest:"id"   myddl:"VARCHAR(36)  NOT NULL"`
+		// Name is a author name.
+		Name string     `dbtest:"name" myddl:"VARCHAR(255) NOT NULL"`
+	}
+
+	// Book is a book.
+	//
+	// myddl:table:`books`
+	Book struct {
+		// AuthorID is a book author.
+		AuthorID string `myddl:"VARCHAR(255) NOT NULL" pkey:"true"`
+		// ID is a book ID.
+		ID string       `myddl:"VARCHAR(36)  NOT NULL" pkey:"true"`
+		// Title is a book title.
+		Title string    `myddl:"VARCHAR(255) NOT NULL"`
+	}
+
+	// Store
+	// myddl: table: CREATE TABLE `stores`
+	Store struct {
+		// ID is a store ID.
+		ID string   `dbtest:"id" pkey:"false"`
+		// Name is a store name.
+		Name string `dbtest:"name"`
+	}
+)
+
+// myddl: index: `index_books_by_title` ON `books` (`title`)

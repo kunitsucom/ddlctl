@@ -1,0 +1,69 @@
+package main
+
+type (
+	// User is a user.
+	//
+	// pgddl:      table: "users"
+	// pgddl: constraint: UNIQUE("name")
+	// pgddl:      index: CREATE INDEX "index_users_by_name" ON "users" ("name")
+	User struct {
+		// UserID is a user ID.
+		UserID string `dbtest:"user_id" pgddl:"TEXT    NOT NULL" pkey:"true"`
+		// Name is a user name.
+		Name string   `dbtest:"name"    pgddl:"TEXT    NOT NULL"`
+		// Email is a user email.
+		Email string  `dbtest:"email"   pgddl:"TEXT    NOT NULL"`
+		// Age is a user age.
+		Age int       `dbtest:"age"     pgddl:"INTEGER NOT NULL"`
+		// Ignore is a ignore field.
+		Ignore string `dbtest:"-"       pgddl:"-"`
+	}
+
+	// Users is a user array.
+	// This type is expected not to be detected.
+	//
+	// pgddl: table: "user_arrays"
+	Users []*User
+
+	// UserGroup is a user group.
+	//
+	// pgddl:table:
+	UserGroup struct {
+		// ID is a group ID.
+		ID string   `dbtest:"id"   pgddl:"TEXT NOT NULL"`
+		// Name is a group name.
+		Name string `dbtest:"name" pgddl:"TEXT NOT NULL"`
+	}
+
+	// Author is a author.
+	// pgddl:
+	Author struct {
+		// ID is a author ID.
+		AuthorID string `dbtest:"id"     pgddl:"TEXT NOT NULL"`
+		// Name is a author name.
+		Name string     `dbtest:"name"   pgddl:"TEXT NOT NULL"`
+	}
+
+	// Book is a book.
+	//
+	// pgddl:table:"books"
+	Book struct {
+		// AuthorID is a book author.
+		AuthorID string `pgddl:"TEXT NOT NULL" pkey:"true"`
+		// ID is a book ID.
+		ID string       `pgddl:"TEXT NOT NULL" pkey:"true"`
+		// Title is a book title.
+		Title string    `pgddl:"TEXT NOT NULL"`
+	}
+
+	// Store
+	// pgddl: table: CREATE TABLE "stores"
+	Store struct {
+		// ID is a store ID.
+		ID string   `dbtest:"id" pkey:"false"`
+		// Name is a store name.
+		Name string `dbtest:"name"`
+	}
+)
+
+// pgddl: index: "index_books_by_title" ON "books" ("Title")

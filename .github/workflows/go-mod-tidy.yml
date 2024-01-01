@@ -1,0 +1,134 @@
+name: go-mod-tidy
+
+on:
+  pull_request:
+    types:
+      - synchronize
+    paths-ignore:
+      - '.github/dependabot.yml'
+      - '.github/pull_request_template.md'
+      - '.github/release.yml'
+      - '.github/workflows/label-checker.yml'
+      - '.github/workflows/task-list-checker.yml'
+      - '**.md'
+  workflow_dispatch:
+    inputs: {}
+
+# NOTE: If commit & push continuously, cancel the workflow other than the latest commit.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.base_ref }}-${{ github.head_ref }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  WORKDIR: .
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  go-mod-tidy: # NOTE: for Branch protection rule `Status checks that are required.`
+    name: Run go mod tidy
+    permissions:
+      id-token: write
+      contents: write
+    runs-on: ubuntu-latest # ref. https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }} # needed for gh pr view
+      - name: DEBUG
+        shell: bash
+        run: |
+          cat <<'DEBUG_DOC'
+          == DEBUG =======================================================
+          github.ref: ${{ github.ref }}
+          github.event_name: ${{ github.event_name }}
+          -- toJSON(github.event.inputs) ---------------------------------
+          ${{ toJSON(github.event.inputs) }}
+          -- toJSON(github) ----------------------------------------------
+          ${{ toJSON(github) }}
+          ================================================================
+          DEBUG_DOC
+      - name: actions/cache for versenv
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/versenv
+          key: versenv-${{ runner.os }}-${{ hashFiles('**/.versenv.env') }}
+          restore-keys: |
+            versenv-${{ runner.os }}-
+      - name: Add GITHUB_PATH, GITHUB_ENV
+        shell: bash
+        run: |
+          # Update GITHUB_PATH
+          cat <<GITHUB_PATH >> $GITHUB_PATH
+          ${PWD}/.local/bin
+          ${PWD}/${{ env.WORKDIR }}/.local/bin
+          ${PWD}/.bin
+          GITHUB_PATH
+          # Update GITHUB_ENV
+          grep -Ev '^\s*$|^\s*#' .versenv.env >> $GITHUB_ENV
+      - name: Setup versenv
+        shell: bash
+        run: |
+          # Setup versenv
+          direnv allow ${{ env.WORKDIR }}
+          make versenv
+      - uses: actions/setup-go@v4 # ref. https://github.com/actions/setup-go#usage
+        id: setup-go
+        with:
+          cache: false
+          go-version-file: ${{ env.WORKDIR }}/go.mod
+      - name: Get Golang info
+        id: golang-info
+        shell: bash
+        run: |
+          echo "GOVERSION=$(go version | cut -d' ' -f3)" >> "$GITHUB_OUTPUT"
+          echo "GOCACHE=$(go env GOCACHE)" >> "$GITHUB_OUTPUT"
+      - name: actions/cache for go
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/go/pkg/mod
+            ${{ steps.golang-info.outputs.GOCACHE }}
+          key: ${{ runner.os }}-go-${{ steps.golang-info.outputs.GOVERSION }}-${{ hashFiles('**/go.sum') }}-${{ hashFiles('**/*.go') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ steps.golang-info.outputs.GOVERSION }}-${{ hashFiles('**/go.sum') }}-
+            ${{ runner.os }}-go-${{ steps.golang-info.outputs.GOVERSION }}-
+            ${{ runner.os }}-go-
+      - name: Setup git config for go mod download
+        env:
+          DEBIAN_FRONTEND: noninteractive
+          # GITHUB_TOKEN: ${{ secrets.GH_BOT_TOKEN }}
+        working-directory: ${{ env.WORKDIR }}
+        shell: bash
+        run: |
+          set -Eeu -o pipefail -x
+          direnv allow .
+          if [ -n "${GITHUB_TOKEN-}" ]; then
+            direnv exec . bash -Eeux -o pipefail -c 'echo "${GOPRIVATE:-}${GOPRIVATE+,}" | while read -d , -r LINE; do echo "set git config: ${LINE}"; git config --global url."https://${GITHUB_TOKEN}:x-oauth-basic@${LINE}".insteadOf "https://${LINE}"; done'
+          fi
+      - name: Run go mod tidy
+        if: ${{ steps.setup-go.outputs.cache-hit != 'true' }}
+        env:
+          DEBIAN_FRONTEND: noninteractive
+          # GITHUB_TOKEN: ${{ secrets.GH_BOT_TOKEN }}
+        working-directory: ${{ env.WORKDIR }}
+        shell: bash
+        run: |
+          direnv exec . go-mod-tidy-all
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          DIFF_FILES=$(git diff --name-only)
+          if [ -z "${DIFF_FILES-}" ]; then
+            echo "No changes to the output on this push; exiting."
+            exit 0
+          fi
+          echo "${DIFF_FILES:?}" | grep -E "go\.(mod|sum)" | xargs -t git add
+          git commit -m "build: go mod tidy (by github-actions[bot])"
+          git push

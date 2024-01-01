@@ -1,0 +1,23 @@
+# common
+.DS_Store
+Thumbs.db
+*.swp
+.*.swp
+:*
+*~
+.*~
+**/.env
+/.local/
+/.tmp/
+/tmp/
+*.mp4
+
+# go
+/cmd/sandbox/**
+
+# codecov
+coverage.txt*
+coverage.html
+
+# unique
+/ddlctl

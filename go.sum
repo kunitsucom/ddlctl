@@ -1,0 +1,4 @@
+github.com/kunitsucom/util.go v0.0.60-rc.3 h1:BUP+IyIzdjEq2t2V7hYt4+8dd6nO7d4oZM9Pa1e5hGY=
+github.com/kunitsucom/util.go v0.0.60-rc.3/go.mod h1:bYFf2JvRqVF1brBtpdt3xkkTGJBxmYBxZlItrc/lf7Y=
+github.com/lib/pq v1.10.9 h1:YXG7RB+JIjhP29X+OtkiDnYaXQwpS4JEWq7dtCCRUEw=
+github.com/lib/pq v1.10.9/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
