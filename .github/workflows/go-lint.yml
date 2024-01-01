@@ -85,7 +85,7 @@ jobs:
           # Setup versenv
           direnv allow ${{ env.WORKDIR }}
           make versenv
-      - uses: actions/setup-go@v4 # ref. https://github.com/actions/setup-go#usage
+      - uses: actions/setup-go@v5 # ref. https://github.com/actions/setup-go#usage
         id: setup-go
         with:
           cache: false
