@@ -19,6 +19,9 @@ const (
 	OptionDestination = "dst"
 	EnvKeyDestination = "DDLCTL_DESTINATION"
 
+	OptionAutoApprove = "auto-approve"
+	EnvKeyAutoApprove = "DDLCTL_AUTO_APPROVE"
+
 	// Golang
 	OptionColumnTagGo = "column-tag-go"
 	EnvKeyColumnTagGo = "DDLCTL_COLUMN_TAG_GO"

@@ -90,9 +90,22 @@ func DDLCtl(ctx context.Context) error {
 			},
 			{
 				Name:    "diff",
-				Usage:   "ddlctl diff [options] --dialect <DDL dialect> --src <source> --dst <destination>",
+				Usage:   "ddlctl diff [options] --dialect <DDL dialect> <DDL source before> <DDL source after>",
 				Options: opts,
 				RunFunc: Diff,
+			},
+			{
+				Name:  "apply",
+				Usage: "ddlctl apply [options] --dialect <DDL dialect> <DSN to apply> <DDL source>",
+				Options: append(opts,
+					&cliz.BoolOption{
+						Name:        consts.OptionAutoApprove,
+						Environment: consts.EnvKeyAutoApprove,
+						Description: "auto approve",
+						Default:     cliz.Default(false),
+					},
+				),
+				RunFunc: Apply,
 			},
 		},
 		Options: []cliz.Option{

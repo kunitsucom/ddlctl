@@ -1,7 +1,9 @@
 package ddlctl
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"os"
 	"regexp"
 	"strings"
@@ -28,13 +30,22 @@ func Diff(ctx context.Context, args []string) error {
 		return errorz.Errorf("config.Load: %w", err)
 	}
 
+	if len(args) != 2 {
+		return errorz.Errorf("args=%v: %w", args, apperr.ErrTwoArgumentsRequired)
+	}
+
 	left, right, err := resolve(ctx, config.Dialect(), args[0], args[1])
 	if err != nil {
 		return errorz.Errorf("resolve: %w", err)
 	}
 
-	if err := diff(left, right); err != nil {
+	buf := bytes.NewBuffer(nil)
+	if err := diff(buf, left, right); err != nil {
 		return errorz.Errorf("diff: %w", err)
+	}
+
+	if _, err := io.Copy(os.Stdout, buf); err != nil {
+		return errorz.Errorf("io.Copy: %w", err)
 	}
 
 	return nil
@@ -134,7 +145,7 @@ func generateDDLForDiff(ctx context.Context, src string) (string, error) {
 }
 
 //nolint:cyclop
-func diff(src, dst string) error {
+func diff(out io.Writer, src, dst string) error {
 	logs.Debug.Printf("src: %q", src)
 	logs.Debug.Printf("dst: %q", dst)
 
@@ -172,7 +183,9 @@ func diff(src, dst string) error {
 			return errorz.Errorf("pgddl.Diff: %w", err)
 		}
 
-		os.Stdout.WriteString(result.String())
+		if _, err := io.WriteString(out, result.String()); err != nil {
+			return errorz.Errorf("io.WriteString: %w", err)
+		}
 
 		return nil
 	case "":
