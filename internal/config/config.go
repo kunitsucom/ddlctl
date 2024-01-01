@@ -22,6 +22,7 @@ type config struct {
 	Dialect     string `json:"dialect"`
 	Source      string `json:"source"`
 	Destination string `json:"destination"`
+	AutoApprove bool   `json:"auto_approve"`
 	// Golang
 	ColumnTagGo string `json:"column_tag_go"`
 	DDLTagGo    string `json:"ddl_tag_go"`
@@ -80,6 +81,7 @@ func load(ctx context.Context) (cfg *config, err error) { //nolint:unparam
 		Dialect:     loadDialect(ctx, cmd),
 		Source:      loadSource(ctx, cmd),
 		Destination: loadDestination(ctx, cmd),
+		AutoApprove: loadAutoApprove(ctx, cmd),
 		ColumnTagGo: loadColumnTagGo(ctx, cmd),
 		DDLTagGo:    loadDDLTagGo(ctx, cmd),
 		PKTagGo:     loadPKTagGo(ctx, cmd),

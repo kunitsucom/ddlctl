@@ -166,7 +166,7 @@ options:
 ```console
 $ ddlctl diff --help
 Usage:
-    ddlctl diff [options] --dialect <DDL dialect> --src <source> --dst <destination>
+    ddlctl diff [options] --dialect <DDL dialect> <DDL source before> <DDL source after>
 
 Description:
     command "ddlctl diff" description
@@ -186,20 +186,55 @@ options:
         show usage
 ```
 
+### `ddlctl apply`
+
+```console
+$ ddlctl apply --help
+Usage:
+    ddlctl apply [options] --dialect <DDL dialect> <DSN to apply> <DDL source>
+
+Description:
+    command "ddlctl apply" description
+
+options:
+    --lang (env: DDLCTL_LANGUAGE, default: go)
+        programming language to generate DDL
+    --dialect (env: DDLCTL_DIALECT, default: )
+        SQL dialect to generate DDL
+    --column-tag-go (env: DDLCTL_COLUMN_TAG_GO, default: db)
+        column annotation key for Go struct tag
+    --ddl-tag-go (env: DDLCTL_DDL_TAG_GO, default: ddlctl)
+        DDL annotation key for Go struct tag
+    --pk-tag-go (env: DDLCTL_PK_TAG_GO, default: pk)
+        primary key annotation key for Go struct tag
+    --auto-approve (env: DDLCTL_AUTO_APPROVE, default: false)
+        auto approve
+    --help (default: false)
+        show usage
+```
+
 ## TODO
 
-- dialect
-  - `generate` subcommand
+- `generate` subcommand
+  - dialect
     - [x] Support `mysql`
     - [x] Support `postgres`
     - [x] Support `cockroachdb`
     - [x] Support `spanner`
     - [ ] Support `sqlite3`
-  - `diff` subcommand
+  - lang
+    - [x] Support `go`
+- `diff` subcommand
+  - dialect
     - [ ] Support `mysql`
     - [ ] Support `postgres`
     - [x] Support `cockroachdb`
     - [ ] Support `spanner`
     - [ ] Support `sqlite3`
-- lang
-  - [x] Support `go`
+- `apply` subcommand
+  - dialect
+    - [ ] Support `mysql`
+    - [ ] Support `postgres`
+    - [x] Support `cockroachdb`
+    - [ ] Support `spanner`
+    - [ ] Support `sqlite3`
