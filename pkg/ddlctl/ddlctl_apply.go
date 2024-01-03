@@ -25,7 +25,10 @@ func Apply(ctx context.Context, args []string) error {
 		return errorz.Errorf("args=%v: %w", args, apperr.ErrTwoArgumentsRequired)
 	}
 
-	left, right, err := resolve(ctx, config.Dialect(), args[0], args[1])
+	dsn := args[0]
+	ddlSrc := args[1]
+
+	left, right, err := resolve(ctx, config.Dialect(), dsn, ddlSrc)
 	if err != nil {
 		return errorz.Errorf("resolve: %w", err)
 	}
@@ -36,7 +39,6 @@ func Apply(ctx context.Context, args []string) error {
 	}
 
 	msg := `
-
 ddlctl will exec the following DDL queries:
 
 -- 8< --
@@ -45,7 +47,7 @@ ddlctl will exec the following DDL queries:
 
 -- >8 --
 
-Do you want to apply these DDL?
+Do you want to apply these DDL queries?
   ddlctl will exec the DDL queries described above.
   Only 'yes' will be accepted to approve.
 
@@ -67,7 +69,7 @@ Enter a value: `
 
 	os.Stdout.WriteString("\nexecuting...\n")
 
-	db, err := sqlz.OpenContext(ctx, _postgres, args[0])
+	db, err := sqlz.OpenContext(ctx, _postgres, dsn)
 	if err != nil {
 		return errorz.Errorf("sqlz.OpenContext: %w", err)
 	}
@@ -88,7 +90,7 @@ func prompt() error {
 	userInput := scanner.Text()
 
 	switch userInput {
-	case "yes", "YES":
+	case "yes":
 		return nil
 	default:
 		return errorz.Errorf("userInput=%s: %w", userInput, apperr.ErrUserCanceled)
