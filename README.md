@@ -122,6 +122,7 @@ sub commands:
     version: show version
     generate: command "generate" description
     diff: command "diff" description
+    apply: command "apply" description
 
 options:
     --trace (env: DDLCTL_TRACE, default: false)
