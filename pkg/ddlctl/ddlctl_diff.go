@@ -1,7 +1,6 @@
 package ddlctl
 
 import (
-	"bytes"
 	"context"
 	"io"
 	"os"
@@ -12,15 +11,18 @@ import (
 	errorz "github.com/kunitsucom/util.go/errors"
 	crdbddl "github.com/kunitsucom/util.go/exp/database/sql/ddl/cockroachdb"
 	pgddl "github.com/kunitsucom/util.go/exp/database/sql/ddl/postgres"
+	crdbutil "github.com/kunitsucom/util.go/exp/database/sql/util/cockroachdb"
+	myutil "github.com/kunitsucom/util.go/exp/database/sql/util/mysql"
+	pgutil "github.com/kunitsucom/util.go/exp/database/sql/util/postgres"
 	osz "github.com/kunitsucom/util.go/os"
 
 	"github.com/kunitsucom/ddlctl/internal/config"
-	pgddlgen "github.com/kunitsucom/ddlctl/internal/ddlctl/ddl/dialect/postgres"
 	"github.com/kunitsucom/ddlctl/internal/logs"
 	apperr "github.com/kunitsucom/ddlctl/pkg/errors"
 )
 
 const (
+	_mysql       = "mysql"
 	_postgres    = "postgres"
 	_cockroachdb = "cockroachdb"
 )
@@ -39,13 +41,8 @@ func Diff(ctx context.Context, args []string) error {
 		return errorz.Errorf("resolve: %w", err)
 	}
 
-	buf := bytes.NewBuffer(nil)
-	if err := diff(buf, left, right); err != nil {
+	if err := diff(os.Stdout, left, right); err != nil {
 		return errorz.Errorf("diff: %w", err)
-	}
-
-	if _, err := io.Copy(os.Stdout, buf); err != nil {
-		return errorz.Errorf("io.Copy: %w", err)
 	}
 
 	return nil
@@ -85,7 +82,7 @@ func resolve(ctx context.Context, dialect, left, right string) (srcDDL string, d
 
 		ddl, err := dumpCreateStmts(ctx, dialect, right)
 		if err != nil {
-			return "", "", errorz.Errorf("sqlz.OpenContext: %w", err)
+			return "", "", errorz.Errorf("dumpCreateStmts: %w", err)
 		}
 		dstDDL = ddl
 	case osz.IsFile(right): // NOTE: expect SQL file
@@ -105,25 +102,59 @@ func resolve(ctx context.Context, dialect, left, right string) (srcDDL string, d
 	return srcDDL, dstDDL, nil
 }
 
+//nolint:cyclop
 func dumpCreateStmts(ctx context.Context, dialect string, dsn string) (ddl string, err error) {
 	switch dialect {
+	case _mysql:
+		db, err := sqlz.OpenContext(ctx, _mysql, dsn)
+		if err != nil {
+			return "", errorz.Errorf("sqlz.OpenContext: %w", err)
+		}
+		defer func() {
+			if cerr := db.Close(); err == nil && cerr != nil {
+				err = errorz.Errorf("db.Close: %w", cerr)
+			}
+		}()
+
+		ddl, err := myutil.ShowCreateAllTables(ctx, db)
+		if err != nil {
+			return "", errorz.Errorf("pgutil.ShowCreateAllTables: %w", err)
+		}
+
+		return ddl, nil
+	case _postgres:
+		db, err := sqlz.OpenContext(ctx, _postgres, dsn)
+		if err != nil {
+			return "", errorz.Errorf("sqlz.OpenContext: %w", err)
+		}
+		defer func() {
+			if cerr := db.Close(); err == nil && cerr != nil {
+				err = errorz.Errorf("db.Close: %w", cerr)
+			}
+		}()
+
+		ddl, err := pgutil.ShowCreateAllTables(ctx, db)
+		if err != nil {
+			return "", errorz.Errorf("pgutil.ShowCreateAllTables: %w", err)
+		}
+
+		return ddl, nil
 	case _cockroachdb:
 		db, err := sqlz.OpenContext(ctx, _postgres, dsn)
 		if err != nil {
 			return "", errorz.Errorf("sqlz.OpenContext: %w", err)
 		}
-		defer db.Close()
+		defer func() {
+			if cerr := db.Close(); err == nil && cerr != nil {
+				err = errorz.Errorf("db.Close: %w", cerr)
+			}
+		}()
 
-		type CreateTableStatement struct {
-			CreateStatement string `db:"create_statement"`
+		ddl, err := crdbutil.ShowCreateAllTables(ctx, db)
+		if err != nil {
+			return "", errorz.Errorf("crdbutil.ShowCreateAllTables: %w", err)
 		}
-		v := new([]*CreateTableStatement)
-		if err := sqlz.NewDB(db).QueryContext(ctx, v, "SHOW CREATE ALL TABLES;"); err != nil {
-			return "", errorz.Errorf("sqlz.NewDB.QueryContext: %w", err)
-		}
-		for _, stmt := range *v {
-			ddl += stmt.CreateStatement
-		}
+
 		return ddl, nil
 	default:
 		return "", errorz.Errorf("dialect=%s: %w", dialect, apperr.ErrNotSupported)
@@ -150,7 +181,10 @@ func diff(out io.Writer, src, dst string) error {
 	logs.Debug.Printf("dst: %q", dst)
 
 	switch dialect := config.Dialect(); dialect {
-	case pgddlgen.Dialect:
+	case _mysql:
+		// TODO: implement
+		return errorz.Errorf("dialect=%s: %w", dialect, apperr.ErrNotSupported)
+	case _postgres:
 		leftDDL, err := pgddl.NewParser(pgddl.NewLexer(src)).Parse()
 		if err != nil {
 			return errorz.Errorf("pgddl.NewParser: %w", err)
@@ -165,7 +199,9 @@ func diff(out io.Writer, src, dst string) error {
 			return errorz.Errorf("pgddl.Diff: %w", err)
 		}
 
-		os.Stdout.WriteString(result.String())
+		if _, err := io.WriteString(out, result.String()); err != nil {
+			return errorz.Errorf("io.WriteString: %w", err)
+		}
 
 		return nil
 	case _cockroachdb:
