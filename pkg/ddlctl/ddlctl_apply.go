@@ -16,7 +16,7 @@ import (
 )
 
 //nolint:cyclop,funlen
-func Apply(ctx context.Context, args []string) error {
+func Apply(ctx context.Context, args []string) (err error) {
 	if _, err := config.Load(ctx); err != nil {
 		return errorz.Errorf("config.Load: %w", err)
 	}
@@ -37,13 +37,14 @@ func Apply(ctx context.Context, args []string) error {
 	if err := diff(buf, left, right); err != nil {
 		return errorz.Errorf("diff: %w", err)
 	}
+	q := buf.String()
 
 	msg := `
 ddlctl will exec the following DDL queries:
 
 -- 8< --
 
-` + buf.String() + `
+` + q + `
 
 -- >8 --
 
@@ -73,9 +74,13 @@ Enter a value: `
 	if err != nil {
 		return errorz.Errorf("sqlz.OpenContext: %w", err)
 	}
-	defer db.Close()
+	defer func() {
+		if cerr := db.Close(); err == nil && cerr != nil {
+			err = errorz.Errorf("db.Close: %w", cerr)
+		}
+	}()
 
-	if _, err := db.ExecContext(ctx, buf.String()); err != nil {
+	if _, err := db.ExecContext(ctx, q); err != nil {
 		return errorz.Errorf("db.ExecContext: %w", err)
 	}
 

@@ -228,14 +228,14 @@ options:
 - `diff` subcommand
   - dialect
     - [ ] Support `mysql`
-    - [ ] Support `postgres`
+    - [x] Support `postgres`
     - [x] Support `cockroachdb`
     - [ ] Support `spanner`
     - [ ] Support `sqlite3`
 - `apply` subcommand
   - dialect
     - [ ] Support `mysql`
-    - [ ] Support `postgres`
+    - [x] Support `postgres`
     - [x] Support `cockroachdb`
     - [ ] Support `spanner`
     - [ ] Support `sqlite3`
