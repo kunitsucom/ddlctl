@@ -13,6 +13,32 @@
 
 `ddlctl` is a tool for control RDBMS DDL.
 
+## TODO
+
+- `generate` subcommand
+  - dialect
+    - [x] Support `mysql` (alpha)
+    - [x] Support `postgres` (alpha)
+    - [x] Support `cockroachdb` (alpha)
+    - [x] Support `spanner` (alpha)
+    - [ ] Support `sqlite3`
+  - lang
+    - [x] Support `go` (beta)
+- `diff` subcommand
+  - dialect
+    - [x] Support `mysql` (alpha)
+    - [x] Support `postgres` (alpha)
+    - [x] Support `cockroachdb` (alpha)
+    - [ ] Support `spanner`
+    - [ ] Support `sqlite3`
+- `apply` subcommand
+  - dialect
+    - [x] Support `mysql` (alpha)
+    - [x] Support `postgres` (alpha)
+    - [x] Support `cockroachdb` (alpha)
+    - [ ] Support `spanner`
+    - [ ] Support `sqlite3`
+
 ## Example
 
 ```console
@@ -213,29 +239,3 @@ options:
     --help (default: false)
         show usage
 ```
-
-## TODO
-
-- `generate` subcommand
-  - dialect
-    - [x] Support `mysql`
-    - [x] Support `postgres`
-    - [x] Support `cockroachdb`
-    - [x] Support `spanner`
-    - [ ] Support `sqlite3`
-  - lang
-    - [x] Support `go`
-- `diff` subcommand
-  - dialect
-    - [ ] Support `mysql`
-    - [x] Support `postgres`
-    - [x] Support `cockroachdb`
-    - [ ] Support `spanner`
-    - [ ] Support `sqlite3`
-- `apply` subcommand
-  - dialect
-    - [ ] Support `mysql`
-    - [x] Support `postgres`
-    - [x] Support `cockroachdb`
-    - [ ] Support `spanner`
-    - [ ] Support `sqlite3`
