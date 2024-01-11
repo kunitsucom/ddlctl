@@ -10,9 +10,9 @@ import (
 	sqlz "github.com/kunitsucom/util.go/database/sql"
 	errorz "github.com/kunitsucom/util.go/errors"
 
-	"github.com/kunitsucom/ddlctl/internal/config"
-	"github.com/kunitsucom/ddlctl/internal/consts"
 	apperr "github.com/kunitsucom/ddlctl/pkg/errors"
+	"github.com/kunitsucom/ddlctl/pkg/internal/config"
+	"github.com/kunitsucom/ddlctl/pkg/internal/consts"
 )
 
 //nolint:cyclop,funlen
@@ -34,7 +34,7 @@ func Apply(ctx context.Context, args []string) (err error) {
 	}
 
 	buf := new(strings.Builder)
-	if err := diff(buf, left, right); err != nil {
+	if err := DiffDDL(buf, config.Dialect(), left, right); err != nil {
 		return errorz.Errorf("diff: %w", err)
 	}
 	q := buf.String()
