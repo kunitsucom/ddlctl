@@ -7,10 +7,10 @@ import (
 
 	sqlz "github.com/kunitsucom/util.go/database/sql"
 	errorz "github.com/kunitsucom/util.go/errors"
-	crdbutil "github.com/kunitsucom/util.go/exp/database/sql/util/cockroachdb"
-	myutil "github.com/kunitsucom/util.go/exp/database/sql/util/mysql"
-	pgutil "github.com/kunitsucom/util.go/exp/database/sql/util/postgres"
 
+	crdbdump "github.com/kunitsucom/ddlctl/pkg/dump/cockroachdb"
+	mydump "github.com/kunitsucom/ddlctl/pkg/dump/mysql"
+	pgdump "github.com/kunitsucom/ddlctl/pkg/dump/postgres"
 	apperr "github.com/kunitsucom/ddlctl/pkg/errors"
 	"github.com/kunitsucom/ddlctl/pkg/internal/config"
 )
@@ -20,7 +20,7 @@ func Dump(ctx context.Context, args []string) error {
 		return errorz.Errorf("config.Load: %w", err)
 	}
 
-	ddl, err := dump(ctx, config.Dialect(), args[0])
+	ddl, err := DumpDDL(ctx, config.Dialect(), args[0])
 	if err != nil {
 		return errorz.Errorf("diff: %w", err)
 	}
@@ -33,7 +33,7 @@ func Dump(ctx context.Context, args []string) error {
 }
 
 //nolint:cyclop
-func dump(ctx context.Context, dialect string, dsn string) (ddl string, err error) {
+func DumpDDL(ctx context.Context, dialect string, dsn string) (ddl string, err error) {
 	switch dialect {
 	case _mysql:
 		db, err := sqlz.OpenContext(ctx, _mysql, dsn)
@@ -46,7 +46,7 @@ func dump(ctx context.Context, dialect string, dsn string) (ddl string, err erro
 			}
 		}()
 
-		ddl, err := myutil.ShowCreateAllTables(ctx, db)
+		ddl, err := mydump.ShowCreateAllTables(ctx, db)
 		if err != nil {
 			return "", errorz.Errorf("pgutil.ShowCreateAllTables: %w", err)
 		}
@@ -63,7 +63,7 @@ func dump(ctx context.Context, dialect string, dsn string) (ddl string, err erro
 			}
 		}()
 
-		ddl, err := pgutil.ShowCreateAllTables(ctx, db)
+		ddl, err := pgdump.ShowCreateAllTables(ctx, db)
 		if err != nil {
 			return "", errorz.Errorf("pgutil.ShowCreateAllTables: %w", err)
 		}
@@ -80,7 +80,7 @@ func dump(ctx context.Context, dialect string, dsn string) (ddl string, err erro
 			}
 		}()
 
-		ddl, err := crdbutil.ShowCreateAllTables(ctx, db)
+		ddl, err := crdbdump.ShowCreateAllTables(ctx, db)
 		if err != nil {
 			return "", errorz.Errorf("crdbutil.ShowCreateAllTables: %w", err)
 		}

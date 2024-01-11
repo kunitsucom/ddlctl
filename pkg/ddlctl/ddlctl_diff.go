@@ -7,10 +7,11 @@ import (
 	"strings"
 
 	errorz "github.com/kunitsucom/util.go/errors"
-	crdbddl "github.com/kunitsucom/util.go/exp/database/sql/ddl/cockroachdb"
-	myddl "github.com/kunitsucom/util.go/exp/database/sql/ddl/mysql"
-	pgddl "github.com/kunitsucom/util.go/exp/database/sql/ddl/postgres"
 	osz "github.com/kunitsucom/util.go/os"
+
+	crdbddl "github.com/kunitsucom/ddlctl/pkg/ddl/cockroachdb"
+	myddl "github.com/kunitsucom/ddlctl/pkg/ddl/mysql"
+	pgddl "github.com/kunitsucom/ddlctl/pkg/ddl/postgres"
 
 	apperr "github.com/kunitsucom/ddlctl/pkg/errors"
 	"github.com/kunitsucom/ddlctl/pkg/internal/config"
@@ -60,7 +61,7 @@ func resolve(ctx context.Context, dialect, left, right string) (srcDDL string, d
 		}
 		srcDDL = ddl
 	default: // NOTE: expect DSN
-		ddl, err := dump(ctx, dialect, left)
+		ddl, err := DumpDDL(ctx, dialect, left)
 		if err != nil {
 			return "", "", errorz.Errorf("dumpCreateStmts: %w", err)
 		}
@@ -81,7 +82,7 @@ func resolve(ctx context.Context, dialect, left, right string) (srcDDL string, d
 		}
 		dstDDL = ddl
 	default: // NOTE: expect ddlctl generate format
-		ddl, err := dump(ctx, dialect, right)
+		ddl, err := DumpDDL(ctx, dialect, right)
 		if err != nil {
 			return "", "", errorz.Errorf("dumpCreateStmts: %w", err)
 		}

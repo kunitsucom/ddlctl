@@ -14,6 +14,7 @@ linters:
     - exhaustruct # https://github.com/GaijinEntertainment/go-exhaustruct
     - exhaustivestruct # https://github.com/mbilski/exhaustivestruct
     - gci # unnecessary
+    - goconst # unnecessary
     - godox # unnecessary
     - golint # deprecated https://github.com/golang/lint
     - gomnd # https://github.com/tommy-muehle/go-mnd
@@ -54,9 +55,13 @@ issues:
         - gochecknoglobals
         - gocognit
         - goconst
+        - gocyclo
         - goerr113
+        - gosec
         - ireturn
         - maintidx
         - noctx
+        - revive
+        - testpackage
         - varnamelen
         - wrapcheck
