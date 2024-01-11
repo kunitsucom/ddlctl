@@ -9,45 +9,48 @@ import (
 	errorz "github.com/kunitsucom/util.go/errors"
 	cliz "github.com/kunitsucom/util.go/exp/cli"
 	"github.com/kunitsucom/util.go/version"
-	_ "github.com/lib/pq" //nolint:revive
 
-	"github.com/kunitsucom/ddlctl/internal/consts"
+	"github.com/kunitsucom/ddlctl/pkg/internal/consts"
 )
 
 //nolint:gochecknoglobals
-var opts = []cliz.Option{
-	&cliz.StringOption{
+var (
+	optLanguage = &cliz.StringOption{
 		Name:        consts.OptionLanguage,
 		Environment: consts.EnvKeyLanguage,
 		Description: "programming language to generate DDL",
 		Default:     cliz.Default("go"),
-	},
-	&cliz.StringOption{
+	}
+	optDialect = &cliz.StringOption{
 		Name:        consts.OptionDialect,
 		Environment: consts.EnvKeyDialect,
 		Description: "SQL dialect to generate DDL",
 		Default:     cliz.Default(""),
-	},
-	// Golang
-	&cliz.StringOption{
-		Name:        consts.OptionColumnTagGo,
-		Environment: consts.EnvKeyColumnTagGo,
-		Description: "column annotation key for Go struct tag",
-		Default:     cliz.Default("db"),
-	},
-	&cliz.StringOption{
-		Name:        consts.OptionDDLTagGo,
-		Environment: consts.EnvKeyDDLTagGo,
-		Description: "DDL annotation key for Go struct tag",
-		Default:     cliz.Default("ddlctl"),
-	},
-	&cliz.StringOption{
-		Name:        consts.OptionPKTagGo,
-		Environment: consts.EnvKeyPKTagGo,
-		Description: "primary key annotation key for Go struct tag",
-		Default:     cliz.Default("pk"),
-	},
-}
+	}
+	opts = []cliz.Option{
+		optLanguage,
+		optDialect,
+		// Golang
+		&cliz.StringOption{
+			Name:        consts.OptionColumnTagGo,
+			Environment: consts.EnvKeyColumnTagGo,
+			Description: "column annotation key for Go struct tag",
+			Default:     cliz.Default("db"),
+		},
+		&cliz.StringOption{
+			Name:        consts.OptionDDLTagGo,
+			Environment: consts.EnvKeyDDLTagGo,
+			Description: "DDL annotation key for Go struct tag",
+			Default:     cliz.Default("ddlctl"),
+		},
+		&cliz.StringOption{
+			Name:        consts.OptionPKTagGo,
+			Environment: consts.EnvKeyPKTagGo,
+			Description: "primary key annotation key for Go struct tag",
+			Default:     cliz.Default("pk"),
+		},
+	}
+)
 
 //nolint:cyclop,funlen
 func DDLCtl(ctx context.Context) error {
@@ -87,6 +90,12 @@ func DDLCtl(ctx context.Context) error {
 					},
 				),
 				RunFunc: Generate,
+			},
+			{
+				Name:    "dump",
+				Usage:   "ddlctl dump --dialect <DDL dialect> <DSN>",
+				Options: []cliz.Option{optDialect},
+				RunFunc: Dump,
 			},
 			{
 				Name:    "diff",

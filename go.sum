@@ -1,4 +1,6 @@
-github.com/kunitsucom/util.go v0.0.60-rc.6 h1:aiyBwQzzqxzQzWz5fZCMoj1bOWPA7iAVgju85/zXmA8=
-github.com/kunitsucom/util.go v0.0.60-rc.6/go.mod h1:bYFf2JvRqVF1brBtpdt3xkkTGJBxmYBxZlItrc/lf7Y=
+github.com/go-sql-driver/mysql v1.7.1 h1:lUIinVbN1DY0xBg0eMOzmmtGoHwWBbvnWubQUrtU8EI=
+github.com/go-sql-driver/mysql v1.7.1/go.mod h1:OXbVy3sEdcQ2Doequ6Z5BW6fXNQTmx+9S1MCJN5yJMI=
+github.com/kunitsucom/util.go v0.0.60-rc.6.0.20240110200752-3883fd8962e2 h1:wTIULmiNA1fvv7SGAA4vbbzngZ/xhdwb1OH8ZL78gAE=
+github.com/kunitsucom/util.go v0.0.60-rc.6.0.20240110200752-3883fd8962e2/go.mod h1:bYFf2JvRqVF1brBtpdt3xkkTGJBxmYBxZlItrc/lf7Y=
 github.com/lib/pq v1.10.9 h1:YXG7RB+JIjhP29X+OtkiDnYaXQwpS4JEWq7dtCCRUEw=
 github.com/lib/pq v1.10.9/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
