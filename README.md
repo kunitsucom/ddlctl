@@ -117,7 +117,7 @@ CREATE UNIQUE INDEX "index_groups_group_name" ON "groups" ("group_name");
 ### pre-built binary
 
 ```bash
-VERSION=v0.0.13
+VERSION=v0.0.4
 
 # download
 curl -fLROSs https://github.com/kunitsucom/ddlctl/releases/download/${VERSION}/ddlctl_${VERSION}_darwin_arm64.zip
@@ -129,7 +129,7 @@ unzip -j ddlctl_${VERSION}_darwin_arm64.zip '*/ddlctl'
 ### go install
 
 ```bash
-go install github.com/kunitsucom/ddlctl/cmd/ddlctl@v0.0.1
+go install github.com/kunitsucom/ddlctl/cmd/ddlctl@v0.0.4
 ```
 
 ## Usage
