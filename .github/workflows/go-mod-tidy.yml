@@ -11,6 +11,7 @@ on:
       - '.github/workflows/label-checker.yml'
       - '.github/workflows/task-list-checker.yml'
       - '**.md'
+      - 'CREDITS'
   workflow_dispatch:
     inputs: {}
 

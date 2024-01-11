@@ -14,6 +14,7 @@ on:
       - '.github/workflows/label-checker.yml'
       - '.github/workflows/task-list-checker.yml'
       - '**.md'
+      - 'CREDITS'
   pull_request:
     paths-ignore:
       - '.github/dependabot.yml'
@@ -22,6 +23,7 @@ on:
       - '.github/workflows/label-checker.yml'
       - '.github/workflows/task-list-checker.yml'
       - '**.md'
+      - 'CREDITS'
   workflow_dispatch:
     inputs: {}
 
