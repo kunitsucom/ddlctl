@@ -16,14 +16,21 @@
 ## TODO
 
 - `generate` subcommand
+  - source language
+    - [x] Support `go` (beta)
   - dialect
     - [x] Support `mysql` (alpha)
     - [x] Support `postgres` (alpha)
     - [x] Support `cockroachdb` (alpha)
     - [x] Support `spanner` (alpha)
     - [ ] Support `sqlite3`
-  - lang
-    - [x] Support `go` (beta)
+- `show` subcommand
+  - dialect
+    - [x] Support `mysql` (beta)
+    - [x] Support `postgres` (beta)
+    - [x] Support `cockroachdb` (beta)
+    - [x] Support `spanner` (alpha)
+    - [ ] Support `sqlite3`
 - `diff` subcommand
   - dialect
     - [x] Support `mysql` (alpha)

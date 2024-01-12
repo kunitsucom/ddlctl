@@ -18,12 +18,6 @@ import (
 	"github.com/kunitsucom/ddlctl/pkg/internal/logs"
 )
 
-const (
-	_mysql       = "mysql"
-	_postgres    = "postgres"
-	_cockroachdb = "cockroachdb"
-)
-
 func Diff(ctx context.Context, args []string) error {
 	if _, err := config.Load(ctx); err != nil {
 		return errorz.Errorf("config.Load: %w", err)
@@ -61,9 +55,9 @@ func resolve(ctx context.Context, dialect, left, right string) (srcDDL string, d
 		}
 		srcDDL = ddl
 	default: // NOTE: expect DSN
-		ddl, err := DumpDDL(ctx, dialect, left)
+		ddl, err := ShowDDL(ctx, dialect, left)
 		if err != nil {
-			return "", "", errorz.Errorf("dumpCreateStmts: %w", err)
+			return "", "", errorz.Errorf("ShowDDL: %w", err)
 		}
 		srcDDL = ddl
 	}
@@ -82,9 +76,9 @@ func resolve(ctx context.Context, dialect, left, right string) (srcDDL string, d
 		}
 		dstDDL = ddl
 	default: // NOTE: expect ddlctl generate format
-		ddl, err := DumpDDL(ctx, dialect, right)
+		ddl, err := ShowDDL(ctx, dialect, right)
 		if err != nil {
-			return "", "", errorz.Errorf("dumpCreateStmts: %w", err)
+			return "", "", errorz.Errorf("ShowDDL: %w", err)
 		}
 		dstDDL = ddl
 	}

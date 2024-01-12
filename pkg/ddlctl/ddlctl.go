@@ -13,6 +13,13 @@ import (
 	"github.com/kunitsucom/ddlctl/pkg/internal/consts"
 )
 
+const (
+	_mysql       = "mysql"
+	_postgres    = "postgres"
+	_cockroachdb = "cockroachdb"
+	_spanner     = "spanner"
+)
+
 //nolint:gochecknoglobals
 var (
 	optLanguage = &cliz.StringOption{
@@ -92,10 +99,10 @@ func DDLCtl(ctx context.Context) error {
 				RunFunc: Generate,
 			},
 			{
-				Name:    "dump",
-				Usage:   "ddlctl dump --dialect <DDL dialect> <DSN>",
+				Name:    "show",
+				Usage:   "ddlctl show --dialect <DDL dialect> <DSN>",
 				Options: []cliz.Option{optDialect},
-				RunFunc: Dump,
+				RunFunc: Show,
 			},
 			{
 				Name:    "diff",
