@@ -89,12 +89,12 @@ func load(ctx context.Context) (cfg *config, err error) { //nolint:unparam
 
 	if c.Debug {
 		logs.Debug = logs.NewDebug()
-		logs.Trace.Print("debug mode enabled")
+		logs.Debug.Print("debug mode enabled")
 	}
 	if c.Trace {
 		logs.Trace = logs.NewTrace()
 		logs.Debug = logs.NewDebug()
-		logs.Debug.Print("trace mode enabled")
+		logs.Trace.Print("trace mode enabled")
 	}
 
 	if err := json.NewEncoder(logs.Debug).Encode(c); err != nil {
