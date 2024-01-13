@@ -11,6 +11,8 @@ import (
 	"github.com/kunitsucom/ddlctl/pkg/internal/logs"
 )
 
+// NOTE: https://cloud.google.com/spanner/docs/information-schema?hl=ja
+
 type sqlQueryerContext = interface {
 	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
 }
@@ -47,7 +49,40 @@ func (c *informationSchemaColumn) String() string {
 }
 
 const (
-	queryShowPrimaryKey = `SELECT i.INDEX_NAME, i.INDEX_TYPE, ic.COLUMN_NAME, ic.COLUMN_ORDERING, ic.ORDINAL_POSITION FROM INFORMATION_SCHEMA.INDEXES AS i INNER JOIN INFORMATION_SCHEMA.INDEX_COLUMNS AS ic ON i.TABLE_NAME = ic.TABLE_NAME WHERE i.TABLE_NAME = ? AND i.INDEX_TYPE = "PRIMARY_KEY" ORDER BY i.TABLE_NAME, ic.ORDINAL_POSITION;`
+	queryShowTableColumnOptions = `SELECT COLUMN_NAME, OPTION_NAME, OPTION_VALUE FROM INFORMATION_SCHEMA.COLUMN_OPTIONS WHERE TABLE_NAME = ?;`
+)
+
+type informationSchemaColumnOption struct {
+	ColumnName  string `db:"COLUMN_NAME"`
+	OptionName  string `db:"OPTION_NAME"`
+	OptionValue string `db:"OPTION_VALUE"`
+}
+
+func (c *informationSchemaColumnOption) String() string {
+	return fmt.Sprintf("%s = %s", c.OptionName, c.OptionValue)
+}
+
+const (
+	queryShowPrimaryKey = `-- SHOW TABLES
+SELECT
+    i.INDEX_NAME,
+    i.INDEX_TYPE,
+    ic.COLUMN_NAME,
+    ic.COLUMN_ORDERING,
+    ic.ORDINAL_POSITION
+FROM
+    INFORMATION_SCHEMA.INDEXES AS i
+INNER JOIN
+    INFORMATION_SCHEMA.INDEX_COLUMNS AS ic
+ON
+    i.TABLE_NAME = ic.TABLE_NAME
+WHERE
+    i.TABLE_NAME = ?
+    AND i.INDEX_TYPE = "PRIMARY_KEY"
+ORDER BY
+    i.TABLE_NAME, ic.ORDINAL_POSITION
+;
+`
 )
 
 type informationSchemaPrimaryKey struct {
@@ -77,9 +112,12 @@ SELECT
     ic.COLUMN_NAME,
     ic.COLUMN_ORDERING,
     ic.ORDINAL_POSITION
-FROM INFORMATION_SCHEMA.INDEXES AS i
-INNER JOIN INFORMATION_SCHEMA.INDEX_COLUMNS AS ic
-    ON i.TABLE_NAME = ic.TABLE_NAME
+FROM
+    INFORMATION_SCHEMA.INDEXES AS i
+INNER JOIN
+    INFORMATION_SCHEMA.INDEX_COLUMNS AS ic
+ON
+    i.TABLE_NAME = ic.TABLE_NAME
 WHERE
     i.TABLE_NAME = ? 
     AND i.INDEX_TYPE != "PRIMARY_KEY" 
@@ -144,10 +182,33 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 			return "", errorz.Errorf("dbz.QueryContext: %w", err)
 		}
 
+		allColumnOptions := make([]*informationSchemaColumnOption, 0)
+		if err := dbz.QueryContext(ctx, &allColumnOptions, queryShowTableColumnOptions, tbl.TableName); err != nil {
+			return "", errorz.Errorf("dbz.QueryContext: %w", err)
+		}
+
 		columnsLastIndex := len(columns) - 1
-		for i, col := range columns {
+		for colIdx, col := range columns {
 			d += fmt.Sprintf("    %s", col)
-			if i != columnsLastIndex {
+			if len(allColumnOptions) > 0 {
+				columnOptions := make([]*informationSchemaColumnOption, 0)
+				for _, opt := range allColumnOptions {
+					if col.ColumnName == opt.ColumnName {
+						columnOptions = append(columnOptions, opt)
+					}
+				}
+				if len(columnOptions) > 0 {
+					d += " OPTIONS ("
+					for columnOptionsIdx, opt := range columnOptions {
+						d += opt.String()
+						if columnOptionsLastIndex := len(columnOptions) - 1; columnOptionsIdx != columnOptionsLastIndex {
+							d += ", "
+						}
+					}
+					d += ")"
+				}
+			}
+			if colIdx != columnsLastIndex {
 				d += ","
 			}
 			d += "\n"
