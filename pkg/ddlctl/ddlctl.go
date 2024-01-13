@@ -13,10 +13,6 @@ import (
 	"github.com/kunitsucom/ddlctl/pkg/internal/consts"
 )
 
-const (
-	_spanner = "spanner" // TODO: remove after spanner ddl diff implemented
-)
-
 //nolint:gochecknoglobals
 var (
 	optLanguage = &cliz.StringOption{

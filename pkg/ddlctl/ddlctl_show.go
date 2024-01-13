@@ -11,6 +11,7 @@ import (
 	crdbddl "github.com/kunitsucom/ddlctl/pkg/ddl/cockroachdb"
 	myddl "github.com/kunitsucom/ddlctl/pkg/ddl/mysql"
 	pgddl "github.com/kunitsucom/ddlctl/pkg/ddl/postgres"
+	spanddl "github.com/kunitsucom/ddlctl/pkg/ddl/spanner"
 	apperr "github.com/kunitsucom/ddlctl/pkg/errors"
 	"github.com/kunitsucom/ddlctl/pkg/internal/config"
 	crdbshow "github.com/kunitsucom/ddlctl/pkg/show/cockroachdb"
@@ -76,7 +77,7 @@ func ShowDDL(ctx context.Context, dialect string, dsn string) (ddl string, err e
 			return "", errorz.Errorf("crdbutil.ShowCreateAllTables: %w", err)
 		}
 		return ddl, nil
-	case _spanner:
+	case spanddl.Dialect:
 		ddl, err := spanshow.ShowCreateAllTables(ctx, db)
 		if err != nil {
 			return "", errorz.Errorf("spanshow.ShowCreateAllTables: %w", err)
