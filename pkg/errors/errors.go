@@ -4,7 +4,7 @@ import "errors"
 
 var (
 	ErrNotSupported                       = errors.New("not supported")
-	ErrUserCanceled                       = errors.New("user canceled")
+	ErrCanceled                           = errors.New("canceled")
 	ErrDialectIsEmpty                     = errors.New("dialect is empty")
 	ErrDDLTagGoAnnotationNotFoundInSource = errors.New("ddl-tag-go annotation not found in source")
 	ErrTwoArgumentsRequired               = errors.New("two arguments required")

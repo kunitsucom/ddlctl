@@ -10,6 +10,7 @@ import (
 	sqlz "github.com/kunitsucom/util.go/database/sql"
 	errorz "github.com/kunitsucom/util.go/errors"
 
+	crdbddl "github.com/kunitsucom/ddlctl/pkg/ddl/cockroachdb"
 	apperr "github.com/kunitsucom/ddlctl/pkg/errors"
 	"github.com/kunitsucom/ddlctl/pkg/internal/config"
 	"github.com/kunitsucom/ddlctl/pkg/internal/consts"
@@ -25,10 +26,14 @@ func Apply(ctx context.Context, args []string) (err error) {
 		return errorz.Errorf("args=%v: %w", args, apperr.ErrTwoArgumentsRequired)
 	}
 
-	dsn := args[0]
-	ddlSrc := args[1]
+	dsn, ddlSrc := args[0], args[1]
 
-	left, right, err := resolve(ctx, config.Dialect(), dsn, ddlSrc)
+	left, err := resolve(ctx, config.Dialect(), dsn)
+	if err != nil {
+		return errorz.Errorf("resolve: %w", err)
+	}
+
+	right, err := resolve(ctx, config.Dialect(), ddlSrc)
 	if err != nil {
 		return errorz.Errorf("resolve: %w", err)
 	}
@@ -70,7 +75,16 @@ Enter a value: `
 
 	os.Stdout.WriteString("\nexecuting...\n")
 
-	db, err := sqlz.OpenContext(ctx, _postgres, dsn)
+	driverName := func() string {
+		switch dialect := config.Dialect(); dialect {
+		case crdbddl.Dialect:
+			return crdbddl.DriverName
+		default:
+			return dialect
+		}
+	}()
+
+	db, err := sqlz.OpenContext(ctx, driverName, dsn)
 	if err != nil {
 		return errorz.Errorf("sqlz.OpenContext: %w", err)
 	}
@@ -92,12 +106,12 @@ Enter a value: `
 func prompt() error {
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Scan()
-	userInput := scanner.Text()
+	input := scanner.Text()
 
-	switch userInput {
+	switch input {
 	case "yes":
 		return nil
 	default:
-		return errorz.Errorf("userInput=%s: %w", userInput, apperr.ErrUserCanceled)
+		return errorz.Errorf("input=%s: %w", input, apperr.ErrCanceled)
 	}
 }
