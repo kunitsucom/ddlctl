@@ -6,11 +6,6 @@ import (
 
 // MEMO: https://www.postgresql.jp/docs/11/datatype.html
 
-const (
-	QuotationChar = '"'
-	QuotationStr  = string(QuotationChar)
-)
-
 // Token はSQL文のトークンを表す型です。
 type Token struct {
 	Type    TokenType
