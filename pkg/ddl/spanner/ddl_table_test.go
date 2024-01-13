@@ -220,9 +220,9 @@ func TestOption(t *testing.T) {
 	t.Run("success,Option", func(t *testing.T) {
 		t.Parallel()
 
-		option := &Option{Name: "TABLESPACE", Value: &Ident{Name: "pg_default", QuotationMark: `"`, Raw: `"pg_default"`}}
+		option := &Option{Name: "PRIMARY KEY", Value: &Expr{Idents: []*Ident{{Name: "id", QuotationMark: ``, Raw: `id`}}}}
 
-		expected := `TABLESPACE "pg_default"`
+		expected := `PRIMARY KEY "id"`
 		actual := option.String()
 		require.Equal(t, expected, actual)
 

@@ -260,6 +260,29 @@ func (config *DiffCreateTableConfig) diffCreateTableColumn(ddls *DDL, before, af
 				},
 			})
 		}
+
+		switch {
+		case beforeColumn.Options != nil && afterColumn.Options == nil:
+			// ALTER TABLE table_name ALTER COLUMN column_name DROP OPTIONS;
+			ddls.Stmts = append(ddls.Stmts, &AlterTableStmt{
+				Comment: simplediff.Diff(beforeColumn.String(), afterColumn.String()).String(),
+				Name:    after.Name,
+				Action: &AlterColumn{
+					Name:   afterColumn.Name,
+					Action: &AlterColumnDropOptions{},
+				},
+			})
+		case afterColumn.Options != nil && beforeColumn.Options.StringForDiff() != afterColumn.Options.StringForDiff():
+			// ALTER TABLE table_name ALTER COLUMN column_name SET OPTIONS (option_name = option_value);
+			ddls.Stmts = append(ddls.Stmts, &AlterTableStmt{
+				Comment: simplediff.Diff(beforeColumn.String(), afterColumn.String()).String(),
+				Name:    after.Name,
+				Action: &AlterColumn{
+					Name:   afterColumn.Name,
+					Action: &AlterColumnSetOptions{Options: afterColumn.Options},
+				},
+			})
+		}
 	}
 
 	for _, afterColumn := range onlyLeftColumn(after.Columns, before.Columns) {

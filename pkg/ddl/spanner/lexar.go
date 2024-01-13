@@ -70,39 +70,27 @@ const (
 	TOKEN_USING  TokenType = "USING"
 	TOKEN_ON     TokenType = "ON"
 	TOKEN_TO     TokenType = "TO"
+	TOKEN_WITH   TokenType = "WITH"
 
 	// DATA TYPE.
-	TOKEN_BOOL              TokenType = "BOOL" //diff:ignore-line-postgres-cockroach
-	TOKEN_INT2              TokenType = "INT2" //diff:ignore-line-postgres-cockroach
-	TOKEN_INT4              TokenType = "INT4" //diff:ignore-line-postgres-cockroach
-	TOKEN_INT8              TokenType = "INT8" //diff:ignore-line-postgres-cockroach
-	TOKEN_DECIMAL           TokenType = "DECIMAL"
-	TOKEN_NUMERIC           TokenType = "NUMERIC"
-	TOKEN_REAL              TokenType = "REAL"
-	TOKEN_DOUBLE            TokenType = "DOUBLE"
-	TOKEN_PRECISION         TokenType = "PRECISION"
-	TOKEN_DOUBLE_PRECISION  TokenType = "DOUBLE PRECISION"
-	TOKEN_SMALLSERIAL       TokenType = "SMALLSERIAL"
-	TOKEN_SERIAL            TokenType = "SERIAL"
-	TOKEN_BIGSERIAL         TokenType = "BIGSERIAL"
-	TOKEN_UUID              TokenType = "UUID"
-	TOKEN_JSONB             TokenType = "JSONB"
-	TOKEN_CHARACTER_VARYING TokenType = "CHARACTER VARYING"
-	TOKEN_CHARACTER         TokenType = "CHARACTER"
-	TOKEN_VARYING           TokenType = "VARYING"
-	TOKEN_VARCHAR           TokenType = "VARCHAR" //diff:ignore-line-postgres-cockroach
-	TOKEN_STRING            TokenType = "STRING"  //diff:ignore-line-postgres-cockroach
-	TOKEN_TIMESTAMPTZ       TokenType = "TIMESTAMPTZ"
-	TOKEN_TIMESTAMP         TokenType = "TIMESTAMP"
-	TOKEN_WITH              TokenType = "WITH"
-	TOKEN_TIME              TokenType = "TIME"
-	TOKEN_ZONE              TokenType = "ZONE"
+	TOKEN_BOOL      TokenType = "BOOL"  //diff:ignore-line-postgres-cockroach
+	TOKEN_INT64     TokenType = "INT64" //diff:ignore-line-postgres-cockroach
+	TOKEN_FLOAT64   TokenType = "FLOAT64"
+	TOKEN_NUMERIC   TokenType = "NUMERIC"
+	TOKEN_JSON      TokenType = "JSON"
+	TOKEN_STRING    TokenType = "STRING" //diff:ignore-line-postgres-cockroach
+	TOKEN_BYTES     TokenType = "BYTES"
+	TOKEN_TIMESTAMP TokenType = "TIMESTAMP"
+	TOKEN_DATE      TokenType = "DATE"
+	TOKEN_ARRAY     TokenType = "ARRAY"
+	TOKEN_STRUCT    TokenType = "STRUCT"
 
 	// COLUMN.
 	TOKEN_DEFAULT TokenType = "DEFAULT"
 	TOKEN_NOT     TokenType = "NOT"
 	TOKEN_ASC     TokenType = "ASC"
 	TOKEN_DESC    TokenType = "DESC"
+	TOKEN_OPTIONS TokenType = "OPTIONS"
 
 	// CONSTRAINT.
 	TOKEN_CONSTRAINT TokenType = "CONSTRAINT"
@@ -166,52 +154,30 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_ON
 	case "TO":
 		return TOKEN_TO
-	case "BOOLEAN", "BOOL": //diff:ignore-line-postgres-cockroach
-		return TOKEN_BOOL //diff:ignore-line-postgres-cockroach
-	case "INT2", "SMALLINT": //diff:ignore-line-postgres-cockroach
-		return TOKEN_INT2 //diff:ignore-line-postgres-cockroach
-	case "INT4", "INTEGER", "INT": //diff:ignore-line-postgres-cockroach
-		return TOKEN_INT4 //diff:ignore-line-postgres-cockroach
-	case "INT8", "BIGINT": //diff:ignore-line-postgres-cockroach
-		return TOKEN_INT8 //diff:ignore-line-postgres-cockroach
-	case "DECIMAL":
-		return TOKEN_DECIMAL
-	case "NUMERIC":
-		return TOKEN_NUMERIC
-	case "REAL":
-		return TOKEN_REAL
-	case "DOUBLE":
-		return TOKEN_DOUBLE
-	case "PRECISION":
-		return TOKEN_PRECISION
-	case "SMALLSERIAL":
-		return TOKEN_SMALLSERIAL
-	case "SERIAL":
-		return TOKEN_SERIAL
-	case "BIGSERIAL":
-		return TOKEN_BIGSERIAL
-	case "UUID":
-		return TOKEN_UUID
-	case "JSONB":
-		return TOKEN_JSONB
-	case "CHARACTER":
-		return TOKEN_CHARACTER
-	case "VARYING": //diff:ignore-line-postgres-cockroach
-		return TOKEN_VARYING
-	case "VARCHAR": //diff:ignore-line-postgres-cockroach
-		return TOKEN_VARCHAR //diff:ignore-line-postgres-cockroach
-	case "TEXT", "STRING": //diff:ignore-line-postgres-cockroach
-		return TOKEN_STRING //diff:ignore-line-postgres-cockroach
-	case "TIMESTAMP":
-		return TOKEN_TIMESTAMP
-	case "TIMESTAMPTZ":
-		return TOKEN_TIMESTAMPTZ
 	case "WITH":
 		return TOKEN_WITH
-	case "TIME":
-		return TOKEN_TIME
-	case "ZONE":
-		return TOKEN_ZONE
+	case "BOOL":
+		return TOKEN_BOOL
+	case "INT64":
+		return TOKEN_INT64
+	case "FLOAT64":
+		return TOKEN_FLOAT64
+	case "NUMERIC":
+		return TOKEN_NUMERIC
+	case "JSON":
+		return TOKEN_JSON
+	case "STRING":
+		return TOKEN_STRING
+	case "BYTES":
+		return TOKEN_BYTES
+	case "TIMESTAMP":
+		return TOKEN_TIMESTAMP
+	case "DATE":
+		return TOKEN_DATE
+	case "ARRAY":
+		return TOKEN_ARRAY
+	case "STRUCT":
+		return TOKEN_STRUCT
 	case "DEFAULT":
 		return TOKEN_DEFAULT
 	case "NOT":
@@ -220,6 +186,8 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_ASC
 	case "DESC":
 		return TOKEN_DESC
+	case "OPTIONS":
+		return TOKEN_OPTIONS
 	case "CONSTRAINT":
 		return TOKEN_CONSTRAINT
 	case "PRIMARY":
@@ -293,7 +261,7 @@ func (l *Lexer) NextToken() Token {
 	}
 
 	switch l.ch {
-	case '"', '\'':
+	case '"', '\'', '`':
 		tok.Type = TOKEN_IDENT
 		tok.Literal = Literal{Str: l.readQuotedLiteral(l.ch)}
 	case '|':

@@ -17,7 +17,7 @@ import (
 )
 
 //nolint:gochecknoglobals
-var quotationMarks = []string{`"`}
+var quotationMarks = []string{`"`, "`", "'"}
 
 func NewRawIdent(raw string) *Ident {
 	for _, q := range quotationMarks {
@@ -173,15 +173,44 @@ LabelColumns:
 			p.nextToken()
 			continue
 		case p.isCurrentToken(TOKEN_CLOSE_PAREN):
-			switch p.peekToken.Type { //nolint:exhaustive
-			case TOKEN_SEMICOLON, TOKEN_EOF:
-				break LabelColumns
-			default:
-				return nil, errorz.Errorf(errFmtPrefix+"peekToken=%#v: %w", p.peekToken, ddl.ErrUnexpectedToken)
-			}
+			p.nextToken()
+			break LabelColumns
 		default:
 			return nil, errorz.Errorf(errFmtPrefix+"currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
 		}
+	}
+
+LabelTableOptions:
+	for {
+		opt := &Option{}
+		switch p.currentToken.Type { //nolint:exhaustive
+		case TOKEN_PRIMARY:
+			p.nextToken() // current = KEY
+			if err := p.checkCurrentToken(TOKEN_KEY); err != nil {
+				return nil, errorz.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			opt.Name = "PRIMARY KEY"
+			p.nextToken() // current = `(`
+			if err := p.checkCurrentToken(TOKEN_OPEN_PAREN); err != nil {
+				return nil, errorz.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			opt.Value = opt.Value.Append(NewRawIdent(p.currentToken.Literal.Str))
+			pkColumns, err := p.parseIdents()
+			if err != nil {
+				return nil, errorz.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			opt.Value = opt.Value.Append(pkColumns...)
+			if err := p.checkCurrentToken(TOKEN_CLOSE_PAREN); err != nil {
+				return nil, errorz.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			opt.Value = opt.Value.Append(NewRawIdent(p.currentToken.Literal.Str))
+		case TOKEN_SEMICOLON, TOKEN_EOF:
+			break LabelTableOptions
+		default:
+			return nil, errorz.Errorf(errFmtPrefix+"peekToken=%#v: %w", p.peekToken, ddl.ErrUnexpectedToken)
+		}
+		createTableStmt.Options = append(createTableStmt.Options, opt)
+		p.nextToken()
 	}
 
 	return createTableStmt, nil
@@ -310,6 +339,15 @@ func (p *Parser) parseColumn(tableName *Ident) (*Column, []Constraint, error) {
 			for _, c := range cs {
 				constraints = constraints.Append(c)
 			}
+		}
+
+		if p.isCurrentToken(TOKEN_OPTIONS) {
+			p.nextToken() // current = (
+			idents, err := p.parseExpr()
+			if err != nil {
+				return nil, nil, errorz.Errorf(errFmtPrefix+"parseExpr: %w", err)
+			}
+			column.Options = column.Options.Append(idents...)
 		}
 	default:
 		return nil, nil, errorz.Errorf(errFmtPrefix+"currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
@@ -460,7 +498,7 @@ LabelConstraints:
 			}
 			constraint.Expr = constraint.Expr.Append(idents...)
 			constraints = constraints.Append(constraint)
-		case TOKEN_IDENT, TOKEN_COMMA, TOKEN_CLOSE_PAREN:
+		case TOKEN_OPTIONS, TOKEN_IDENT, TOKEN_COMMA, TOKEN_CLOSE_PAREN:
 			break LabelConstraints
 		default:
 			return nil, errorz.Errorf("currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
@@ -485,7 +523,7 @@ func (p *Parser) parseTableConstraint(tableName *Ident) (Constraint, error) { //
 	}
 
 	switch p.currentToken.Type { //nolint:exhaustive
-	case TOKEN_PRIMARY:
+	case TOKEN_PRIMARY: // TODO: remove
 		if err := p.checkPeekToken(TOKEN_KEY); err != nil {
 			return nil, errorz.Errorf("checkPeekToken: %w", err)
 		}
@@ -579,48 +617,12 @@ func (p *Parser) parseTableConstraint(tableName *Ident) (Constraint, error) { //
 
 //nolint:cyclop,funlen
 func (p *Parser) parseDataType() (*DataType, error) {
-	dataType := &DataType{Type: TOKEN_ILLEGAL}
-
-	switch p.currentToken.Type { //nolint:exhaustive
-	case TOKEN_TIMESTAMP:
-		dataType.Name = p.currentToken.Literal.String()
-		if p.isPeekToken(TOKEN_WITH) {
-			p.nextToken() // current = WITH
-			dataType.Name += " " + p.currentToken.Literal.String()
-			if err := p.checkPeekToken(TOKEN_TIME); err != nil {
-				return nil, errorz.Errorf("checkPeekToken: %w", err)
-			}
-			p.nextToken() // current = TIME
-			dataType.Name += " " + p.currentToken.Literal.String()
-			if err := p.checkPeekToken(TOKEN_ZONE); err != nil {
-				return nil, errorz.Errorf("checkPeekToken: %w", err)
-			}
-			p.nextToken() // current = ZONE
-			dataType.Name += " " + p.currentToken.Literal.String()
-			dataType.Type = TOKEN_TIMESTAMPTZ //diff:ignore-line-postgres-cockroach
-		} else {
-			dataType.Type = TOKEN_TIMESTAMP
-		}
-	case TOKEN_DOUBLE:
-		dataType.Name = p.currentToken.Literal.String()
-		if err := p.checkPeekToken(TOKEN_PRECISION); err != nil {
-			return nil, errorz.Errorf("checkPeekToken: %w", err)
-		}
-		p.nextToken() // current = PRECISION
-		dataType.Name += " " + p.currentToken.Literal.String()
-		dataType.Type = TOKEN_DOUBLE_PRECISION
-	case TOKEN_CHARACTER:
-		dataType.Name = p.currentToken.Literal.String()
-		if err := p.checkPeekToken(TOKEN_VARYING); err != nil {
-			return nil, errorz.Errorf("checkPeekToken: %w", err)
-		}
-		p.nextToken() // current = VARYING
-		dataType.Name += " " + p.currentToken.Literal.String()
-		dataType.Type = TOKEN_VARCHAR //diff:ignore-line-postgres-cockroach
-	default:
-		dataType.Name = p.currentToken.Literal.String()
-		dataType.Type = p.currentToken.Type
+	dataType := &DataType{
+		Name: p.currentToken.Literal.String(),
+		Type: p.currentToken.Type,
 	}
+
+	// TODO: support ARRAY, STRUCT
 
 	if p.isPeekToken(TOKEN_OPEN_PAREN) {
 		p.nextToken() // current = (
@@ -713,15 +715,13 @@ func isReservedValue(tokenType TokenType) bool {
 
 func isDataType(tokenType TokenType) bool {
 	switch tokenType { //nolint:exhaustive
-	case TOKEN_BOOL, //diff:ignore-line-postgres-cockroach
-		TOKEN_INT2, TOKEN_INT4, TOKEN_INT8, //diff:ignore-line-postgres-cockroach
-		TOKEN_DECIMAL, TOKEN_NUMERIC,
-		TOKEN_REAL, TOKEN_DOUBLE, /* TOKEN_PRECISION, */
-		TOKEN_SMALLSERIAL, TOKEN_SERIAL, TOKEN_BIGSERIAL,
-		TOKEN_UUID, TOKEN_JSONB,
-		TOKEN_CHARACTER, TOKEN_VARYING,
-		TOKEN_VARCHAR, TOKEN_STRING, //diff:ignore-line-postgres-cockroach
-		TOKEN_TIMESTAMP, TOKEN_TIMESTAMPTZ:
+	case TOKEN_BOOL,
+		TOKEN_INT64,
+		TOKEN_NUMERIC,
+		TOKEN_FLOAT64,
+		TOKEN_JSON,
+		TOKEN_STRING,
+		TOKEN_TIMESTAMP:
 		return true
 	default:
 		return false
@@ -731,7 +731,7 @@ func isDataType(tokenType TokenType) bool {
 func isConstraint(tokenType TokenType) bool {
 	switch tokenType { //nolint:exhaustive
 	case TOKEN_CONSTRAINT,
-		TOKEN_INDEX, //diff:ignore-line-postgres-cockroach
+		TOKEN_INDEX,
 		TOKEN_PRIMARY, TOKEN_KEY,
 		TOKEN_FOREIGN, TOKEN_REFERENCES,
 		TOKEN_UNIQUE,

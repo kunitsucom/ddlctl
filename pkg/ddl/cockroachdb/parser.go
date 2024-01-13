@@ -438,6 +438,7 @@ LabelConstraints:
 			if err != nil {
 				return nil, errorz.Errorf("parseColumnIdents: %w", err)
 			}
+			// TODO: support ON DELETE, ON UPDATE
 			constraint.RefColumns = idents
 			constraints = constraints.Append(constraint)
 		case TOKEN_UNIQUE:

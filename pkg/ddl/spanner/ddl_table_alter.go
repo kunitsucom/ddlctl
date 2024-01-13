@@ -61,6 +61,10 @@ func (s *AlterTableStmt) String() string {
 			str += "SET NOT NULL"
 		case *AlterColumnDropNotNull:
 			str += "DROP NOT NULL"
+		case *AlterColumnSetOptions:
+			str += "SET OPTIONS " + ca.Options.String()
+		case *AlterColumnDropOptions:
+			str += "DROP OPTIONS"
 		}
 	case *AddConstraint:
 		str += "ADD " + a.Constraint.String()
@@ -193,6 +197,22 @@ type AlterColumnDropNotNull struct{}
 func (*AlterColumnDropNotNull) isAlterColumnAction() {}
 
 func (s *AlterColumnDropNotNull) GoString() string { return internal.GoString(*s) }
+
+// AlterColumnSetOptions represents ALTER TABLE table_name ALTER COLUMN column_name SET OPTIONS.
+type AlterColumnSetOptions struct {
+	Options *Expr
+}
+
+func (*AlterColumnSetOptions) isAlterColumnAction() {}
+
+func (s *AlterColumnSetOptions) GoString() string { return internal.GoString(*s) }
+
+// AlterColumnDropOptions represents ALTER TABLE table_name ALTER COLUMN column_name DROP OPTIONS.
+type AlterColumnDropOptions struct{}
+
+func (*AlterColumnDropOptions) isAlterColumnAction() {}
+
+func (s *AlterColumnDropOptions) GoString() string { return internal.GoString(*s) }
 
 // AddConstraint represents ALTER TABLE table_name ADD CONSTRAINT.
 type AddConstraint struct {

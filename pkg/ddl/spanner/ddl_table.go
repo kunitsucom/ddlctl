@@ -256,6 +256,7 @@ type Column struct {
 	DataType *DataType
 	Default  *Default
 	NotNull  bool
+	Options  *Expr
 }
 
 type Default struct {
@@ -274,6 +275,8 @@ func (d *Expr) Append(idents ...*Ident) *Expr {
 type Expr struct {
 	Idents []*Ident
 }
+
+func (d *Expr) GoString() string { return internal.GoString(*d) }
 
 //nolint:cyclop
 func (d *Expr) String() string {
@@ -297,6 +300,22 @@ func (d *Expr) String() string {
 			str += " "
 		}
 		str += d.Idents[i].String()
+	}
+
+	return str
+}
+
+func (d *Expr) StringForDiff() string {
+	if d == nil || len(d.Idents) == 0 {
+		return ""
+	}
+
+	var str string
+	for i, v := range d.Idents {
+		if i != 0 {
+			str += " "
+		}
+		str += v.StringForDiff()
 	}
 
 	return str
@@ -340,6 +359,9 @@ func (c *Column) String() string {
 	if c.Default != nil { //diff:ignore-line-postgres-cockroach
 		str += " " + c.Default.String() //diff:ignore-line-postgres-cockroach
 	}
+	if c.Options != nil && len(c.Options.Idents) > 0 { //diff:ignore-line-postgres-cockroach
+		str += " " + c.Options.String() //diff:ignore-line-postgres-cockroach
+	}
 	return str
 }
 
@@ -347,7 +369,7 @@ func (c *Column) GoString() string { return internal.GoString(*c) }
 
 type Option struct {
 	Name  string
-	Value *Ident
+	Value *Expr
 }
 
 func (o *Option) String() string {

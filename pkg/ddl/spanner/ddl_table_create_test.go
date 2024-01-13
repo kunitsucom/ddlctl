@@ -21,17 +21,14 @@ func TestCreateTableStmt_String(t *testing.T) {
 				{Name: &Ident{Name: "name", Raw: "name"}, DataType: &DataType{Name: "VARYING", Expr: &Expr{Idents: []*Ident{NewRawIdent("255")}}}},
 			},
 			Options: []*Option{
-				{Name: "TABLESPACE", Value: &Ident{Name: "default_tablespace", Raw: "default_tablespace"}},
-				{Name: "LIKE", Value: &Ident{Name: "parent_test", Raw: "parent_test"}},
+				{Name: "PRIMARY KEY", Value: &Expr{Idents: []*Ident{NewRawIdent("id")}}},
 			},
 		}
 		expected := `-- test comment content
 CREATE TABLE test (
     id INTEGER,
     name VARYING(255)
-)
-TABLESPACE default_tablespace,
-LIKE parent_test;
+) PRIMARY KEY (id);
 `
 
 		actual := stmt.String()
