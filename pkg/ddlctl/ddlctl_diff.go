@@ -27,7 +27,12 @@ func Diff(ctx context.Context, args []string) error {
 		return errorz.Errorf("args=%v: %w", args, apperr.ErrTwoArgumentsRequired)
 	}
 
-	left, right, err := resolve(ctx, config.Dialect(), args[0], args[1])
+	left, err := resolve(ctx, config.Dialect(), args[0])
+	if err != nil {
+		return errorz.Errorf("resolve: %w", err)
+	}
+
+	right, err := resolve(ctx, config.Dialect(), args[1])
 	if err != nil {
 		return errorz.Errorf("resolve: %w", err)
 	}
@@ -40,50 +45,29 @@ func Diff(ctx context.Context, args []string) error {
 }
 
 //nolint:cyclop
-func resolve(ctx context.Context, dialect, left, right string) (srcDDL string, dstDDL string, err error) {
+func resolve(ctx context.Context, dialect, arg string) (ddl string, err error) {
 	switch {
-	case osz.IsFile(left): // NOTE: expect SQL file
-		ddlBytes, err := os.ReadFile(left)
+	case osz.IsFile(arg): // NOTE: expect SQL file
+		ddlBytes, err := os.ReadFile(arg)
 		if err != nil {
-			return "", "", errorz.Errorf("os.ReadFile: %w", err)
+			return "", errorz.Errorf("os.ReadFile: %w", err)
 		}
-		srcDDL = string(ddlBytes)
-	case osz.Exists(left): // NOTE: expect ddlctl generate format
-		ddl, err := generateDDLForDiff(ctx, left)
+		ddl = string(ddlBytes)
+	case osz.Exists(arg): // NOTE: expect ddlctl generate format
+		genDDL, err := generateDDLForDiff(ctx, arg)
 		if err != nil {
-			return "", "", errorz.Errorf("generateDDL: %w", err) // TODO: ddlgen 形式じゃないから無理というエラーに修正する
+			return "", errorz.Errorf("generateDDL: %w", err) // TODO: ddlgen 形式じゃないから無理というエラーに修正する
 		}
-		srcDDL = ddl
+		ddl = genDDL
 	default: // NOTE: expect DSN
-		ddl, err := ShowDDL(ctx, dialect, left)
+		genDDL, err := ShowDDL(ctx, dialect, arg)
 		if err != nil {
-			return "", "", errorz.Errorf("ShowDDL: %w", err)
+			return "", errorz.Errorf("ShowDDL: %w", err)
 		}
-		srcDDL = ddl
+		ddl = genDDL
 	}
 
-	switch {
-	case osz.IsFile(right): // NOTE: expect SQL file
-		ddlBytes, err := os.ReadFile(right)
-		if err != nil {
-			return "", "", errorz.Errorf("os.ReadFile: %w", err)
-		}
-		dstDDL = string(ddlBytes)
-	case osz.Exists(right): // NOTE: expect ddlctl generate format
-		ddl, err := generateDDLForDiff(ctx, right)
-		if err != nil {
-			return "", "", errorz.Errorf("generateDDL: %w", err) // TODO: ddlgen 形式じゃないから無理というエラーに修正する
-		}
-		dstDDL = ddl
-	default: // NOTE: expect ddlctl generate format
-		ddl, err := ShowDDL(ctx, dialect, right)
-		if err != nil {
-			return "", "", errorz.Errorf("ShowDDL: %w", err)
-		}
-		dstDDL = ddl
-	}
-
-	return srcDDL, dstDDL, nil
+	return ddl, nil
 }
 
 func generateDDLForDiff(ctx context.Context, src string) (string, error) {
@@ -106,7 +90,7 @@ func DiffDDL(out io.Writer, dialect string, srcDDL string, dstDDL string) error 
 	logs.Trace.Printf("dst: %q", dstDDL)
 
 	switch dialect {
-	case _mysql:
+	case myddl.Dialect:
 		leftDDL, err := myddl.NewParser(myddl.NewLexer(srcDDL)).Parse()
 		if err != nil {
 			return errorz.Errorf("myddl.NewParser: %w", err)
@@ -126,7 +110,7 @@ func DiffDDL(out io.Writer, dialect string, srcDDL string, dstDDL string) error 
 		}
 
 		return nil
-	case _postgres:
+	case pgddl.Dialect:
 		leftDDL, err := pgddl.NewParser(pgddl.NewLexer(srcDDL)).Parse()
 		if err != nil {
 			return errorz.Errorf("pgddl.NewParser: %w", err)
@@ -146,7 +130,7 @@ func DiffDDL(out io.Writer, dialect string, srcDDL string, dstDDL string) error 
 		}
 
 		return nil
-	case _cockroachdb:
+	case crdbddl.Dialect:
 		leftDDL, err := crdbddl.NewParser(crdbddl.NewLexer(srcDDL)).Parse()
 		if err != nil {
 			return errorz.Errorf("pgddl.NewParser: %w", err)

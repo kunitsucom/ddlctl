@@ -7,6 +7,8 @@ import (
 )
 
 const (
+	Dialect       = "postgres"
+	DriverName    = "postgres"
 	Indent        = "    "
 	CommentPrefix = "-- "
 )

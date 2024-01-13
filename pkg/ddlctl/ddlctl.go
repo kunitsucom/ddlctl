@@ -14,10 +14,7 @@ import (
 )
 
 const (
-	_mysql       = "mysql"
-	_postgres    = "postgres"
-	_cockroachdb = "cockroachdb"
-	_spanner     = "spanner"
+	_spanner = "spanner" // TODO: remove after spanner ddl diff implemented
 )
 
 //nolint:gochecknoglobals

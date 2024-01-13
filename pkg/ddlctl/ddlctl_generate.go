@@ -8,6 +8,7 @@ import (
 
 	errorz "github.com/kunitsucom/util.go/errors"
 
+	crdbddl "github.com/kunitsucom/ddlctl/pkg/ddl/cockroachdb"
 	apperr "github.com/kunitsucom/ddlctl/pkg/errors"
 	"github.com/kunitsucom/ddlctl/pkg/internal/config"
 	"github.com/kunitsucom/ddlctl/pkg/internal/generator"
@@ -93,7 +94,7 @@ func Fprint(w io.Writer, dialect string, ddl *generator.DDL) error {
 			return errorz.Errorf("spanner.Fprint: %w", err)
 		}
 		return nil
-	case postgres.Dialect, "cockroachdb":
+	case postgres.Dialect, crdbddl.Dialect:
 		if err := postgres.Fprint(w, ddl); err != nil {
 			return errorz.Errorf("postgres.Fprint: %w", err)
 		}

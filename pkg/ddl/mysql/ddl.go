@@ -7,6 +7,8 @@ import (
 )
 
 const (
+	Dialect       = "mysql"
+	DriverName    = "mysql"
 	Indent        = "    "
 	CommentPrefix = "-- "
 )
