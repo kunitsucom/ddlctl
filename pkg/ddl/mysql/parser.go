@@ -412,6 +412,7 @@ LabelDefault:
 	return def, nil
 }
 
+//nolint:funlen,cyclop
 func (p *Parser) parseExpr() ([]*Ident, error) {
 	idents := make([]*Ident, 0)
 

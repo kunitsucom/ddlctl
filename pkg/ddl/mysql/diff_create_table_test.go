@@ -123,10 +123,10 @@ ALTER TABLE "users" DROP COLUMN "age";
 
 		expectedStr := `-- -"name" VARCHAR(255) NOT NULL
 -- +"name" TEXT NOT NULL
-ALTER TABLE "users" ALTER COLUMN "name" SET DATA TYPE TEXT;
+ALTER TABLE "users" MODIFY "name" TEXT NOT NULL;
 -- -"age" INT DEFAULT 0
 -- +"age" BIGINT DEFAULT 0
-ALTER TABLE "users" ALTER COLUMN "age" SET DATA TYPE BIGINT;
+ALTER TABLE "users" MODIFY "age" BIGINT;
 -- -
 -- +UNIQUE KEY users_unique_name (name)
 CREATE UNIQUE INDEX users_unique_name ON "users" ("name");
@@ -149,7 +149,7 @@ CREATE UNIQUE INDEX users_unique_name ON "users" ("name");
 
 		expectedStr := `-- -"age" INT DEFAULT 0
 -- +"age" INT
-ALTER TABLE "users" ALTER COLUMN "age" DROP DEFAULT;
+ALTER TABLE "users" ALTER "age" DROP DEFAULT;
 `
 
 		actual, err := DiffCreateTable(
@@ -174,7 +174,7 @@ ALTER TABLE "users" ALTER COLUMN "age" DROP DEFAULT;
 
 		expectedStr := `-- -"age" INT
 -- +"age" INT DEFAULT 0
-ALTER TABLE "users" ALTER COLUMN "age" SET DEFAULT 0;
+ALTER TABLE "users" ALTER "age" SET DEFAULT 0;
 -- -CONSTRAINT users_age_check CHECK ("age" >= 0)
 -- +
 ALTER TABLE "users" DROP CONSTRAINT users_age_check;
@@ -253,7 +253,7 @@ ALTER TABLE "public.app_users" ADD CONSTRAINT app_users_age_check CHECK ("age" >
 
 		expectedStr := `-- -"age" INT DEFAULT 0
 -- +"age" INTEGER NOT NULL DEFAULT 0
-ALTER TABLE "users" ALTER COLUMN "age" SET NOT NULL;
+ALTER TABLE "users" MODIFY "age" INTEGER NOT NULL;
 `
 
 		actual, err := DiffCreateTable(
@@ -280,7 +280,7 @@ ALTER TABLE "users" ALTER COLUMN "age" SET NOT NULL;
 
 		expectedStr := `-- -"age" INT NOT NULL DEFAULT 0
 -- +"age" INT DEFAULT 0
-ALTER TABLE "users" ALTER COLUMN "age" DROP NOT NULL;
+ALTER TABLE "users" MODIFY "age" INT;
 `
 
 		actual, err := DiffCreateTable(
@@ -393,7 +393,7 @@ CREATE UNIQUE INDEX users_unique_name ON "users" ("id", name);
 
 		expectedStr := `-- -"age" INT NOT NULL DEFAULT 0
 -- +"age" INT NOT NULL DEFAULT ((0 + 3) - 1 * 4 / 2)
-ALTER TABLE "users" ALTER COLUMN "age" SET DEFAULT ((0 + 3) - 1 * 4 / 2);
+ALTER TABLE "users" ALTER "age" SET DEFAULT ((0 + 3) - 1 * 4 / 2);
 `
 
 		actual, err := DiffCreateTable(

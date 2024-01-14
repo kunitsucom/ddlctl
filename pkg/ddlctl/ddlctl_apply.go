@@ -14,6 +14,7 @@ import (
 	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 	"github.com/kunitsucom/ddlctl/pkg/ddl"
 	crdbddl "github.com/kunitsucom/ddlctl/pkg/ddl/cockroachdb"
+	myddl "github.com/kunitsucom/ddlctl/pkg/ddl/mysql"
 	spanddl "github.com/kunitsucom/ddlctl/pkg/ddl/spanner"
 	"github.com/kunitsucom/ddlctl/pkg/internal/config"
 	"github.com/kunitsucom/ddlctl/pkg/internal/consts"
@@ -102,8 +103,18 @@ Enter a value: `
 		}
 	}()
 
-	switch {
-	case driverName == spanddl.DriverName:
+	switch driverName {
+	case myddl.DriverName:
+		for _, q := range strings.Split(q, ";\n") {
+			if len(q) == 0 {
+				// skip empty query
+				continue
+			}
+			if _, err := db.ExecContext(ctx, q); err != nil {
+				return apperr.Errorf("conn.ExecContext: %w", err)
+			}
+		}
+	case spanddl.DriverName:
 		conn, err := db.Conn(ctx)
 		if err != nil {
 			return apperr.Errorf("db.Conn: %w", err)
@@ -120,6 +131,7 @@ Enter a value: `
 		commentTrimmedDDL := stringz.ReadLine(q, "\n", stringz.ReadLineFuncRemoveCommentLine("--"))
 		for _, q := range strings.Split(commentTrimmedDDL, ";\n") {
 			if len(q) == 0 {
+				// skip empty query
 				continue
 			}
 			if _, err := conn.ExecContext(ctx, q); err != nil {

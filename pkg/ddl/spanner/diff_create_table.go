@@ -206,7 +206,7 @@ func (config *DiffCreateTableConfig) diffCreateTableColumn(ddls *DDL, before, af
 		if beforeColumn.DataType.StringForDiff() != afterColumn.DataType.StringForDiff() ||
 			beforeColumn.NotNull && !afterColumn.NotNull ||
 			!beforeColumn.NotNull && afterColumn.NotNull {
-			// ALTER TABLE table_name ALTER COLUMN column_name SET DATA TYPE data_type;
+			// ALTER TABLE table_name ALTER COLUMN column_name data_type NOT NULL;
 			ddls.Stmts = append(ddls.Stmts, &AlterTableStmt{
 				Comment: simplediff.Diff(beforeColumn.String(), afterColumn.String()).String(),
 				Name:    after.Name,

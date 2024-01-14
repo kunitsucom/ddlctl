@@ -158,7 +158,7 @@ type AlterColumnAction interface {
 	GoString() string
 }
 
-// AlterColumnDataType represents ALTER TABLE table_name ALTER COLUMN column_name SET DATA TYPE.
+// AlterColumnDataType represents ALTER TABLE table_name ALTER COLUMN column_name data_type NOT NULL.
 type AlterColumnDataType struct {
 	DataType *DataType
 	NotNull  bool

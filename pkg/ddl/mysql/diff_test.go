@@ -388,7 +388,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS public.users_idx_by_username ON public.users (
 
 		expected := `-- -username VARCHAR(10) NOT NULL
 -- +username VARCHAR(11) NOT NULL
-ALTER TABLE public.users ALTER COLUMN username SET DATA TYPE VARCHAR(11);
+ALTER TABLE public.users MODIFY username VARCHAR(11) NOT NULL;
 `
 		actual, err := Diff(before, after)
 		require.NoError(t, err)
