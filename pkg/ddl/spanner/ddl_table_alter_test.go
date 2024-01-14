@@ -20,7 +20,7 @@ func Test_isAlterTableAction(t *testing.T) {
 	(&AddConstraint{}).isAlterTableAction()
 	(&DropConstraint{}).isAlterTableAction()
 	(&AlterConstraint{}).isAlterTableAction()
-	(&AlterColumnSetDataType{}).isAlterColumnAction()
+	(&AlterColumnDataType{}).isAlterColumnAction()
 	(&AlterColumnSetOptions{}).isAlterColumnAction()
 	(&AlterColumnDropOptions{}).isAlterColumnAction()
 }
@@ -28,11 +28,9 @@ func Test_isAlterTableAction(t *testing.T) {
 func Test_isAlterColumnAction(t *testing.T) {
 	t.Parallel()
 
-	(&AlterColumnSetDataType{}).isAlterColumnAction()
+	(&AlterColumnDataType{}).isAlterColumnAction()
 	(&AlterColumnSetDefault{}).isAlterColumnAction()
 	(&AlterColumnDropDefault{}).isAlterColumnAction()
-	(&AlterColumnSetNotNull{}).isAlterColumnAction()
-	(&AlterColumnDropNotNull{}).isAlterColumnAction()
 }
 
 func TestAlterTableStmt_String(t *testing.T) {
@@ -137,11 +135,11 @@ func TestAlterTableStmt_String(t *testing.T) {
 			Name: &ObjectName{Name: &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`}},
 			Action: &AlterColumn{
 				Name:   &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
-				Action: &AlterColumnSetDataType{DataType: &DataType{Name: "INTEGER"}},
+				Action: &AlterColumnDataType{DataType: &DataType{Name: "INT64"}},
 			},
 		}
 
-		expected := `ALTER TABLE "users" ALTER COLUMN "age" SET DATA TYPE INTEGER;` + "\n"
+		expected := `ALTER TABLE "users" ALTER COLUMN "age" INT64;` + "\n"
 		actual := stmt.String()
 
 		if !assert.Equal(t, expected, actual) {
@@ -182,46 +180,6 @@ func TestAlterTableStmt_String(t *testing.T) {
 		}
 
 		expected := `ALTER TABLE "users" ALTER COLUMN "age" DROP DEFAULT;` + "\n"
-		actual := stmt.String()
-
-		if !assert.Equal(t, expected, actual) {
-			assert.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
-		}
-		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
-	})
-
-	t.Run("success,AlterColumnSetNotNull", func(t *testing.T) {
-		t.Parallel()
-
-		stmt := &AlterTableStmt{
-			Name: &ObjectName{Name: &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`}},
-			Action: &AlterColumn{
-				Name:   &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
-				Action: &AlterColumnSetNotNull{},
-			},
-		}
-
-		expected := `ALTER TABLE "users" ALTER COLUMN "age" SET NOT NULL;` + "\n"
-		actual := stmt.String()
-
-		if !assert.Equal(t, expected, actual) {
-			assert.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
-		}
-		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
-	})
-
-	t.Run("success,AlterColumnDropNotNull", func(t *testing.T) {
-		t.Parallel()
-
-		stmt := &AlterTableStmt{
-			Name: &ObjectName{Name: &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`}},
-			Action: &AlterColumn{
-				Name:   &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
-				Action: &AlterColumnDropNotNull{},
-			},
-		}
-
-		expected := `ALTER TABLE "users" ALTER COLUMN "age" DROP NOT NULL;` + "\n"
 		actual := stmt.String()
 
 		if !assert.Equal(t, expected, actual) {

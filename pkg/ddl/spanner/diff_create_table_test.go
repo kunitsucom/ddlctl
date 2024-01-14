@@ -123,7 +123,7 @@ ALTER TABLE "users" DROP COLUMN "age";
 
 		expectedStr := `-- -"name" STRING(255) NOT NULL
 -- +"name" STRING NOT NULL
-ALTER TABLE "users" ALTER COLUMN "name" SET DATA TYPE STRING;
+ALTER TABLE "users" ALTER COLUMN "name" STRING NOT NULL;
 -- -
 -- +UNIQUE INDEX users_unique_name (name ASC)
 CREATE UNIQUE INDEX users_unique_name ON "users" ("name");
@@ -250,7 +250,7 @@ ALTER TABLE "public.app_users" ADD CONSTRAINT app_users_age_check CHECK ("age" >
 
 		expectedStr := `-- -"age" INT64 DEFAULT 0
 -- +"age" INT64 NOT NULL DEFAULT 0
-ALTER TABLE "users" ALTER COLUMN "age" SET NOT NULL;
+ALTER TABLE "users" ALTER COLUMN "age" INT64 NOT NULL;
 `
 
 		actual, err := DiffCreateTable(
@@ -277,7 +277,7 @@ ALTER TABLE "users" ALTER COLUMN "age" SET NOT NULL;
 
 		expectedStr := `-- -"age" INT64 NOT NULL DEFAULT 0
 -- +"age" INT64 DEFAULT 0
-ALTER TABLE "users" ALTER COLUMN "age" DROP NOT NULL;
+ALTER TABLE "users" ALTER COLUMN "age" INT64;
 `
 
 		actual, err := DiffCreateTable(
