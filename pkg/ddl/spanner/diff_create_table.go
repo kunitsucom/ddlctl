@@ -3,9 +3,9 @@ package spanner
 import (
 	"reflect"
 
-	errorz "github.com/kunitsucom/util.go/errors"
 	"github.com/kunitsucom/util.go/exp/diff/simplediff"
 
+	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 	"github.com/kunitsucom/ddlctl/pkg/ddl"
 )
 
@@ -53,7 +53,7 @@ func DiffCreateTable(before, after *CreateTableStmt, opts ...DiffCreateTableOpti
 		})
 		return result, nil
 	case (before == nil && after == nil) || reflect.DeepEqual(before, after) || before.String() == after.String():
-		return nil, errorz.Errorf("before: %s, after: %s: %w", before.GetNameForDiff(), after.GetNameForDiff(), ddl.ErrNoDifference)
+		return nil, apperr.Errorf("before: %s, after: %s: %w", before.GetNameForDiff(), after.GetNameForDiff(), ddl.ErrNoDifference)
 	}
 
 	if before.Name.StringForDiff() != after.Name.StringForDiff() {
@@ -181,7 +181,7 @@ func DiffCreateTable(before, after *CreateTableStmt, opts ...DiffCreateTableOpti
 	}
 
 	if len(result.Stmts) == 0 {
-		return nil, errorz.Errorf("before: %s, after: %s: %w", before.GetNameForDiff(), after.GetNameForDiff(), ddl.ErrNoDifference)
+		return nil, apperr.Errorf("before: %s, after: %s: %w", before.GetNameForDiff(), after.GetNameForDiff(), ddl.ErrNoDifference)
 	}
 
 	return result, nil

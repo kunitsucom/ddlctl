@@ -3,44 +3,52 @@ package ddlctl
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
 
 	sqlz "github.com/kunitsucom/util.go/database/sql"
-	errorz "github.com/kunitsucom/util.go/errors"
+	stringz "github.com/kunitsucom/util.go/strings"
 
+	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
+	"github.com/kunitsucom/ddlctl/pkg/ddl"
 	crdbddl "github.com/kunitsucom/ddlctl/pkg/ddl/cockroachdb"
-	apperr "github.com/kunitsucom/ddlctl/pkg/errors"
+	spanddl "github.com/kunitsucom/ddlctl/pkg/ddl/spanner"
 	"github.com/kunitsucom/ddlctl/pkg/internal/config"
 	"github.com/kunitsucom/ddlctl/pkg/internal/consts"
 )
 
-//nolint:cyclop,funlen
+//nolint:cyclop,funlen,gocognit
 func Apply(ctx context.Context, args []string) (err error) {
 	if _, err := config.Load(ctx); err != nil {
-		return errorz.Errorf("config.Load: %w", err)
+		return apperr.Errorf("config.Load: %w", err)
 	}
 
 	if len(args) != 2 {
-		return errorz.Errorf("args=%v: %w", args, apperr.ErrTwoArgumentsRequired)
+		return apperr.Errorf("args=%v: %w", args, apperr.ErrTwoArgumentsRequired)
 	}
 
 	dsn, ddlSrc := args[0], args[1]
+	dialect := config.Dialect()
 
-	left, err := resolve(ctx, config.Dialect(), dsn)
+	left, err := resolve(ctx, dialect, dsn)
 	if err != nil {
-		return errorz.Errorf("resolve: %w", err)
+		return apperr.Errorf("resolve: %w", err)
 	}
 
-	right, err := resolve(ctx, config.Dialect(), ddlSrc)
+	right, err := resolve(ctx, dialect, ddlSrc)
 	if err != nil {
-		return errorz.Errorf("resolve: %w", err)
+		return apperr.Errorf("resolve: %w", err)
 	}
 
 	buf := new(strings.Builder)
-	if err := DiffDDL(buf, config.Dialect(), left, right); err != nil {
-		return errorz.Errorf("diff: %w", err)
+	if err := DiffDDL(buf, dialect, left, right); err != nil {
+		if errors.Is(err, ddl.ErrNoDifference) {
+			_, _ = fmt.Fprintln(os.Stdout, ddl.ErrNoDifference.Error())
+			return nil
+		}
+		return apperr.Errorf("diff: %w", err)
 	}
 	q := buf.String()
 
@@ -60,23 +68,23 @@ Do you want to apply these DDL queries?
 Enter a value: `
 
 	if _, err := os.Stdout.WriteString(msg); err != nil {
-		return errorz.Errorf("os.Stdout.WriteString: %w", err)
+		return apperr.Errorf("os.Stdout.WriteString: %w", err)
 	}
 
 	if config.AutoApprove() {
 		if _, err := os.Stdout.WriteString(fmt.Sprintf("yes (via --%s option)\n", consts.OptionAutoApprove)); err != nil {
-			return errorz.Errorf("os.Stdout.WriteString: %w", err)
+			return apperr.Errorf("os.Stdout.WriteString: %w", err)
 		}
 	} else {
 		if err := prompt(); err != nil {
-			return errorz.Errorf("prompt: %w", err)
+			return apperr.Errorf("prompt: %w", err)
 		}
 	}
 
 	os.Stdout.WriteString("\nexecuting...\n")
 
 	driverName := func() string {
-		switch dialect := config.Dialect(); dialect {
+		switch dialect {
 		case crdbddl.Dialect:
 			return crdbddl.DriverName
 		default:
@@ -86,16 +94,46 @@ Enter a value: `
 
 	db, err := sqlz.OpenContext(ctx, driverName, dsn)
 	if err != nil {
-		return errorz.Errorf("sqlz.OpenContext: %w", err)
+		return apperr.Errorf("sqlz.OpenContext: %w", err)
 	}
 	defer func() {
 		if cerr := db.Close(); err == nil && cerr != nil {
-			err = errorz.Errorf("db.Close: %w", cerr)
+			err = apperr.Errorf("db.Close: %w", cerr)
 		}
 	}()
 
-	if _, err := db.ExecContext(ctx, q); err != nil {
-		return errorz.Errorf("db.ExecContext: %w", err)
+	switch {
+	case driverName == spanddl.DriverName:
+		conn, err := db.Conn(ctx)
+		if err != nil {
+			return apperr.Errorf("db.Conn: %w", err)
+		}
+		defer func() {
+			if cerr := conn.Close(); err == nil && cerr != nil {
+				err = apperr.Errorf("conn.Close: %w", cerr)
+			}
+		}()
+		if _, err := conn.ExecContext(ctx, "START BATCH DDL"); err != nil {
+			return apperr.Errorf("conn.ExecContext: %w", err)
+		}
+
+		commentTrimmedDDL := stringz.ReadLine(q, "\n", stringz.ReadLineFuncRemoveCommentLine("--"))
+		for _, q := range strings.Split(commentTrimmedDDL, ";\n") {
+			if len(q) == 0 {
+				continue
+			}
+			if _, err := conn.ExecContext(ctx, q); err != nil {
+				return apperr.Errorf("conn.ExecContext: %w", err)
+			}
+		}
+
+		if _, err := conn.ExecContext(ctx, "RUN BATCH"); err != nil {
+			return apperr.Errorf("conn.ExecContext: %w", err)
+		}
+	default:
+		if _, err := db.ExecContext(ctx, q); err != nil {
+			return apperr.Errorf("db.ExecContext: %w", err)
+		}
 	}
 
 	os.Stdout.WriteString("done\n")
@@ -112,6 +150,6 @@ func prompt() error {
 	case "yes":
 		return nil
 	default:
-		return errorz.Errorf("input=%s: %w", input, apperr.ErrCanceled)
+		return apperr.Errorf("input=%s: %w", input, apperr.ErrCanceled)
 	}
 }

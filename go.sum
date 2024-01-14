@@ -74,8 +74,8 @@ github.com/googleapis/gax-go/v2 v2.12.0 h1:A+gCJKdRfqXkr+BIRGtZLibNXf0m1f9E4HG56
 github.com/googleapis/gax-go/v2 v2.12.0/go.mod h1:y+aIqrI5eb1YGMVJfuV3185Ts/D7qKpsEkdD5+I6QGU=
 github.com/googleapis/go-sql-spanner v1.1.1 h1:Z5kRckvrSNokM/x21BBy23kg9b0e9ikkderuuLVXfGY=
 github.com/googleapis/go-sql-spanner v1.1.1/go.mod h1:e12AKZmltQH/2XGqR/2SAPWPKshc5+WF4W7OGD9YcAw=
-github.com/kunitsucom/util.go v0.0.61-0.20240112184211-8b1d5e248ad7 h1:u6fQAHydd8pzKpGNDsHrAwGrU/7MM0CoIS9RdN46+Wo=
-github.com/kunitsucom/util.go v0.0.61-0.20240112184211-8b1d5e248ad7/go.mod h1:bYFf2JvRqVF1brBtpdt3xkkTGJBxmYBxZlItrc/lf7Y=
+github.com/kunitsucom/util.go v0.0.62-0.20240114101559-dfc75add0960 h1:PgH03jgwCc1bWymGQx5dj1t430BkG9akLXRZlc0SBpk=
+github.com/kunitsucom/util.go v0.0.62-0.20240114101559-dfc75add0960/go.mod h1:bYFf2JvRqVF1brBtpdt3xkkTGJBxmYBxZlItrc/lf7Y=
 github.com/lib/pq v1.10.9 h1:YXG7RB+JIjhP29X+OtkiDnYaXQwpS4JEWq7dtCCRUEw=
 github.com/lib/pq v1.10.9/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=

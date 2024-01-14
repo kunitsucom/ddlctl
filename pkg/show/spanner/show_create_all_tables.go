@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	sqlz "github.com/kunitsucom/util.go/database/sql"
-	errorz "github.com/kunitsucom/util.go/errors"
 
+	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 	"github.com/kunitsucom/ddlctl/pkg/internal/logs"
 )
 
@@ -40,7 +40,7 @@ type informationSchemaColumn struct {
 func (c *informationSchemaColumn) String() string {
 	d := fmt.Sprintf("%s %s", c.ColumnName, c.SpannerType)
 	if c.ColumnDefault != nil {
-		d += fmt.Sprintf(" DEFAULT %s", *c.ColumnDefault)
+		d += fmt.Sprintf(" DEFAULT (%s)", *c.ColumnDefault)
 	}
 	if c.IsNullable == "NO" {
 		d += " NOT NULL"
@@ -169,7 +169,7 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 
 	tables := make([]*informationSchemaTable, 0)
 	if err := dbz.QueryContext(ctx, &tables, querySelectTableName); err != nil {
-		return "", errorz.Errorf("dbz.QueryContext: %w", err)
+		return "", apperr.Errorf("dbz.QueryContext: %w", err)
 	}
 
 	tablesLastIndex := len(tables) - 1
@@ -179,12 +179,12 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 
 		columns := make([]*informationSchemaColumn, 0)
 		if err := dbz.QueryContext(ctx, &columns, queryShowCreateAllTables, tbl.TableName); err != nil {
-			return "", errorz.Errorf("dbz.QueryContext: %w", err)
+			return "", apperr.Errorf("dbz.QueryContext: %w", err)
 		}
 
 		allColumnOptions := make([]*informationSchemaColumnOption, 0)
 		if err := dbz.QueryContext(ctx, &allColumnOptions, queryShowTableColumnOptions, tbl.TableName); err != nil {
-			return "", errorz.Errorf("dbz.QueryContext: %w", err)
+			return "", apperr.Errorf("dbz.QueryContext: %w", err)
 		}
 
 		columnsLastIndex := len(columns) - 1
@@ -219,7 +219,7 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 
 		primaryKeyColumns := make([]*informationSchemaPrimaryKey, 0)
 		if err := dbz.QueryContext(ctx, &primaryKeyColumns, queryShowPrimaryKey, tbl.TableName); err != nil {
-			return "", errorz.Errorf("dbz.QueryContext: %w", err)
+			return "", apperr.Errorf("dbz.QueryContext: %w", err)
 		}
 
 		if len(primaryKeyColumns) > 0 {
@@ -240,13 +240,13 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 		// INDEX
 		indexNames := make([]*informationSchemaIndexName, 0)
 		if err := dbz.QueryContext(ctx, &indexNames, querySelectIndexes, tbl.TableName); err != nil {
-			return "", errorz.Errorf("dbz.QueryContext: %w", err)
+			return "", apperr.Errorf("dbz.QueryContext: %w", err)
 		}
 
 		for _, indexName := range indexNames {
 			indexes := make([]*informationSchemaIndex, 0)
 			if err := dbz.QueryContext(ctx, &indexes, queryShowIndexes, tbl.TableName); err != nil {
-				return "", errorz.Errorf("dbz.QueryContext: %w", err)
+				return "", apperr.Errorf("dbz.QueryContext: %w", err)
 			}
 
 			d := "CREATE "

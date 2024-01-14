@@ -1,6 +1,9 @@
-package errors
+package apperr
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 var (
 	ErrNotSupported                       = errors.New("not supported")
@@ -11,3 +14,6 @@ var (
 	ErrBothArgumentsIsDSN                 = errors.New("both arguments is dsn")
 	ErrBothArgumentsAreNotDSNOrSQLFile    = errors.New("both arguments are not dsn or sql file")
 )
+
+//nolint:gochecknoglobals
+var Errorf = fmt.Errorf

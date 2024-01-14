@@ -6,10 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	errorz "github.com/kunitsucom/util.go/errors"
-
+	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 	crdbddl "github.com/kunitsucom/ddlctl/pkg/ddl/cockroachdb"
-	apperr "github.com/kunitsucom/ddlctl/pkg/errors"
 	"github.com/kunitsucom/ddlctl/pkg/internal/config"
 	"github.com/kunitsucom/ddlctl/pkg/internal/generator"
 	"github.com/kunitsucom/ddlctl/pkg/internal/generator/dialect/mysql"
@@ -21,7 +19,7 @@ import (
 
 func Generate(ctx context.Context, _ []string) error {
 	if _, err := config.Load(ctx); err != nil {
-		return errorz.Errorf("config.Load: %w", err)
+		return apperr.Errorf("config.Load: %w", err)
 	}
 
 	src := config.Source()
@@ -32,7 +30,7 @@ func Generate(ctx context.Context, _ []string) error {
 
 	ddl, err := Parse(ctx, language, src)
 	if err != nil {
-		return errorz.Errorf("parse: %w", err)
+		return apperr.Errorf("parse: %w", err)
 	}
 
 	if info, err := os.Stat(config.Destination()); err == nil && info.IsDir() {
@@ -42,7 +40,7 @@ func Generate(ctx context.Context, _ []string) error {
 
 			f, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
 			if err != nil {
-				return errorz.Errorf("os.OpenFile: %w", err)
+				return apperr.Errorf("os.OpenFile: %w", err)
 			}
 
 			if err := Fprint(
@@ -54,7 +52,7 @@ func Generate(ctx context.Context, _ []string) error {
 					Stmts:  []generator.Stmt{stmt},
 				},
 			); err != nil {
-				return errorz.Errorf("fprint: %w", err)
+				return apperr.Errorf("fprint: %w", err)
 			}
 		}
 		return nil
@@ -65,11 +63,11 @@ func Generate(ctx context.Context, _ []string) error {
 
 	f, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
-		return errorz.Errorf("os.OpenFile: %w", err)
+		return apperr.Errorf("os.OpenFile: %w", err)
 	}
 
 	if err := Fprint(f, config.Dialect(), ddl); err != nil {
-		return errorz.Errorf("fprint: %w", err)
+		return apperr.Errorf("fprint: %w", err)
 	}
 	return nil
 }
@@ -79,11 +77,11 @@ func Parse(ctx context.Context, language string, src string) (*generator.DDL, er
 	case ddlctlgo.Language:
 		ddl, err := ddlctlgo.Parse(ctx, src)
 		if err != nil {
-			return nil, errorz.Errorf("ddlgengo.Parse: %w", err)
+			return nil, apperr.Errorf("ddlgengo.Parse: %w", err)
 		}
 		return ddl, nil
 	default:
-		return nil, errorz.Errorf("language=%s: %w", language, apperr.ErrNotSupported)
+		return nil, apperr.Errorf("language=%s: %w", language, apperr.ErrNotSupported)
 	}
 }
 
@@ -91,22 +89,22 @@ func Fprint(w io.Writer, dialect string, ddl *generator.DDL) error {
 	switch dialect {
 	case spanner.Dialect:
 		if err := spanner.Fprint(w, ddl); err != nil {
-			return errorz.Errorf("spanner.Fprint: %w", err)
+			return apperr.Errorf("spanner.Fprint: %w", err)
 		}
 		return nil
 	case postgres.Dialect, crdbddl.Dialect:
 		if err := postgres.Fprint(w, ddl); err != nil {
-			return errorz.Errorf("postgres.Fprint: %w", err)
+			return apperr.Errorf("postgres.Fprint: %w", err)
 		}
 		return nil
 	case mysql.Dialect:
 		if err := mysql.Fprint(w, ddl); err != nil {
-			return errorz.Errorf("mysql.Fprint: %w", err)
+			return apperr.Errorf("mysql.Fprint: %w", err)
 		}
 		return nil
 	case "":
-		return errorz.Errorf("dialect=%s: %w", dialect, apperr.ErrDialectIsEmpty)
+		return apperr.Errorf("dialect=%s: %w", dialect, apperr.ErrDialectIsEmpty)
 	default:
-		return errorz.Errorf("dialect=%s: %w", dialect, apperr.ErrNotSupported)
+		return apperr.Errorf("dialect=%s: %w", dialect, apperr.ErrNotSupported)
 	}
 }

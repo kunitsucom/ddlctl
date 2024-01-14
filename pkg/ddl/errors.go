@@ -1,6 +1,8 @@
 package ddl
 
-import "errors"
+import (
+	"errors"
+)
 
 var (
 	ErrUnexpectedToken = errors.New("unexpected token")

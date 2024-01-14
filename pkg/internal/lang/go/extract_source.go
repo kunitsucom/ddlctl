@@ -8,10 +8,9 @@ import (
 	"regexp"
 	"sync"
 
-	errorz "github.com/kunitsucom/util.go/errors"
 	filepathz "github.com/kunitsucom/util.go/path/filepath"
 
-	apperr "github.com/kunitsucom/ddlctl/pkg/errors"
+	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 	"github.com/kunitsucom/ddlctl/pkg/internal/config"
 	"github.com/kunitsucom/ddlctl/pkg/internal/logs"
 )
@@ -84,7 +83,7 @@ func extractDDLSourceFromDDLTagGo(_ context.Context, fset *token.FileSet, f *goa
 	}
 
 	if len(ddlSrc) == 0 {
-		return nil, errorz.Errorf("ddl-tag-go=%s: %w", config.DDLTagGo(), apperr.ErrDDLTagGoAnnotationNotFoundInSource)
+		return nil, apperr.Errorf("ddl-tag-go=%s: %w", config.DDLTagGo(), apperr.ErrDDLTagGoAnnotationNotFoundInSource)
 	}
 
 	return ddlSrc, nil

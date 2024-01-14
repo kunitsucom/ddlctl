@@ -338,13 +338,14 @@ func (d *Default) StringForDiff() string {
 		return ""
 	}
 	if e := d.Value; e != nil {
-		str := "DEFAULT "
+		str := "DEFAULT ("
 		for i, v := range d.Value.Idents {
 			if i != 0 {
 				str += " "
 			}
 			str += v.StringForDiff()
 		}
+		str += ")"
 		return str
 	}
 	return ""

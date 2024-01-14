@@ -6,7 +6,8 @@ import (
 	"fmt"
 
 	sqlz "github.com/kunitsucom/util.go/database/sql"
-	errorz "github.com/kunitsucom/util.go/errors"
+
+	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 )
 
 type sqlQueryerContext = interface {
@@ -126,7 +127,7 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 
 	createTableStmts := new([]*CreateStatement)
 	if err := dbz.QueryContext(ctx, createTableStmts, fmt.Sprintf(formatShowCreateAllTables, cfg.schema)); err != nil {
-		return "", errorz.Errorf("dbz.QueryContext: %w", err)
+		return "", apperr.Errorf("dbz.QueryContext: %w", err)
 	}
 	for _, stmt := range *createTableStmts {
 		query += stmt.CreateStatement + "\n"
@@ -134,7 +135,7 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 
 	createIndexStmts := new([]*CreateStatement)
 	if err := dbz.QueryContext(ctx, createIndexStmts, fmt.Sprintf(formatShowCreateAllIndexes, cfg.schema, cfg.schema)); err != nil {
-		return "", errorz.Errorf("dbz.QueryContext: %w", err)
+		return "", apperr.Errorf("dbz.QueryContext: %w", err)
 	}
 	for _, stmt := range *createIndexStmts {
 		query += stmt.CreateStatement + ";\n"
