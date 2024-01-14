@@ -114,7 +114,7 @@ func (p *Parser) parseCreateStatement() (Stmt, error) { //nolint:ireturn
 	}
 }
 
-//nolint:cyclop,funlen,gocognit
+//nolint:cyclop,funlen,gocognit,gocyclo
 func (p *Parser) parseCreateTableStmt() (*CreateTableStmt, error) {
 	createTableStmt := &CreateTableStmt{
 		Indent: Indent,
@@ -182,9 +182,9 @@ LabelColumns:
 
 LabelTableOptions:
 	for {
-		opt := &Option{}
 		switch p.currentToken.Type { //nolint:exhaustive
 		case TOKEN_PRIMARY:
+			opt := &Option{}
 			p.nextToken() // current = KEY
 			if err := p.checkCurrentToken(TOKEN_KEY); err != nil {
 				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
@@ -204,12 +204,53 @@ LabelTableOptions:
 				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 			}
 			opt.Value = opt.Value.Append(NewRawIdent(p.currentToken.Literal.Str))
+			createTableStmt.Options = append(createTableStmt.Options, opt)
+		case TOKEN_INTERLEAVE:
+			opt := &Option{}
+			p.nextToken() // current = IN
+			if err := p.checkCurrentToken(TOKEN_IN); err != nil {
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			p.nextToken() // current = PARENT
+			if err := p.checkCurrentToken(TOKEN_PARENT); err != nil {
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			opt.Name = "INTERLEAVE IN PARENT"
+			p.nextToken() // current = table_name
+			if err := p.checkCurrentToken(TOKEN_IDENT); err != nil {
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			opt.Value = opt.Value.Append(NewRawIdent(p.currentToken.Literal.String()))
+			if p.isPeekToken(TOKEN_ON) {
+				p.nextToken() // current = ON
+				p.nextToken() // current = DELETE
+				if err := p.checkCurrentToken(TOKEN_DELETE); err != nil {
+					return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+				}
+				onAction := "ON DELETE"
+				p.nextToken()                // current = CASCADE or NO
+				switch p.currentToken.Type { //nolint:exhaustive
+				case TOKEN_CASCADE:
+					onAction += " CASCADE"
+				case TOKEN_NO:
+					p.nextToken() // current = ACTION
+					if err := p.checkCurrentToken(TOKEN_ACTION); err != nil {
+						return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+					}
+					onAction += " NO ACTION"
+				default:
+					return nil, apperr.Errorf(errFmtPrefix+"currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
+				}
+				opt.Value = opt.Value.Append(NewRawIdent(onAction))
+			}
+			createTableStmt.Options = append(createTableStmt.Options, opt)
+		case TOKEN_COMMA:
+			// do nothing
 		case TOKEN_SEMICOLON, TOKEN_EOF:
 			break LabelTableOptions
 		default:
 			return nil, apperr.Errorf(errFmtPrefix+"peekToken=%#v: %w", p.peekToken, ddl.ErrUnexpectedToken)
 		}
-		createTableStmt.Options = append(createTableStmt.Options, opt)
 		p.nextToken()
 	}
 

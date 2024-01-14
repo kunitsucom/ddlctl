@@ -58,6 +58,7 @@ const (
 	TOKEN_DROP     TokenType = "DROP"
 	TOKEN_RENAME   TokenType = "RENAME"
 	TOKEN_TRUNCATE TokenType = "TRUNCATE"
+	TOKEN_DELETE   TokenType = "DELETE"
 
 	// OBJECT.
 	TOKEN_TABLE TokenType = "TABLE"
@@ -86,11 +87,17 @@ const (
 	TOKEN_STRUCT    TokenType = "STRUCT"
 
 	// COLUMN.
-	TOKEN_DEFAULT TokenType = "DEFAULT"
-	TOKEN_NOT     TokenType = "NOT"
-	TOKEN_ASC     TokenType = "ASC"
-	TOKEN_DESC    TokenType = "DESC"
-	TOKEN_OPTIONS TokenType = "OPTIONS"
+	TOKEN_DEFAULT    TokenType = "DEFAULT"
+	TOKEN_NOT        TokenType = "NOT"
+	TOKEN_ASC        TokenType = "ASC"
+	TOKEN_DESC       TokenType = "DESC"
+	TOKEN_OPTIONS    TokenType = "OPTIONS"
+	TOKEN_INTERLEAVE TokenType = "INTERLEAVE"
+	TOKEN_IN         TokenType = "IN"
+	TOKEN_PARENT     TokenType = "PARENT"
+	TOKEN_CASCADE    TokenType = "CASCADE"
+	TOKEN_NO         TokenType = "NO"
+	TOKEN_ACTION     TokenType = "ACTION"
 
 	// CONSTRAINT.
 	TOKEN_CONSTRAINT TokenType = "CONSTRAINT"
@@ -138,6 +145,8 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_RENAME
 	case "TRUNCATE":
 		return TOKEN_TRUNCATE
+	case "DELETE":
+		return TOKEN_DELETE
 	case "TABLE":
 		return TOKEN_TABLE
 	case "INDEX":
@@ -188,6 +197,18 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_DESC
 	case "OPTIONS":
 		return TOKEN_OPTIONS
+	case "INTERLEAVE":
+		return TOKEN_INTERLEAVE
+	case "IN":
+		return TOKEN_IN
+	case "PARENT":
+		return TOKEN_PARENT
+	case "CASCADE":
+		return TOKEN_CASCADE
+	case "NO":
+		return TOKEN_NO
+	case "ACTION":
+		return TOKEN_ACTION
 	case "CONSTRAINT":
 		return TOKEN_CONSTRAINT
 	case "PRIMARY":

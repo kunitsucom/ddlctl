@@ -361,7 +361,7 @@ func (c *Column) String() string {
 		str += " " + c.Default.String() //diff:ignore-line-postgres-cockroach
 	}
 	if c.Options != nil && len(c.Options.Idents) > 0 { //diff:ignore-line-postgres-cockroach
-		str += " " + c.Options.String() //diff:ignore-line-postgres-cockroach
+		str += " OPTIONS " + c.Options.String() //diff:ignore-line-postgres-cockroach
 	}
 	return str
 }

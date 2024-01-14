@@ -20,6 +20,9 @@ func Test_isAlterTableAction(t *testing.T) {
 	(&AddConstraint{}).isAlterTableAction()
 	(&DropConstraint{}).isAlterTableAction()
 	(&AlterConstraint{}).isAlterTableAction()
+	(&AlterColumnSetDataType{}).isAlterColumnAction()
+	(&AlterColumnSetOptions{}).isAlterColumnAction()
+	(&AlterColumnDropOptions{}).isAlterColumnAction()
 }
 
 func Test_isAlterColumnAction(t *testing.T) {

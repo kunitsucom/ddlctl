@@ -29,24 +29,23 @@ func TestParser_Parse(t *testing.T) {
 	}{
 		{
 			name:    "success,CREATE_TABLE",
-			input:   `CREATE TABLE "groups" ("id" STRING(36) NOT NULL PRIMARY KEY, description STRING); CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"));`,
+			input:   `CREATE TABLE "groups" ("id" STRING(36) NOT NULL, description STRING) PRIMARY KEY ("id"); CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 CHECK ("age" >= 0), description STRING) PRIMARY KEY ("id"), INTERLEAVE IN PARENT names ON DELETE NO ACTION;`,
 			wantErr: nil,
 			wantStr: `CREATE TABLE "groups" (
     "id" STRING(36) NOT NULL,
-    description STRING,
-    CONSTRAINT groups_pkey PRIMARY KEY ("id")
-);
+    description STRING
+) PRIMARY KEY ("id");
 CREATE TABLE "users" (
     id STRING(36) NOT NULL,
     group_id STRING(36) NOT NULL,
     "name" STRING(255) NOT NULL,
     "age" INT64 DEFAULT 0,
     description STRING,
-    CONSTRAINT users_pkey PRIMARY KEY ("id"),
     CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id) REFERENCES "groups" ("id"),
     UNIQUE INDEX users_unique_name ("name"),
     CONSTRAINT users_age_check CHECK ("age" >= 0)
-);
+) PRIMARY KEY ("id"),
+INTERLEAVE IN PARENT names ON DELETE NO ACTION;
 `,
 		},
 		{

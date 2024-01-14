@@ -14,11 +14,11 @@ func TestDiffCreateTable(t *testing.T) {
 	t.Run("failure,ddl.ErrNoDifference", func(t *testing.T) {
 		t.Parallel()
 
-		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, description STRING, PRIMARY KEY ("id"));`
+		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, description STRING) PRIMARY KEY ("id");`
 		beforeDDL, err := NewParser(NewLexer(before)).Parse()
 		require.NoError(t, err)
 
-		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, description STRING, PRIMARY KEY ("id"));`
+		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, description STRING) PRIMARY KEY ("id");`
 
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
@@ -39,11 +39,11 @@ func TestDiffCreateTable(t *testing.T) {
 	t.Run("success,ADD_COLUMN", func(t *testing.T) {
 		t.Parallel()
 
-		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, description STRING, PRIMARY KEY ("id"));`
+		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, description STRING) PRIMARY KEY ("id");`
 		beforeDDL, err := NewParser(NewLexer(before)).Parse()
 		require.NoError(t, err)
 
-		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"));`
+		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING) PRIMARY KEY ("id");`
 
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
@@ -71,11 +71,11 @@ ALTER TABLE "users" ADD CONSTRAINT users_age_check CHECK ("age" >= 0);
 	t.Run("success,DROP_COLUMN", func(t *testing.T) {
 		t.Parallel()
 
-		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"));`
+		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING) PRIMARY KEY ("id");`
 		beforeDDL, err := NewParser(NewLexer(before)).Parse()
 		require.NoError(t, err)
 
-		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL, description STRING, PRIMARY KEY ("id"));`
+		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL, description STRING) PRIMARY KEY ("id");`
 
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
@@ -106,11 +106,11 @@ ALTER TABLE "users" DROP COLUMN "age";
 	t.Run("success,ALTER_COLUMN_SET_DATA_TYPE", func(t *testing.T) {
 		t.Parallel()
 
-		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL, "age" INT64 DEFAULT 0 CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"));`
+		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL, "age" INT64 DEFAULT 0 CHECK ("age" >= 0), description STRING) PRIMARY KEY ("id");`
 		beforeDDL, err := NewParser(NewLexer(before)).Parse()
 		require.NoError(t, err)
 
-		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING NOT NULL UNIQUE, "age" INT64 DEFAULT 0 CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"));`
+		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING NOT NULL UNIQUE, "age" INT64 DEFAULT 0 CHECK ("age" >= 0), description STRING) PRIMARY KEY ("id");`
 
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
@@ -136,11 +136,11 @@ CREATE UNIQUE INDEX users_unique_name ON "users" ("name");
 	})
 
 	t.Run("success,ALTER_COLUMN_DROP_DEFAULT", func(t *testing.T) {
-		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"));`
+		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 CHECK ("age" >= 0), description STRING) PRIMARY KEY ("id");`
 		beforeDDL, err := NewParser(NewLexer(before)).Parse()
 		require.NoError(t, err)
 
-		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"));`
+		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 CHECK ("age" >= 0), description STRING) PRIMARY KEY ("id");`
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
@@ -161,11 +161,11 @@ ALTER TABLE "users" ALTER COLUMN "age" DROP DEFAULT;
 	})
 
 	t.Run("success,ALTER_COLUMN_SET_DEFAULT", func(t *testing.T) {
-		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"));`
+		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 CHECK ("age" >= 0), description STRING) PRIMARY KEY ("id");`
 		beforeDDL, err := NewParser(NewLexer(before)).Parse()
 		require.NoError(t, err)
 
-		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 CHECK ("age" <> 0), description STRING, PRIMARY KEY (id));`
+		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 CHECK ("age" <> 0), description STRING) PRIMARY KEY (id);`
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
@@ -194,20 +194,17 @@ ALTER TABLE "users" ADD CONSTRAINT users_age_check CHECK ("age" <> 0);
 	t.Run("success,ALTER_TABLE_RENAME_TO", func(t *testing.T) {
 		t.Parallel()
 
-		before := `CREATE TABLE "public.users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"));`
+		before := `CREATE TABLE "public.users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 CHECK ("age" >= 0), description STRING) PRIMARY KEY ("id");`
 		beforeDDL, err := NewParser(NewLexer(before)).Parse()
 		require.NoError(t, err)
 
-		after := `CREATE TABLE "app_users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"));`
+		after := `CREATE TABLE "app_users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 CHECK ("age" >= 0), description STRING) PRIMARY KEY ("id");`
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
 		expectedStr := `-- -public.users
 -- +public.app_users
 ALTER TABLE "public.users" RENAME TO "public.app_users";
--- -CONSTRAINT users_pkey PRIMARY KEY ("id")
--- +
-ALTER TABLE "public.app_users" DROP CONSTRAINT users_pkey;
 -- -CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id) REFERENCES "groups" ("id")
 -- +
 ALTER TABLE "public.app_users" DROP CONSTRAINT users_group_id_fkey;
@@ -217,9 +214,6 @@ DROP INDEX public.users_unique_name;
 -- -CONSTRAINT users_age_check CHECK ("age" >= 0)
 -- +
 ALTER TABLE "public.app_users" DROP CONSTRAINT users_age_check;
--- -
--- +CONSTRAINT app_users_pkey PRIMARY KEY ("id")
-ALTER TABLE "public.app_users" ADD CONSTRAINT app_users_pkey PRIMARY KEY ("id");
 -- -
 -- +CONSTRAINT app_users_group_id_fkey FOREIGN KEY (group_id) REFERENCES "groups" ("id")
 ALTER TABLE "public.app_users" ADD CONSTRAINT app_users_group_id_fkey FOREIGN KEY (group_id) REFERENCES "groups" ("id");
@@ -246,11 +240,11 @@ ALTER TABLE "public.app_users" ADD CONSTRAINT app_users_age_check CHECK ("age" >
 	t.Run("success,SET_NOT_NULL", func(t *testing.T) {
 		t.Parallel()
 
-		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"));`
+		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 CHECK ("age" >= 0), description STRING) PRIMARY KEY ("id");`
 		beforeDDL, err := NewParser(NewLexer(before)).Parse()
 		require.NoError(t, err)
 
-		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"));`
+		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING) PRIMARY KEY ("id");`
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
@@ -273,11 +267,11 @@ ALTER TABLE "users" ALTER COLUMN "age" SET NOT NULL;
 	t.Run("success,DROP_NOT_NULL", func(t *testing.T) {
 		t.Parallel()
 
-		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"));`
+		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING) PRIMARY KEY ("id");`
 		beforeDDL, err := NewParser(NewLexer(before)).Parse()
 		require.NoError(t, err)
 
-		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"));`
+		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 CHECK ("age" >= 0), description STRING) PRIMARY KEY ("id");`
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
@@ -300,7 +294,7 @@ ALTER TABLE "users" ALTER COLUMN "age" DROP NOT NULL;
 	t.Run("success,DROP_ADD_PRIMARY_KEY", func(t *testing.T) {
 		t.Parallel()
 
-		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"));`
+		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING) PRIMARY KEY ("id");`
 		beforeDDL, err := NewParser(NewLexer(before)).Parse()
 		require.NoError(t, err)
 
@@ -308,10 +302,7 @@ ALTER TABLE "users" ALTER COLUMN "age" DROP NOT NULL;
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
-		expectedStr := `-- -CONSTRAINT users_pkey PRIMARY KEY ("id")
--- +
-ALTER TABLE "users" DROP CONSTRAINT users_pkey;
--- -
+		expectedStr := `-- -
 -- +CONSTRAINT users_pkey PRIMARY KEY ("id", name)
 ALTER TABLE "users" ADD CONSTRAINT users_pkey PRIMARY KEY ("id", name);
 `
@@ -330,11 +321,11 @@ ALTER TABLE "users" ADD CONSTRAINT users_pkey PRIMARY KEY ("id", name);
 	t.Run("success,DROP_ADD_FOREIGN_KEY", func(t *testing.T) {
 		t.Parallel()
 
-		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL, "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"), CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id) REFERENCES "groups" ("id"));`
+		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL, "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id") CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id) REFERENCES "groups" ("id"));`
 		beforeDDL, err := NewParser(NewLexer(before)).Parse()
 		require.NoError(t, err)
 
-		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL, "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"), CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id, name) REFERENCES "groups" ("id", name));`
+		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL, "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id") CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id, name) REFERENCES "groups" ("id", name));`
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
@@ -360,11 +351,11 @@ ALTER TABLE "users" ADD CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id, na
 	t.Run("success,DROP_ADD_UNIQUE", func(t *testing.T) {
 		t.Parallel()
 
-		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL, "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"));`
+		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL, "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING) PRIMARY KEY ("id");`
 		beforeDDL, err := NewParser(NewLexer(before)).Parse()
 		require.NoError(t, err)
 
-		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL, "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"), UNIQUE INDEX users_unique_name ("id" ASC, name ASC));`
+		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL, "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING, UNIQUE INDEX users_unique_name ("id" ASC, name ASC)) PRIMARY KEY ("id");`
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
@@ -386,11 +377,11 @@ CREATE UNIQUE INDEX users_unique_name ON "users" ("id" ASC, name ASC);
 	t.Run("success,ALTER_COLUMN_SET_DEFAULT_OVERWRITE", func(t *testing.T) {
 		t.Parallel()
 
-		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL, "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"));`
+		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL, "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING) PRIMARY KEY ("id");`
 		beforeDDL, err := NewParser(NewLexer(before)).Parse()
 		require.NoError(t, err)
 
-		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL, "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT ( (0 + 3) - 1 * 4 / 2 ) NOT NULL CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"));`
+		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL, "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT ( (0 + 3) - 1 * 4 / 2 ) NOT NULL CHECK ("age" >= 0), description STRING) PRIMARY KEY ("id");`
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
@@ -415,8 +406,8 @@ ALTER TABLE "users" ALTER COLUMN "age" SET DEFAULT ((0 + 3) - 1 * 4 / 2);
 
 		before := `CREATE TABLE complex_defaults (
     id INT64 PRIMARY KEY,
-    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP()),
-    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP()),
+    created_at TIMESTAMP OPTIONS (allow_commit_timestamp=true, option_name=null),
+    updated_at TIMESTAMP,
     unique_code STRING,
     status STRING DEFAULT ('pending'),
     random_number INT64 DEFAULT (FLOOR(RANDOM() * 100)),
@@ -429,8 +420,8 @@ ALTER TABLE "users" ALTER COLUMN "age" SET DEFAULT ((0 + 3) - 1 * 4 / 2);
 
 		after := `CREATE TABLE complex_defaults (
     id INT64 PRIMARY KEY,
-    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP()),
-    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP()),
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP OPTIONS (allow_commit_timestamp=true, option_name=null),
     unique_code STRING DEFAULT 'CODE-' || TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || '-' || LPAD(TO_CHAR(NEXTVAL('seq_complex_default')), 5, '0'),
     status STRING DEFAULT ('pending'),
     random_number INT64 DEFAULT (FLOOR(RANDOM() * 100)),
@@ -441,7 +432,13 @@ ALTER TABLE "users" ALTER COLUMN "age" SET DEFAULT ((0 + 3) - 1 * 4 / 2);
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
-		expectedStr := `-- -unique_code STRING
+		expectedStr := `-- -created_at TIMESTAMP OPTIONS (allow_commit_timestamp = TRUE, option_name = NULL)
+-- +created_at TIMESTAMP
+ALTER TABLE complex_defaults ALTER COLUMN created_at DROP OPTIONS;
+-- -updated_at TIMESTAMP
+-- +updated_at TIMESTAMP OPTIONS (allow_commit_timestamp = TRUE, option_name = NULL)
+ALTER TABLE complex_defaults ALTER COLUMN updated_at SET OPTIONS (allow_commit_timestamp = TRUE, option_name = NULL);
+-- -unique_code STRING
 -- +unique_code STRING DEFAULT 'CODE-' || TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || '-' || LPAD(TO_CHAR(NEXTVAL('seq_complex_default')), 5, '0')
 ALTER TABLE complex_defaults ALTER COLUMN unique_code SET DEFAULT 'CODE-' || TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || '-' || LPAD(TO_CHAR(NEXTVAL('seq_complex_default')), 5, '0');
 `
@@ -460,10 +457,10 @@ ALTER TABLE complex_defaults ALTER COLUMN unique_code SET DEFAULT 'CODE-' || TO_
 	t.Run("success,DiffCreateTableUseAlterTableAddConstraintNotValid", func(t *testing.T) {
 		t.Parallel()
 
-		beforeDDL, err := NewParser(NewLexer(`CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0, description STRING, PRIMARY KEY ("id"));`)).Parse()
+		beforeDDL, err := NewParser(NewLexer(`CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0, description STRING) PRIMARY KEY ("id");`)).Parse()
 		require.NoError(t, err)
 
-		afterDDL, err := NewParser(NewLexer(`CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"));`)).Parse()
+		afterDDL, err := NewParser(NewLexer(`CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 CHECK ("age" >= 0), description STRING) PRIMARY KEY ("id");`)).Parse()
 		require.NoError(t, err)
 
 		expected := `-- -
@@ -486,7 +483,7 @@ ALTER TABLE "users" ADD CONSTRAINT users_age_check CHECK ("age" >= 0) NOT VALID;
 	t.Run("success,CREATE_TABLE", func(t *testing.T) {
 		t.Parallel()
 
-		afterDDL, err := NewParser(NewLexer(`CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"));`)).Parse()
+		afterDDL, err := NewParser(NewLexer(`CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 CHECK ("age" >= 0), description STRING) PRIMARY KEY ("id");`)).Parse()
 		require.NoError(t, err)
 
 		expected := `CREATE TABLE "users" (
@@ -495,11 +492,10 @@ ALTER TABLE "users" ADD CONSTRAINT users_age_check CHECK ("age" >= 0) NOT VALID;
     "name" STRING(255) NOT NULL,
     "age" INT64 DEFAULT 0,
     description STRING,
-    CONSTRAINT users_pkey PRIMARY KEY ("id"),
     CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id) REFERENCES "groups" ("id"),
     UNIQUE INDEX users_unique_name ("name"),
     CONSTRAINT users_age_check CHECK ("age" >= 0)
-);
+) PRIMARY KEY ("id");
 `
 		actual, err := DiffCreateTable(
 			nil,
@@ -517,7 +513,7 @@ ALTER TABLE "users" ADD CONSTRAINT users_age_check CHECK ("age" >= 0) NOT VALID;
 	t.Run("success,DROP_TABLE", func(t *testing.T) {
 		t.Parallel()
 
-		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"));`
+		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 CHECK ("age" >= 0), description STRING) PRIMARY KEY ("id");`
 
 		beforeDDL, err := NewParser(NewLexer(before)).Parse()
 		require.NoError(t, err)
@@ -543,10 +539,10 @@ ALTER TABLE "users" ADD CONSTRAINT users_age_check CHECK ("age" >= 0) NOT VALID;
 	t.Run("success,NoAsc", func(t *testing.T) {
 		t.Parallel()
 
-		beforeDDL, err := NewParser(NewLexer(`CREATE TABLE "users" (id STRING(36) NOT NULL, PRIMARY KEY ("id" ASC));`)).Parse()
+		beforeDDL, err := NewParser(NewLexer(`CREATE TABLE "users" (id STRING(36) NOT NULL) PRIMARY KEY ("id" ASC);`)).Parse()
 		require.NoError(t, err)
 
-		afterDDL, err := NewParser(NewLexer(`CREATE TABLE "users" (id STRING(36) NOT NULL, PRIMARY KEY ("id"));`)).Parse()
+		afterDDL, err := NewParser(NewLexer(`CREATE TABLE "users" (id STRING(36) NOT NULL) PRIMARY KEY ("id");`)).Parse()
 		require.NoError(t, err)
 
 		actual, err := DiffCreateTable(
