@@ -160,6 +160,7 @@ type AlterColumnAction interface {
 	GoString() string
 }
 
+// TODO: https://dev.mysql.com/doc/refman/8.0/ja/alter-table-examples.html ALTER TABLE table_name MODIFY column_name TINYINT NOT NULL;
 // AlterColumnSetDataType represents ALTER TABLE table_name ALTER COLUMN column_name SET DATA TYPE.
 type AlterColumnSetDataType struct {
 	DataType *DataType

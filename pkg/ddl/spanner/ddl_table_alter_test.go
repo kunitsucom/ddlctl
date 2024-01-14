@@ -128,7 +128,7 @@ func TestAlterTableStmt_String(t *testing.T) {
 		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
 	})
 
-	t.Run("success,AlterColumnSetDataType", func(t *testing.T) {
+	t.Run("success,AlterColumnDataType", func(t *testing.T) {
 		t.Parallel()
 
 		stmt := &AlterTableStmt{
