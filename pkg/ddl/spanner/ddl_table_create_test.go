@@ -21,7 +21,7 @@ func TestCreateTableStmt_String(t *testing.T) {
 				{Name: &Ident{Name: "name", Raw: "name"}, DataType: &DataType{Name: "VARYING", Expr: &Expr{Idents: []*Ident{NewRawIdent("255")}}}},
 			},
 			Options: []*Option{
-				{Name: "PRIMARY KEY", Value: &Expr{Idents: []*Ident{NewRawIdent("id")}}},
+				{Name: "PRIMARY KEY", Value: &Expr{Idents: []*Ident{NewRawIdent("("), NewRawIdent("id"), NewRawIdent(")")}}},
 			},
 		}
 		expected := `-- test comment content

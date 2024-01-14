@@ -29,19 +29,19 @@ func TestParser_Parse(t *testing.T) {
 	}{
 		{
 			name:    "success,CREATE_TABLE",
-			input:   `CREATE TABLE "groups" ("id" STRING(36) NOT NULL PRIMARY KEY, description TEXT); CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" VARCHAR(255) NOT NULL UNIQUE, "age" INT DEFAULT 0 CHECK ("age" >= 0), description TEXT, PRIMARY KEY ("id"));`,
+			input:   `CREATE TABLE "groups" ("id" STRING(36) NOT NULL PRIMARY KEY, description STRING); CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 CHECK ("age" >= 0), description STRING, PRIMARY KEY ("id"));`,
 			wantErr: nil,
 			wantStr: `CREATE TABLE "groups" (
     "id" STRING(36) NOT NULL,
-    description TEXT,
+    description STRING,
     CONSTRAINT groups_pkey PRIMARY KEY ("id")
 );
 CREATE TABLE "users" (
     id STRING(36) NOT NULL,
     group_id STRING(36) NOT NULL,
-    "name" VARCHAR(255) NOT NULL,
-    "age" INT DEFAULT 0,
-    description TEXT,
+    "name" STRING(255) NOT NULL,
+    "age" INT64 DEFAULT 0,
+    description STRING,
     CONSTRAINT users_pkey PRIMARY KEY ("id"),
     CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id) REFERENCES "groups" ("id"),
     UNIQUE INDEX users_unique_name ("name"),
@@ -54,26 +54,26 @@ CREATE TABLE "users" (
 			input: `-- table: complex_defaults
 CREATE TABLE IF NOT EXISTS complex_defaults (
     -- id is the primary key.
-    id SERIAL PRIMARY KEY,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    unique_code TEXT DEFAULT 'CODE-' || TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || '-' || LPAD(TO_CHAR(NEXTVAL('seq_complex_default')), 5, '0'),
-    status CHARACTER VARYING DEFAULT 'pending',
-    random_number INTEGER DEFAULT FLOOR(RANDOM() * 100::INTEGER)::INTEGER,
-    json_data JSONB DEFAULT '{}',
-    calculated_value INTEGER DEFAULT (SELECT COUNT(*) FROM another_table)
+    id INT64 PRIMARY KEY,
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP()),
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP()),
+    unique_code STRING DEFAULT ('CODE-' || TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || '-' || LPAD(TO_CHAR(NEXTVAL('seq_complex_default')), 5, '0')),
+    status STRING DEFAULT ('pending'),
+    random_number INT64 DEFAULT (FLOOR(RANDOM() * 100)),
+    json_data JSON DEFAULT ('{}'),
+    calculated_value INT64 DEFAULT (SELECT COUNT(*) FROM another_table)
 );
 `,
 			wantErr: nil,
 			wantStr: `CREATE TABLE IF NOT EXISTS complex_defaults (
-    id SERIAL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    unique_code TEXT DEFAULT 'CODE-' || TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || '-' || LPAD(TO_CHAR(NEXTVAL('seq_complex_default')), 5, '0'),
-    status CHARACTER VARYING DEFAULT 'pending',
-    random_number INTEGER DEFAULT FLOOR(RANDOM() * 100::INTEGER)::INTEGER,
-    json_data JSONB DEFAULT '{}',
-    calculated_value INTEGER DEFAULT (SELECT COUNT(*) FROM another_table),
+    id INT64,
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP()),
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP()),
+    unique_code STRING DEFAULT ('CODE-' || TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || '-' || LPAD(TO_CHAR(NEXTVAL('seq_complex_default')), 5, '0')),
+    status STRING DEFAULT ('pending'),
+    random_number INT64 DEFAULT (FLOOR(RANDOM() * 100)),
+    json_data JSON DEFAULT ('{}'),
+    calculated_value INT64 DEFAULT (SELECT COUNT(*) FROM another_table),
     CONSTRAINT complex_defaults_pkey PRIMARY KEY (id)
 );
 `,
@@ -82,10 +82,10 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 			name: "success,CREATE_TABLE_TYPE_ANNOTATION",
 			input: `CREATE TABLE IF NOT EXISTS public.users (
     user_id STRING(36) NOT NULL,
-    username VARCHAR(256) NOT NULL,
+    username STRING(256) NOT NULL,
     is_verified BOOL NOT NULL DEFAULT false,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('UTC':::STRING, current_timestamp():::TIMESTAMPTZ),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('UTC':::STRING, current_timestamp():::TIMESTAMPTZ),
+    created_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP()),
+    updated_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP()),
     CONSTRAINT users_pkey PRIMARY KEY (user_id ASC),
     INDEX users_idx_by_username (username DESC)
 );
@@ -93,10 +93,10 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 			wantErr: nil,
 			wantStr: `CREATE TABLE IF NOT EXISTS public.users (
     user_id STRING(36) NOT NULL,
-    username VARCHAR(256) NOT NULL,
+    username STRING(256) NOT NULL,
     is_verified BOOL NOT NULL DEFAULT false,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('UTC':::STRING, current_timestamp():::TIMESTAMPTZ),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('UTC':::STRING, current_timestamp():::TIMESTAMPTZ),
+    created_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP()),
+    updated_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP()),
     CONSTRAINT users_pkey PRIMARY KEY (user_id ASC),
     INDEX users_idx_by_username (username DESC)
 );
@@ -311,7 +311,7 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_UNIQUE_IDENTS_INVALID",
-			input:   `CREATE TABLE "users" ("id" STRING(36), name TEXT, UNIQUE ("id", name)`,
+			input:   `CREATE TABLE "users" ("id" STRING(36), name STRING, UNIQUE ("id", name)`,
 			wantErr: ddl.ErrUnexpectedToken,
 		},
 		{
@@ -384,7 +384,7 @@ func TestParser_parseColumn(t *testing.T) {
 	t.Run("success,TOKEN_COMMA", func(t *testing.T) {
 		t.Parallel()
 
-		p := NewParser(NewLexer("( id VARCHAR(36),"))
+		p := NewParser(NewLexer("( id STRING(36),"))
 		p.nextToken()
 		p.nextToken()
 		p.nextToken()
@@ -402,7 +402,7 @@ func TestParser_parseColumn(t *testing.T) {
 	t.Run("failure,parseDataType", func(t *testing.T) {
 		t.Parallel()
 
-		p := NewParser(NewLexer("( id VARCHAR("))
+		p := NewParser(NewLexer("( id STRING("))
 		p.nextToken()
 		p.nextToken()
 		p.nextToken()

@@ -414,13 +414,13 @@ ALTER TABLE "users" ALTER COLUMN "age" SET DEFAULT ((0 + 3) - 1 * 4 / 2);
 		t.Parallel()
 
 		before := `CREATE TABLE complex_defaults (
-    id SERIAL PRIMARY KEY,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    id INT64 PRIMARY KEY,
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP()),
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP()),
     unique_code STRING,
-    status STRING DEFAULT 'pending',
-    random_number INT64 DEFAULT FLOOR(RANDOM() * 100)::INTEGER,
-    json_data JSONB DEFAULT '{}',
+    status STRING DEFAULT ('pending'),
+    random_number INT64 DEFAULT (FLOOR(RANDOM() * 100)),
+    json_data JSON DEFAULT ('{}'),
     calculated_value INT64 DEFAULT (SELECT COUNT(*) FROM another_table)
 );
 `
@@ -428,13 +428,13 @@ ALTER TABLE "users" ALTER COLUMN "age" SET DEFAULT ((0 + 3) - 1 * 4 / 2);
 		require.NoError(t, err)
 
 		after := `CREATE TABLE complex_defaults (
-    id SERIAL PRIMARY KEY,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    id INT64 PRIMARY KEY,
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP()),
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP()),
     unique_code STRING DEFAULT 'CODE-' || TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || '-' || LPAD(TO_CHAR(NEXTVAL('seq_complex_default')), 5, '0'),
-    status STRING DEFAULT 'pending',
-    random_number INT64 DEFAULT FLOOR(RANDOM() * 100)::INTEGER,
-    json_data JSONB DEFAULT '{}',
+    status STRING DEFAULT ('pending'),
+    random_number INT64 DEFAULT (FLOOR(RANDOM() * 100)),
+    json_data JSON DEFAULT ('{}'),
     calculated_value INT64 DEFAULT (SELECT COUNT(*) FROM another_table)
 );
 `

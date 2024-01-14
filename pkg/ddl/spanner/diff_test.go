@@ -280,10 +280,10 @@ func TestDiff(t *testing.T) {
 		t.Parallel()
 
 		before, err := NewParser(NewLexer(`CREATE TABLE public.users (
-    user_id UUID NOT NULL,
-    username VARCHAR(256) NOT NULL,
-    is_verified BOOL NOT NULL DEFAULT false,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC':::STRING, current_timestamp():::TIMESTAMPTZ),
+    user_id STRING(36) NOT NULL,
+    username STRING(256) NOT NULL,
+    is_verified BOOL NOT NULL DEFAULT (false),
+    created_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP()),
     CONSTRAINT users_pkey PRIMARY KEY (user_id ASC),
     INDEX users_idx_by_username (username DESC)
 );
@@ -291,11 +291,11 @@ func TestDiff(t *testing.T) {
 		require.NoError(t, err)
 
 		after, err := NewParser(NewLexer(`CREATE TABLE public.users (
-    user_id UUID NOT NULL,
-    username VARCHAR(256) NOT NULL,
-    is_verified BOOL NOT NULL DEFAULT false,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC':::STRING, current_timestamp():::TIMESTAMPTZ),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC':::STRING, current_timestamp():::TIMESTAMPTZ),
+    user_id STRING(36) NOT NULL,
+    username STRING(256) NOT NULL,
+    is_verified BOOL NOT NULL DEFAULT (false),
+    created_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP()),
+    updated_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP()),
     CONSTRAINT users_pkey PRIMARY KEY (user_id ASC),
     INDEX users_idx_by_username (username DESC)
 );
@@ -303,8 +303,8 @@ func TestDiff(t *testing.T) {
 		require.NoError(t, err)
 
 		expected := `-- -
--- +updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC':::STRING, current_timestamp():::TIMESTAMPTZ)
-ALTER TABLE public.users ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT timezone('UTC':::STRING, current_timestamp():::TIMESTAMPTZ);
+-- +updated_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP())
+ALTER TABLE public.users ADD COLUMN updated_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP());
 `
 		actual, err := Diff(before, after)
 		require.NoError(t, err)
@@ -319,11 +319,11 @@ ALTER TABLE public.users ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE NOT NULL
 		t.Parallel()
 
 		before, err := NewParser(NewLexer(`CREATE TABLE public.users (
-    user_id UUID NOT NULL,
-    username VARCHAR(256) NOT NULL,
-    is_verified BOOL NOT NULL DEFAULT false,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('UTC':::STRING, current_timestamp():::TIMESTAMPTZ),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('UTC':::STRING, current_timestamp():::TIMESTAMPTZ),
+    user_id STRING(36) NOT NULL,
+    username STRING(256) NOT NULL,
+    is_verified BOOL NOT NULL DEFAULT (false),
+    created_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP()),
+    updated_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP()),
     CONSTRAINT users_pkey PRIMARY KEY (user_id ASC),
     INDEX users_idx_by_username (username DESC)
 );
@@ -331,11 +331,11 @@ ALTER TABLE public.users ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE NOT NULL
 		require.NoError(t, err)
 
 		after, err := NewParser(NewLexer(`CREATE TABLE public.users (
-    user_id UUID NOT NULL,
-    username VARCHAR(256) NOT NULL,
-    is_verified BOOL NOT NULL DEFAULT false,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('UTC':::STRING, current_timestamp():::TIMESTAMPTZ),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('UTC':::STRING, current_timestamp():::TIMESTAMPTZ),
+    user_id STRING(36) NOT NULL,
+    username STRING(256) NOT NULL,
+    is_verified BOOL NOT NULL DEFAULT (false),
+    created_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP()),
+    updated_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP()),
     CONSTRAINT users_pkey PRIMARY KEY (user_id ASC),
     INDEX users_idx_by_username (username ASC)
 );
@@ -377,18 +377,18 @@ CREATE UNIQUE INDEX IF NOT EXISTS public.users_idx_by_username ON public.users (
 		t.Logf("✅: %s: actual: %%s: \n%s", t.Name(), actual)
 	})
 
-	t.Run("success,VARCHAR(10)->VARCHAR(11)", func(t *testing.T) {
+	t.Run("success,STRING(10)->STRING(11)", func(t *testing.T) {
 		t.Parallel()
 
-		before, err := NewParser(NewLexer(`CREATE TABLE public.users ( username VARCHAR(10) NOT NULL );`)).Parse()
+		before, err := NewParser(NewLexer(`CREATE TABLE public.users ( username STRING(10) NOT NULL );`)).Parse()
 		require.NoError(t, err)
 
-		after, err := NewParser(NewLexer(`CREATE TABLE public.users ( username VARCHAR(11) NOT NULL );`)).Parse()
+		after, err := NewParser(NewLexer(`CREATE TABLE public.users ( username STRING(11) NOT NULL );`)).Parse()
 		require.NoError(t, err)
 
-		expected := `-- -username VARCHAR(10) NOT NULL
--- +username VARCHAR(11) NOT NULL
-ALTER TABLE public.users ALTER COLUMN username SET DATA TYPE VARCHAR(11);
+		expected := `-- -username STRING(10) NOT NULL
+-- +username STRING(11) NOT NULL
+ALTER TABLE public.users ALTER COLUMN username SET DATA TYPE STRING(11);
 `
 		actual, err := Diff(before, after)
 		require.NoError(t, err)
@@ -401,10 +401,10 @@ ALTER TABLE public.users ALTER COLUMN username SET DATA TYPE VARCHAR(11);
 	t.Run("success,SET_DEFAULT_TRUE_FALSE", func(t *testing.T) {
 		t.Parallel()
 
-		before, err := NewParser(NewLexer(`CREATE TABLE public.passwords ( user_id UUID NOT NULL, password TEXT NOT NULL, is_verified BOOLEAN NOT NULL DEFAULT false, is_expired BOOLEAN NOT NULL DEFAULT true );`)).Parse()
+		before, err := NewParser(NewLexer(`CREATE TABLE public.passwords ( user_id STRING(36) NOT NULL, password STRING NOT NULL, is_verified BOOL NOT NULL DEFAULT (false), is_expired BOOL NOT NULL DEFAULT (true) );`)).Parse()
 		require.NoError(t, err)
 
-		after, err := NewParser(NewLexer(`CREATE TABLE public.passwords ( user_id UUID NOT NULL, password TEXT NOT NULL, is_verified BOOLEAN NOT NULL DEFAULT FALSE, is_expired BOOLEAN NOT NULL DEFAULT TRUE );`)).Parse()
+		after, err := NewParser(NewLexer(`CREATE TABLE public.passwords ( user_id STRING(36) NOT NULL, password STRING NOT NULL, is_verified BOOL NOT NULL DEFAULT (FALSE), is_expired BOOL NOT NULL DEFAULT (TRUE) );`)).Parse()
 		require.NoError(t, err)
 
 		expected := ``
