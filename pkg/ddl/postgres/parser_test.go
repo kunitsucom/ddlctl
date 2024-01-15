@@ -225,6 +225,26 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 			wantErr: ddl.ErrUnexpectedToken,
 		},
 		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_REFERENCES_INVALID",
+			input:   `CREATE TABLE "users" ("id" UUID REFERENCES foo (foo_id) ON`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_REFERENCES_INVALID",
+			input:   `CREATE TABLE "users" ("id" UUID REFERENCES foo (foo_id) ON DELETE`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_REFERENCES_INVALID",
+			input:   `CREATE TABLE "users" ("id" UUID REFERENCES foo (foo_id) ON DELETE NO`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_REFERENCES_INVALID",
+			input:   `CREATE TABLE "users" ("id" UUID REFERENCES foo (foo_id) ON DELETE NO ACTION`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_INVALID_FOREIGN",
 			input:   `CREATE TABLE "users" ("id" UUID, FOREIGN NOT`,
 			wantErr: ddl.ErrUnexpectedToken,
@@ -257,6 +277,26 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_FOREIGN_KEY_IDENTS_REFERENCES_INVALID_CLOSE_PAREN",
 			input:   `CREATE TABLE "users" ("id" UUID, FOREIGN KEY ("group_id") REFERENCES "groups" ("id")`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_FOREIGN_KEY_IDENTS_REFERENCES_ON_INVALID",
+			input:   `CREATE TABLE "users" ("id" UUID, FOREIGN KEY ("group_id") REFERENCES "groups" ("id") ON`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_FOREIGN_KEY_IDENTS_REFERENCES_ON_DELETE_INVALID",
+			input:   `CREATE TABLE "users" ("id" UUID, FOREIGN KEY ("group_id") REFERENCES "groups" ("id") ON DELETE`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_FOREIGN_KEY_IDENTS_REFERENCES_ON_DELETE_NO_INVALID",
+			input:   `CREATE TABLE "users" ("id" UUID, FOREIGN KEY ("group_id") REFERENCES "groups" ("id") ON DELETE NO`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_FOREIGN_KEY_IDENTS_REFERENCES_ON_DELETE_NO_INVALID",
+			input:   `CREATE TABLE "users" ("id" UUID, FOREIGN KEY ("group_id") REFERENCES "groups" ("id") ON DELETE NO ACTION`,
 			wantErr: ddl.ErrUnexpectedToken,
 		},
 		{
@@ -383,6 +423,16 @@ func TestParser_parseColumn(t *testing.T) {
 
 func TestParser_parseExpr(t *testing.T) {
 	t.Parallel()
+
+	t.Run("success,isReservedValue", func(t *testing.T) {
+		t.Parallel()
+
+		p := NewParser(NewLexer(`(null)`))
+		p.nextToken()
+		p.nextToken()
+		_, err := p.parseExpr()
+		require.NoError(t, err)
+	})
 
 	t.Run("failure,invalid", func(t *testing.T) {
 		t.Parallel()

@@ -73,6 +73,7 @@ type ForeignKeyConstraint struct {
 	Columns    []*ColumnIdent
 	Ref        *Ident
 	RefColumns []*ColumnIdent
+	OnAction   string
 }
 
 var _ Constraint = (*ForeignKeyConstraint)(nil)
@@ -89,6 +90,9 @@ func (c *ForeignKeyConstraint) String() string {
 	str += " (" + stringz.JoinStringers(", ", c.Columns...) + ")"
 	str += " REFERENCES " + c.Ref.String()
 	str += " (" + stringz.JoinStringers(", ", c.RefColumns...) + ")"
+	if c.OnAction != "" {
+		str += " " + c.OnAction
+	}
 	return str
 }
 
@@ -115,6 +119,9 @@ func (c *ForeignKeyConstraint) StringForDiff() string {
 		str += v.StringForDiff()
 	}
 	str += ")"
+	if c.OnAction != "" {
+		str += " " + c.OnAction
+	}
 	return str
 }
 

@@ -297,6 +297,11 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 			wantErr: ddl.ErrUnexpectedToken,
 		},
 		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_REFERENCES_INVALID",
+			input:   `CREATE TABLE "users" ("id" UUID REFERENCES foo (foo_id) ON DELETE NO ACTION`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_INVALID_FOREIGN",
 			input:   `CREATE TABLE "users" ("id" UUID, FOREIGN NOT`,
 			wantErr: ddl.ErrUnexpectedToken,
