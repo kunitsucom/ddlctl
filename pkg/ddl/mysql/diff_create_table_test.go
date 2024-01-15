@@ -127,6 +127,9 @@ ALTER TABLE "users" MODIFY "name" TEXT NOT NULL;
 -- -"age" INT DEFAULT 0
 -- +"age" BIGINT DEFAULT 0
 ALTER TABLE "users" MODIFY "age" BIGINT;
+-- -"age" INT DEFAULT 0
+-- +"age" BIGINT DEFAULT 0
+ALTER TABLE "users" ALTER "age" SET DEFAULT 0;
 -- -
 -- +UNIQUE KEY users_unique_name (name)
 CREATE UNIQUE INDEX users_unique_name ON "users" ("name");
@@ -254,6 +257,9 @@ ALTER TABLE "public.app_users" ADD CONSTRAINT app_users_age_check CHECK ("age" >
 		expectedStr := `-- -"age" INT DEFAULT 0
 -- +"age" INTEGER NOT NULL DEFAULT 0
 ALTER TABLE "users" MODIFY "age" INTEGER NOT NULL;
+-- -"age" INT DEFAULT 0
+-- +"age" INTEGER NOT NULL DEFAULT 0
+ALTER TABLE "users" ALTER "age" SET DEFAULT 0;
 `
 
 		actual, err := DiffCreateTable(
@@ -281,6 +287,9 @@ ALTER TABLE "users" MODIFY "age" INTEGER NOT NULL;
 		expectedStr := `-- -"age" INT NOT NULL DEFAULT 0
 -- +"age" INT DEFAULT 0
 ALTER TABLE "users" MODIFY "age" INT;
+-- -"age" INT NOT NULL DEFAULT 0
+-- +"age" INT DEFAULT 0
+ALTER TABLE "users" ALTER "age" SET DEFAULT 0;
 `
 
 		actual, err := DiffCreateTable(
