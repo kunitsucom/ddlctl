@@ -1,6 +1,7 @@
 package spanner
 
 import (
+	"math"
 	"testing"
 
 	"github.com/kunitsucom/util.go/testing/require"
@@ -26,6 +27,8 @@ func Test_lookupIdent(t *testing.T) {
 		{name: "success,DROP", input: "DROP", want: TOKEN_DROP},
 		{name: "success,RENAME", input: "RENAME", want: TOKEN_RENAME},
 		{name: "success,TRUNCATE", input: "TRUNCATE", want: TOKEN_TRUNCATE},
+		{name: "success,DELETE", input: "DELETE", want: TOKEN_DELETE},
+		{name: "success,UPDATE", input: "UPDATE", want: TOKEN_UPDATE},
 		{name: "success,TABLE", input: "TABLE", want: TOKEN_TABLE},
 		{name: "success,INDEX", input: "INDEX", want: TOKEN_INDEX},
 		{name: "success,VIEW", input: "VIEW", want: TOKEN_VIEW},
@@ -38,12 +41,18 @@ func Test_lookupIdent(t *testing.T) {
 		{name: "success,NUMERIC", input: "NUMERIC", want: TOKEN_NUMERIC},
 		{name: "success,FLOAT64", input: "FLOAT64", want: TOKEN_FLOAT64},
 		{name: "success,JSON", input: "JSON", want: TOKEN_JSON},
+		{name: "success,STRING", input: "STRING", want: TOKEN_STRING},
+		{name: "success,BYTES", input: "BYTES", want: TOKEN_BYTES},
 		{name: "success,TIMESTAMP", input: "TIMESTAMP", want: TOKEN_TIMESTAMP},
+		{name: "success,DATE", input: "DATE", want: TOKEN_DATE},
+		{name: "success,ARRAY", input: "ARRAY", want: TOKEN_ARRAY},
+		{name: "success,STRUCT", input: "STRUCT", want: TOKEN_STRUCT},
 		{name: "success,DEFAULT", input: "DEFAULT", want: TOKEN_DEFAULT},
 		{name: "success,NOT", input: "NOT", want: TOKEN_NOT},
 		{name: "success,NULL", input: "NULL", want: TOKEN_NULL},
 		{name: "success,ASC", input: "ASC", want: TOKEN_ASC},
 		{name: "success,DESC", input: "DESC", want: TOKEN_DESC},
+		{name: "success,CASCADE", input: "CASCADE", want: TOKEN_CASCADE},
 		{name: "success,CONSTRAINT", input: "CONSTRAINT", want: TOKEN_CONSTRAINT},
 		{name: "success,PRIMARY", input: "PRIMARY", want: TOKEN_PRIMARY},
 		{name: "success,KEY", input: "KEY", want: TOKEN_KEY},
@@ -235,6 +244,21 @@ func TestLexer_NextToken(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestLexer_peekChar(t *testing.T) {
+	t.Parallel()
+
+	t.Run("success,peekChar", func(t *testing.T) {
+		t.Parallel()
+
+		l := NewLexer("")
+		l.readPosition = math.MaxInt64
+		expected := byte(0)
+		actual := l.peekChar()
+
+		require.Equal(t, expected, actual)
+	})
 }
 
 func TestLiteral(t *testing.T) {

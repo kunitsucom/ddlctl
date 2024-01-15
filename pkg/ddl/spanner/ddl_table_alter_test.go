@@ -194,16 +194,20 @@ func TestAlterTableStmt_String(t *testing.T) {
 		stmt := &AlterTableStmt{
 			Name: &ObjectName{Name: &Ident{Name: "groups", QuotationMark: `"`, Raw: `"groups"`}},
 			Action: &AddConstraint{
-				Constraint: &PrimaryKeyConstraint{
-					Name: &Ident{Name: "groups_pkey", QuotationMark: `"`, Raw: `"groups_pkey"`},
-					Columns: []*ColumnIdent{
-						{Ident: &Ident{Name: "id", QuotationMark: `"`, Raw: `"id"`}},
-					},
+				Constraint: &CheckConstraint{
+					Name: &Ident{Name: "groups_yyyymmdd_chk", QuotationMark: `"`, Raw: `"groups_yyyymmdd_chk"`},
+					Expr: &Expr{Idents: []*Ident{
+						NewRawIdent("("),
+						NewRawIdent(`"yyyymmdd"`),
+						NewRawIdent(">"),
+						NewRawIdent("0"),
+						NewRawIdent(")"),
+					}},
 				},
 			},
 		}
 
-		expected := `ALTER TABLE "groups" ADD CONSTRAINT "groups_pkey" PRIMARY KEY ("id");` + "\n"
+		expected := `ALTER TABLE "groups" ADD CONSTRAINT "groups_yyyymmdd_chk" CHECK ("yyyymmdd" > 0);` + "\n"
 		actual := stmt.String()
 
 		if !assert.Equal(t, expected, actual) {

@@ -59,6 +59,7 @@ const (
 	TOKEN_RENAME   TokenType = "RENAME"
 	TOKEN_TRUNCATE TokenType = "TRUNCATE"
 	TOKEN_DELETE   TokenType = "DELETE"
+	TOKEN_UPDATE   TokenType = "UPDATE"
 
 	// OBJECT.
 	TOKEN_TABLE TokenType = "TABLE"
@@ -147,6 +148,8 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_TRUNCATE
 	case "DELETE":
 		return TOKEN_DELETE
+	case "UPDATE":
+		return TOKEN_UPDATE
 	case "TABLE":
 		return TOKEN_TABLE
 	case "INDEX":
@@ -285,27 +288,28 @@ func (l *Lexer) NextToken() Token {
 	case '"', '\'', '`':
 		tok.Type = TOKEN_IDENT
 		tok.Literal = Literal{Str: l.readQuotedLiteral(l.ch)}
-	case '|':
-		if l.peekChar() == '|' {
-			ch := l.ch
-			l.readChar()
-			literal := string(ch) + string(l.ch)
-			tok = Token{Type: TOKEN_STRING_CONCAT, Literal: Literal{Str: literal}}
-		} else {
-			tok = newToken(TOKEN_ILLEGAL, l.ch)
-		}
-	case ':':
-		if l.peekChar() == ':' {
-			l.readChar()
-			if l.peekChar() == ':' { //diff:ignore-line-postgres-cockroach
-				l.readChar()                                                           //diff:ignore-line-postgres-cockroach
-				tok = Token{Type: TOKEN_TYPE_ANNOTATION, Literal: Literal{Str: ":::"}} //diff:ignore-line-postgres-cockroach
-			} else { //diff:ignore-line-postgres-cockroach
-				tok = Token{Type: TOKEN_TYPECAST, Literal: Literal{Str: "::"}}
-			} //diff:ignore-line-postgres-cockroach
-		} else {
-			tok = newToken(TOKEN_ILLEGAL, l.ch)
-		}
+	// MEMO: backup
+	// case '|':
+	// 	if l.peekChar() == '|' {
+	// 		ch := l.ch
+	// 		l.readChar()
+	// 		literal := string(ch) + string(l.ch)
+	// 		tok = Token{Type: TOKEN_STRING_CONCAT, Literal: Literal{Str: literal}}
+	// 	} else {
+	// 		tok = newToken(TOKEN_ILLEGAL, l.ch)
+	// 	}
+	// case ':':
+	// 	if l.peekChar() == ':' {
+	// 		l.readChar()
+	// 		if l.peekChar() == ':' { //diff:ignore-line-postgres-cockroach
+	// 			l.readChar()                                                           //diff:ignore-line-postgres-cockroach
+	// 			tok = Token{Type: TOKEN_TYPE_ANNOTATION, Literal: Literal{Str: ":::"}} //diff:ignore-line-postgres-cockroach
+	// 		} else { //diff:ignore-line-postgres-cockroach
+	// 			tok = Token{Type: TOKEN_TYPECAST, Literal: Literal{Str: "::"}}
+	// 		} //diff:ignore-line-postgres-cockroach
+	// 	} else {
+	// 		tok = newToken(TOKEN_ILLEGAL, l.ch)
+	// 	}
 	case '(':
 		tok = newToken(TOKEN_OPEN_PAREN, l.ch)
 	case ')':

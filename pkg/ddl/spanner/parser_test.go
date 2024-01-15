@@ -21,17 +21,15 @@ func TestParser_Parse(t *testing.T) {
 	})
 	logs.TraceLog = log.New(os.Stderr, "TRACE: ", log.LstdFlags|log.Lshortfile)
 
-	successTests := []struct {
-		name    string
-		input   string
-		wantErr error
-		wantStr string
-	}{
-		{
-			name:    "success,CREATE_TABLE",
-			input:   `CREATE TABLE "groups" ("id" STRING(36) NOT NULL, description STRING) PRIMARY KEY ("id"); CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL UNIQUE, "age" INT64 DEFAULT 0 CHECK ("age" >= 0), description STRING) PRIMARY KEY ("id"), INTERLEAVE IN PARENT names ON DELETE NO ACTION;`,
-			wantErr: nil,
-			wantStr: `CREATE TABLE "groups" (
+	t.Run("success,CREATE_TABLE", func(t *testing.T) {
+		// t.Parallel()
+
+		l := NewLexer(`CREATE TABLE "groups" ("id" STRING(36) NOT NULL, description STRING) PRIMARY KEY ("id"); CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL, "name" STRING(255) NOT NULL, "age" INT64 DEFAULT 0, description STRING, CONSTRAINT users_age_check CHECK ("age" >= 0), CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id) REFERENCES "groups" ("id")) PRIMARY KEY ("id"), INTERLEAVE IN PARENT names ON DELETE NO ACTION;`)
+		p := NewParser(l)
+		actual, err := p.Parse()
+		require.NoError(t, err)
+
+		const expected = `CREATE TABLE "groups" (
     "id" STRING(36) NOT NULL,
     description STRING
 ) PRIMARY KEY ("id");
@@ -41,87 +39,59 @@ CREATE TABLE "users" (
     "name" STRING(255) NOT NULL,
     "age" INT64 DEFAULT 0,
     description STRING,
-    CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id) REFERENCES "groups" ("id"),
-    UNIQUE INDEX users_unique_name ("name"),
-    CONSTRAINT users_age_check CHECK ("age" >= 0)
+    CONSTRAINT users_age_check CHECK ("age" >= 0),
+    CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id) REFERENCES "groups" ("id")
 ) PRIMARY KEY ("id"),
 INTERLEAVE IN PARENT names ON DELETE NO ACTION;
-`,
-		},
-		{
-			name: "success,complex_defaults",
-			input: `-- table: complex_defaults
+`
+
+		if !assert.Equal(t, expected, actual.String()) {
+			t.Fail()
+		}
+
+		t.Logf("✅: %s: actual: %%#v: \n%#v", t.Name(), actual)
+		t.Logf("✅: %s: actual: %%s: \n%s", t.Name(), actual)
+	})
+
+	t.Run("success,complex_defaults", func(t *testing.T) {
+		// t.Parallel()
+
+		l := NewLexer(`-- table: complex_defaults
 CREATE TABLE IF NOT EXISTS complex_defaults (
     -- id is the primary key.
-    id INT64 PRIMARY KEY,
+    id INT64,
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP()),
     updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP()),
-    unique_code STRING DEFAULT ('CODE-' || TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || '-' || LPAD(TO_CHAR(NEXTVAL('seq_complex_default')), 5, '0')),
+    unique_code STRING DEFAULT (GENERATE_UUID()),
     status STRING DEFAULT ('pending'),
     random_number INT64 DEFAULT (FLOOR(RANDOM() * 100)),
     json_data JSON DEFAULT ('{}'),
     calculated_value INT64 DEFAULT (SELECT COUNT(*) FROM another_table)
-);
-`,
-			wantErr: nil,
-			wantStr: `CREATE TABLE IF NOT EXISTS complex_defaults (
+) PRIMARY KEY (id);
+`)
+		p := NewParser(l)
+		actual, err := p.Parse()
+		require.NoError(t, err)
+
+		const expected = `CREATE TABLE IF NOT EXISTS complex_defaults (
     id INT64,
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP()),
     updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP()),
-    unique_code STRING DEFAULT ('CODE-' || TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || '-' || LPAD(TO_CHAR(NEXTVAL('seq_complex_default')), 5, '0')),
+    unique_code STRING DEFAULT (GENERATE_UUID()),
     status STRING DEFAULT ('pending'),
     random_number INT64 DEFAULT (FLOOR(RANDOM() * 100)),
     json_data JSON DEFAULT ('{}'),
-    calculated_value INT64 DEFAULT (SELECT COUNT(*) FROM another_table),
-    CONSTRAINT complex_defaults_pkey PRIMARY KEY (id)
-);
-`,
-		},
-		{
-			name: "success,CREATE_TABLE_TYPE_ANNOTATION",
-			input: `CREATE TABLE IF NOT EXISTS public.users (
-    user_id STRING(36) NOT NULL,
-    username STRING(256) NOT NULL,
-    is_verified BOOL NOT NULL DEFAULT false,
-    created_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP()),
-    updated_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP()),
-    CONSTRAINT users_pkey PRIMARY KEY (user_id ASC),
-    INDEX users_idx_by_username (username DESC)
-);
-`,
-			wantErr: nil,
-			wantStr: `CREATE TABLE IF NOT EXISTS public.users (
-    user_id STRING(36) NOT NULL,
-    username STRING(256) NOT NULL,
-    is_verified BOOL NOT NULL DEFAULT false,
-    created_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP()),
-    updated_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP()),
-    CONSTRAINT users_pkey PRIMARY KEY (user_id ASC),
-    INDEX users_idx_by_username (username DESC)
-);
-`,
-		},
-	}
+    calculated_value INT64 DEFAULT (SELECT COUNT(*) FROM another_table)
+) PRIMARY KEY (id);
+`
 
-	for _, tt := range successTests {
-		tt := tt
+		if !assert.Equal(t, expected, actual.String()) {
+			t.Fail()
+		}
 
-		t.Run(tt.name, func(t *testing.T) {
-			// t.Parallel()
-
-			l := NewLexer(tt.input)
-			p := NewParser(l)
-			actual, err := p.Parse()
-			require.ErrorIs(t, err, tt.wantErr)
-
-			if !assert.Equal(t, tt.wantStr, actual.String()) {
-				t.Fail()
-			}
-
-			t.Logf("✅: %s: actual: %%#v: \n%#v", t.Name(), actual)
-			t.Logf("✅: %s: actual: %%s: \n%s", t.Name(), actual)
-		})
-	}
+		t.Logf("✅: %s: actual: %%#v: \n%#v", t.Name(), actual)
+		t.Logf("✅: %s: actual: %%s: \n%s", t.Name(), actual)
+	})
 
 	failureTests := []struct {
 		name    string
@@ -166,6 +136,21 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_data_type_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36);`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_data_type_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36), enabled BOOL DEFAULT (FALSE);`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_data_type_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36), enabled BOOL DEFAULT (TRUE AND FALSE);`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_data_type_OPTIONS_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36), created_at TIMESTAMP OPTIONS (allow_commit_timestamp = true;`,
 			wantErr: ddl.ErrUnexpectedToken,
 		},
 		{
@@ -234,18 +219,68 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 			wantErr: ddl.ErrUnexpectedToken,
 		},
 		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_CHECK_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36), CONSTRAINT constraint_name CHECK`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_CHECK_OPEN_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36), CONSTRAINT constraint_name CHECK (`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_INVALID_PRIMARY",
-			input:   `CREATE TABLE "users" ("id" STRING(36), PRIMARY NOT`,
+			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY NOT`,
 			wantErr: ddl.ErrUnexpectedToken,
 		},
 		{
-			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_INVALID_PRIMARY_KEY",
-			input:   `CREATE TABLE "users" ("id" STRING(36), PRIMARY KEY NOT`,
+			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY NOT`,
 			wantErr: ddl.ErrUnexpectedToken,
 		},
 		{
-			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_INVALID_PRIMARY_KEY_OPEN_PAREN",
-			input:   `CREATE TABLE "users" ("id" STRING(36), PRIMARY KEY (NOT`,
+			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_OPEN_PAREN_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (NOT`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_OPEN_PAREN_column_name_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_INTERLEAVE_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), INTERLEAVE;`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_INTERLEAVE_IN_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), INTERLEAVE IN;`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_INTERLEAVE_IN_PARENT_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), INTERLEAVE IN PARENT;`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_INTERLEAVE_IN_PARENT_ON_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), INTERLEAVE IN PARENT table_name ON;`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_INTERLEAVE_IN_PARENT_ON_DELETE_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), INTERLEAVE IN PARENT table_name ON DELETE;`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_INTERLEAVE_IN_PARENT_ON_DELETE_CASCADE_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), INTERLEAVE IN PARENT table_name ON DELETE CASCADE NOT;`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_INTERLEAVE_IN_PARENT_ON_DELETE_NO_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), INTERLEAVE IN PARENT table_name ON DELETE NO;`,
 			wantErr: ddl.ErrUnexpectedToken,
 		},
 		{
@@ -375,6 +410,11 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 			require.ErrorIs(t, err, tt.wantErr)
 		})
 	}
+
+	t.Run("success,TOKEN_SEMICOLON", func(t *testing.T) {
+		_, err := NewParser(NewLexer(`;`)).Parse()
+		require.NoError(t, err)
+	})
 }
 
 func TestParser_parseColumn(t *testing.T) {
@@ -407,6 +447,21 @@ func TestParser_parseColumn(t *testing.T) {
 		p.nextToken()
 		_, _, err := p.parseColumn(&Ident{Name: "table_name", QuotationMark: `"`, Raw: `"table_name"`})
 		require.ErrorIs(t, err, ddl.ErrUnexpectedToken)
+	})
+}
+
+func TestParser_parseColumnDefault(t *testing.T) {
+	t.Parallel()
+
+	t.Run("success,isReservedValue", func(t *testing.T) {
+		t.Parallel()
+
+		p := NewParser(NewLexer(`DEFAULT TRUE,`))
+		p.nextToken()
+		p.nextToken()
+		p.nextToken()
+		_, err := p.parseColumnDefault()
+		require.NoError(t, err)
 	})
 }
 

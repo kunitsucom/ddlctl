@@ -74,26 +74,14 @@ func DiffCreateTable(before, after *CreateTableStmt, opts ...DiffCreateTableOpti
 	for _, beforeConstraint := range before.Constraints {
 		afterConstraint := findConstraintByName(beforeConstraint.GetName().Name, after.Constraints)
 		if afterConstraint == nil {
-			switch bc := beforeConstraint.(type) { //diff:ignore-line-postgres-cockroach
-			case *IndexConstraint: //diff:ignore-line-postgres-cockroach
-				// DROP INDEX index_name; //diff:ignore-line-postgres-cockroach
-				result.Stmts = append(result.Stmts, &DropIndexStmt{ //diff:ignore-line-postgres-cockroach
-					Comment: simplediff.Diff(bc.StringForDiff(), "").String(), //diff:ignore-line-postgres-cockroach
-					Name: &ObjectName{ //diff:ignore-line-postgres-cockroach
-						Schema: before.Name.Schema, //diff:ignore-line-postgres-cockroach
-						Name:   bc.GetName(),       //diff:ignore-line-postgres-cockroach
-					}, //diff:ignore-line-postgres-cockroach
-				}) //diff:ignore-line-postgres-cockroach
-			default: //diff:ignore-line-postgres-cockroach
-				// ALTER TABLE table_name DROP CONSTRAINT constraint_name;
-				result.Stmts = append(result.Stmts, &AlterTableStmt{
-					Comment: simplediff.Diff(beforeConstraint.String(), "").String(),
-					Name:    after.Name, // ALTER TABLE RENAME TO で変更された後の可能性があるため after.Name を使用する
-					Action: &DropConstraint{
-						Name: beforeConstraint.GetName(),
-					},
-				})
-			} //diff:ignore-line-postgres-cockroach
+			// ALTER TABLE table_name DROP CONSTRAINT constraint_name;
+			result.Stmts = append(result.Stmts, &AlterTableStmt{
+				Comment: simplediff.Diff(beforeConstraint.String(), "").String(),
+				Name:    after.Name, // ALTER TABLE RENAME TO で変更された後の可能性があるため after.Name を使用する
+				Action: &DropConstraint{
+					Name: beforeConstraint.GetName(),
+				},
+			})
 			continue
 		}
 	}
@@ -104,80 +92,45 @@ func DiffCreateTable(before, after *CreateTableStmt, opts ...DiffCreateTableOpti
 		afterConstraint := findConstraintByName(beforeConstraint.GetName().Name, after.Constraints)
 		if afterConstraint != nil {
 			if beforeConstraint.StringForDiff() != afterConstraint.StringForDiff() {
-				switch ac := afterConstraint.(type) { //diff:ignore-line-postgres-cockroach
-				case *IndexConstraint: //diff:ignore-line-postgres-cockroach
-					// DROP INDEX index_name;                               //diff:ignore-line-postgres-cockroach
-					// CREATE INDEX index_name ON table_name (column_name); //diff:ignore-line-postgres-cockroach
-					result.Stmts = append( //diff:ignore-line-postgres-cockroach
-						result.Stmts, //diff:ignore-line-postgres-cockroach
-						&DropIndexStmt{ //diff:ignore-line-postgres-cockroach
-							Name: &ObjectName{ //diff:ignore-line-postgres-cockroach
-								Schema: before.Name.Schema,         //diff:ignore-line-postgres-cockroach
-								Name:   beforeConstraint.GetName(), //diff:ignore-line-postgres-cockroach
-							}, //diff:ignore-line-postgres-cockroach
-						}, //diff:ignore-line-postgres-cockroach
-						&CreateIndexStmt{ //diff:ignore-line-postgres-cockroach
-							Unique: ac.Unique, //diff:ignore-line-postgres-cockroach
-							Name: &ObjectName{ //diff:ignore-line-postgres-cockroach
-								Schema: after.Name.Schema, //diff:ignore-line-postgres-cockroach
-								Name:   ac.GetName(),      //diff:ignore-line-postgres-cockroach
-							}, //diff:ignore-line-postgres-cockroach
-							TableName: after.Name, //diff:ignore-line-postgres-cockroach
-							Columns:   ac.Columns, //diff:ignore-line-postgres-cockroach
-						}, //diff:ignore-line-postgres-cockroach
-					) //diff:ignore-line-postgres-cockroach
-				default: //diff:ignore-line-postgres-cockroach
-					// ALTER TABLE table_name DROP CONSTRAINT constraint_name;
-					// ALTER TABLE table_name ADD CONSTRAINT constraint_name constraint;
-					result.Stmts = append(
-						result.Stmts,
-						&AlterTableStmt{
-							Comment: simplediff.Diff(beforeConstraint.String(), "").String(),
-							Name:    after.Name, // ALTER TABLE RENAME TO で変更された後の可能性があるため after.Name を使用する
-							Action: &DropConstraint{
-								Name: beforeConstraint.GetName(),
-							},
+				// ALTER TABLE table_name DROP CONSTRAINT constraint_name;
+				// ALTER TABLE table_name ADD CONSTRAINT constraint_name constraint;
+				result.Stmts = append(
+					result.Stmts,
+					&AlterTableStmt{
+						Comment: simplediff.Diff(beforeConstraint.String(), "").String(),
+						Name:    after.Name, // ALTER TABLE RENAME TO で変更された後の可能性があるため after.Name を使用する
+						Action: &DropConstraint{
+							Name: beforeConstraint.GetName(),
 						},
-						&AlterTableStmt{
-							Comment: simplediff.Diff("", afterConstraint.String()).String(),
-							Name:    after.Name,
-							Action: &AddConstraint{
-								Constraint: afterConstraint,
-								NotValid:   config.UseAlterTableAddConstraintNotValid,
-							},
+					},
+					&AlterTableStmt{
+						Comment: simplediff.Diff("", afterConstraint.String()).String(),
+						Name:    after.Name,
+						Action: &AddConstraint{
+							Constraint: afterConstraint,
+							NotValid:   config.UseAlterTableAddConstraintNotValid,
 						},
-					)
-				} //diff:ignore-line-postgres-cockroach
+					},
+				)
 			}
 			continue
 		}
 	}
 
 	for _, afterConstraint := range onlyLeftConstraint(after.Constraints, before.Constraints) {
-		switch ac := afterConstraint.(type) { //diff:ignore-line-postgres-cockroach
-		case *IndexConstraint: //diff:ignore-line-postgres-cockroach
-			// CREATE INDEX index_name ON table_name (column_name); //diff:ignore-line-postgres-cockroach
-			result.Stmts = append(result.Stmts, &CreateIndexStmt{ //diff:ignore-line-postgres-cockroach
-				Comment: simplediff.Diff("", ac.StringForDiff()).String(), //diff:ignore-line-postgres-cockroach
-				Unique:  ac.Unique,                                        //diff:ignore-line-postgres-cockroach
-				Name: &ObjectName{ //diff:ignore-line-postgres-cockroach
-					Schema: after.Name.Schema, //diff:ignore-line-postgres-cockroach
-					Name:   ac.GetName(),      //diff:ignore-line-postgres-cockroach
-				}, //diff:ignore-line-postgres-cockroach
-				TableName: after.Name, //diff:ignore-line-postgres-cockroach
-				Columns:   ac.Columns, //diff:ignore-line-postgres-cockroach
-			}) //diff:ignore-line-postgres-cockroach
-		default: //diff:ignore-line-postgres-cockroach
-			// ALTER TABLE table_name ADD CONSTRAINT constraint_name constraint;
-			result.Stmts = append(result.Stmts, &AlterTableStmt{
-				Comment: simplediff.Diff("", afterConstraint.String()).String(),
-				Name:    after.Name,
-				Action: &AddConstraint{
-					Constraint: afterConstraint,
-					NotValid:   config.UseAlterTableAddConstraintNotValid,
-				},
-			})
-		} //diff:ignore-line-postgres-cockroach
+		// ALTER TABLE table_name ADD CONSTRAINT constraint_name constraint;
+		result.Stmts = append(result.Stmts, &AlterTableStmt{
+			Comment: simplediff.Diff("", afterConstraint.String()).String(),
+			Name:    after.Name,
+			Action: &AddConstraint{
+				Constraint: afterConstraint,
+				NotValid:   config.UseAlterTableAddConstraintNotValid,
+			},
+		})
+	}
+
+	if before.Options.StringForDiff() != after.Options.StringForDiff() {
+		return nil, apperr.Errorf("before: %s, after: %s: %w", before.Options, after.Options, ddl.ErrAlterOptionNotSupported)
 	}
 
 	if len(result.Stmts) == 0 {

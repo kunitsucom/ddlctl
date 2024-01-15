@@ -1,7 +1,7 @@
 package spanner
 
 import (
-	"sort" //diff:ignore-line-postgres-cockroach
+	//diff:ignore-line-postgres-cockroach
 	"strings"
 
 	stringz "github.com/kunitsucom/util.go/strings"
@@ -28,55 +28,7 @@ func (constraints Constraints) Append(constraint Constraint) Constraints {
 	}
 	constraints = append(constraints, constraint)
 
-	sort.Slice(constraints, func(left, right int) bool { //diff:ignore-line-postgres-cockroach
-		_, leftIsPrimaryKeyConstraint := constraints[left].(*PrimaryKeyConstraint) //diff:ignore-line-postgres-cockroach
-		switch {                                                                   //diff:ignore-line-postgres-cockroach
-		case leftIsPrimaryKeyConstraint: //diff:ignore-line-postgres-cockroach
-			return true //diff:ignore-line-postgres-cockroach
-		default: //diff:ignore-line-postgres-cockroach
-			return false //diff:ignore-line-postgres-cockroach
-		} //diff:ignore-line-postgres-cockroach
-	}) //diff:ignore-line-postgres-cockroach
-
 	return constraints
-}
-
-// PrimaryKeyConstraint represents a PRIMARY KEY constraint.
-type PrimaryKeyConstraint struct {
-	Name    *Ident
-	Columns []*ColumnIdent
-}
-
-var _ Constraint = (*PrimaryKeyConstraint)(nil)
-
-func (*PrimaryKeyConstraint) isConstraint()      {}
-func (c *PrimaryKeyConstraint) GetName() *Ident  { return c.Name }
-func (c *PrimaryKeyConstraint) GoString() string { return internal.GoString(*c) }
-func (c *PrimaryKeyConstraint) String() string {
-	var str string
-	if c.Name != nil {
-		str += "CONSTRAINT " + c.Name.String() + " "
-	}
-	str += "PRIMARY KEY"
-	str += " (" + stringz.JoinStringers(", ", c.Columns...) + ")"
-	return str
-}
-
-func (c *PrimaryKeyConstraint) StringForDiff() string {
-	var str string
-	if c.Name != nil {
-		str += "CONSTRAINT " + c.Name.StringForDiff() + " "
-	}
-	str += "PRIMARY KEY"
-	str += " ("
-	for i, v := range c.Columns {
-		if i != 0 {
-			str += ", "
-		}
-		str += v.StringForDiff()
-	}
-	str += ")"
-	return str
 }
 
 // ForeignKeyConstraint represents a FOREIGN KEY constraint.
@@ -135,42 +87,6 @@ type IndexConstraint struct { //diff:ignore-line-postgres-cockroach
 	Name    *Ident
 	Unique  bool //diff:ignore-line-postgres-cockroach
 	Columns []*ColumnIdent
-}
-
-var _ Constraint = (*IndexConstraint)(nil) //diff:ignore-line-postgres-cockroach
-
-func (*IndexConstraint) isConstraint()      {}                               //diff:ignore-line-postgres-cockroach
-func (c *IndexConstraint) GetName() *Ident  { return c.Name }                //diff:ignore-line-postgres-cockroach
-func (c *IndexConstraint) GoString() string { return internal.GoString(*c) } //diff:ignore-line-postgres-cockroach
-func (c *IndexConstraint) String() string { //diff:ignore-line-postgres-cockroach
-	var str string
-	if c.Unique { //diff:ignore-line-postgres-cockroach
-		str += "UNIQUE " //diff:ignore-line-postgres-cockroach
-	} //diff:ignore-line-postgres-cockroach
-	if c.Name != nil { //diff:ignore-line-postgres-cockroach
-		str += "INDEX " + c.Name.String() + " " //diff:ignore-line-postgres-cockroach
-	}
-	str += "(" + stringz.JoinStringers(", ", c.Columns...) + ")"
-	return str
-}
-
-func (c *IndexConstraint) StringForDiff() string { //diff:ignore-line-postgres-cockroach
-	var str string
-	if c.Unique { //diff:ignore-line-postgres-cockroach
-		str += "UNIQUE " //diff:ignore-line-postgres-cockroach
-	} //diff:ignore-line-postgres-cockroach
-	if c.Name != nil {
-		str += "INDEX " + c.Name.StringForDiff() + " " //diff:ignore-line-postgres-cockroach
-	}
-	str += "("
-	for i, v := range c.Columns {
-		if i != 0 {
-			str += ", "
-		}
-		str += v.StringForDiff()
-	}
-	str += ")"
-	return str
 }
 
 // CheckConstraint represents a CHECK constraint.
@@ -287,8 +203,9 @@ func (d *Expr) String() string {
 	var str string
 	for i := range d.Idents {
 		switch {
-		case i != 0 && (d.Idents[i-1].String() == "||" || d.Idents[i].String() == "||"):
-			str += " "
+		// MEMO: backup
+		// case i != 0 && (d.Idents[i-1].String() == "||" || d.Idents[i].String() == "||"):
+		// 	str += " "
 		case i == 0 ||
 			d.Idents[i-1].String() == "(" || d.Idents[i].String() == "(" ||
 			d.Idents[i].String() == ")" ||
@@ -380,4 +297,35 @@ func (o *Option) String() string {
 	return o.Name + " " + o.Value.String()
 }
 
+func (o *Option) StringForDiff() string {
+	if o.Value == nil {
+		return ""
+	}
+	return o.Name + " " + o.Value.StringForDiff()
+}
+
 func (o *Option) GoString() string { return internal.GoString(*o) }
+
+type Options []*Option
+
+func (o Options) String() string {
+	var str string
+	for i, v := range o {
+		if i != 0 {
+			str += ",\n"
+		}
+		str += v.String()
+	}
+	return str
+}
+
+func (o Options) StringForDiff() string {
+	var str string
+	for i, v := range o {
+		if i != 0 {
+			str += ", "
+		}
+		str += v.StringForDiff()
+	}
+	return str
+}

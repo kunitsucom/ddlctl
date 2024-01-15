@@ -17,7 +17,7 @@ type CreateTableStmt struct {
 	Name        *ObjectName
 	Columns     []*Column
 	Constraints Constraints
-	Options     []*Option
+	Options     Options
 }
 
 func (s *CreateTableStmt) GetNameForDiff() string {

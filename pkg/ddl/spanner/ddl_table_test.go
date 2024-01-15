@@ -9,9 +9,7 @@ import (
 func Test_isConstraint(t *testing.T) {
 	t.Parallel()
 
-	(&PrimaryKeyConstraint{}).isConstraint()
 	(&ForeignKeyConstraint{}).isConstraint()
-	(&IndexConstraint{}).isConstraint()
 	(&CheckConstraint{}).isConstraint()
 }
 
@@ -22,37 +20,21 @@ func TestConstraints_Append(t *testing.T) {
 		t.Parallel()
 
 		constraints := Constraints{}
-		constraint := &PrimaryKeyConstraint{Name: &Ident{Name: "pk_users", QuotationMark: `"`, Raw: `"pk_users"`}, Columns: []*ColumnIdent{{Ident: &Ident{Name: "id", QuotationMark: `"`, Raw: `"id"`}}}}
+		constraint := &CheckConstraint{
+			Name: NewRawIdent(`"users_age_check"`),
+			Expr: &Expr{Idents: []*Ident{
+				{Name: "(", QuotationMark: ``, Raw: `(`},
+				{Name: "age", QuotationMark: `"`, Raw: `"age"`},
+				{Name: ">=", QuotationMark: ``, Raw: `>=`},
+				{Name: "0", QuotationMark: ``, Raw: `0`},
+				{Name: ")", QuotationMark: ``, Raw: `)`},
+			}},
+		}
 		constraints = constraints.Append(constraint)
 		constraints = constraints.Append(constraint)
 		expected := Constraints{constraint}
 		actual := constraints
 		require.Equal(t, expected, actual)
-	})
-}
-
-func TestPrimaryKeyConstraint(t *testing.T) {
-	t.Parallel()
-
-	t.Run("success,PrimaryKeyConstraint", func(t *testing.T) {
-		t.Parallel()
-
-		primaryKeyConstraint := &PrimaryKeyConstraint{Name: &Ident{Name: "pk_users", QuotationMark: `"`, Raw: `"pk_users"`}, Columns: []*ColumnIdent{{Ident: &Ident{Name: "id", QuotationMark: `"`, Raw: `"id"`}}}}
-		expected := "CONSTRAINT \"pk_users\" PRIMARY KEY (\"id\")"
-		actual := primaryKeyConstraint.String()
-		require.Equal(t, expected, actual)
-
-		t.Logf("✅: %s: primaryKeyConstraint: %#v", t.Name(), primaryKeyConstraint)
-	})
-	t.Run("success,PrimaryKeyConstraint,empty", func(t *testing.T) {
-		t.Parallel()
-
-		primaryKeyConstraint := &PrimaryKeyConstraint{}
-		expected := "PRIMARY KEY ()"
-		actual := primaryKeyConstraint.String()
-		require.Equal(t, expected, actual)
-
-		t.Logf("✅: %s: primaryKeyConstraint: %#v", t.Name(), primaryKeyConstraint)
 	})
 }
 
@@ -73,25 +55,6 @@ func TestForeignKeyConstraint(t *testing.T) {
 		require.Equal(t, expected, actual)
 
 		t.Logf("✅: %s: foreignKeyConstraint: %#v", t.Name(), foreignKeyConstraint)
-	})
-}
-
-func TestUniqueConstraint(t *testing.T) {
-	t.Parallel()
-	t.Run("success,UniqueConstraint", func(t *testing.T) {
-		t.Parallel()
-
-		indexConstraint := &IndexConstraint{
-			Unique:  true,
-			Name:    &Ident{Name: "uq_users_email", QuotationMark: `"`, Raw: `"uq_users_email"`},
-			Columns: []*ColumnIdent{{Ident: &Ident{Name: "email", QuotationMark: `"`, Raw: `"email"`}}},
-		}
-
-		expected := `UNIQUE INDEX "uq_users_email" ("email")`
-		actual := indexConstraint.String()
-		require.Equal(t, expected, actual)
-
-		t.Logf("✅: %s: uniqueConstraint: %#v", t.Name(), indexConstraint)
 	})
 }
 
@@ -220,22 +183,50 @@ func TestOption(t *testing.T) {
 	t.Run("success,Option", func(t *testing.T) {
 		t.Parallel()
 
-		option := &Option{Name: "PRIMARY KEY", Value: &Expr{Idents: []*Ident{NewRawIdent("("), NewRawIdent(`"id"`), NewRawIdent(")")}}}
+		option := &Option{Name: "PRIMARY KEY", Value: &Expr{Idents: []*Ident{NewRawIdent("("), NewRawIdent(`"id1"`), NewRawIdent(`,`), NewRawIdent(`"id2"`), NewRawIdent(")")}}}
 
-		expected := `PRIMARY KEY ("id")`
+		expected := `PRIMARY KEY ("id1", "id2")`
 		actual := option.String()
 		require.Equal(t, expected, actual)
 
+		expectedForDiff := `PRIMARY KEY ( id1 , id2 )`
+		actualForDiff := option.StringForDiff()
+		require.Equal(t, expectedForDiff, actualForDiff)
+
 		t.Logf("✅: %s: option: %#v", t.Name(), option)
+	})
+
+	t.Run("success,Options", func(t *testing.T) {
+		t.Parallel()
+
+		options := Options{
+			&Option{Name: "PRIMARY KEY", Value: &Expr{Idents: []*Ident{NewRawIdent("("), NewRawIdent(`"id1"`), NewRawIdent(`,`), NewRawIdent(`"id2"`), NewRawIdent(")")}}},
+			&Option{Name: "PRIMARY KEY", Value: &Expr{Idents: []*Ident{NewRawIdent("("), NewRawIdent(`"id1"`), NewRawIdent(`,`), NewRawIdent(`"id2"`), NewRawIdent(")")}}},
+		}
+
+		expected := `PRIMARY KEY ("id1", "id2"),
+PRIMARY KEY ("id1", "id2")`
+		actual := options.String()
+		require.Equal(t, expected, actual)
+
+		expectedForDiff := `PRIMARY KEY ( id1 , id2 ), PRIMARY KEY ( id1 , id2 )`
+		actualForDiff := options.StringForDiff()
+		require.Equal(t, expectedForDiff, actualForDiff)
+
+		t.Logf("✅: %s: option: %#v", t.Name(), options)
 	})
 
 	t.Run("success,Option,empty", func(t *testing.T) {
 		t.Parallel()
 
 		option := &Option{}
-		expected := ""
-		actual := option.String()
-		require.Equal(t, expected, actual)
+		expectedString := ""
+		actualString := option.String()
+		require.Equal(t, expectedString, actualString)
+
+		expectedStringForDiff := ""
+		actualStringForDiff := option.StringForDiff()
+		require.Equal(t, expectedStringForDiff, actualStringForDiff)
 
 		t.Logf("✅: %s: option: %#v", t.Name(), option)
 	})

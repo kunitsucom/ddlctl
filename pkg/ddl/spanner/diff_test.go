@@ -75,21 +75,29 @@ func TestDiff(t *testing.T) {
 						},
 					},
 					Constraints: []Constraint{
-						&PrimaryKeyConstraint{
-							Columns: []*ColumnIdent{
-								{
-									Ident: &Ident{Name: "column_name", Raw: "column_name"},
+						&CheckConstraint{
+							Name: NewRawIdent("table_name_check_column_name"),
+							Expr: &Expr{
+								Idents: []*Ident{
+									NewRawIdent("("),
+									NewRawIdent("column_name"),
+									NewRawIdent("!="),
+									NewRawIdent("''"),
+									NewRawIdent(")"),
 								},
 							},
 						},
+					},
+					Options: []*Option{
+						{Name: "PRIMARY KEY", Value: &Expr{Idents: []*Ident{NewRawIdent("("), NewRawIdent("column_name"), NewRawIdent(")")}}},
 					},
 				},
 			},
 		}
 		expected := `CREATE TABLE table_name (
     column_name STRING NOT NULL,
-    PRIMARY KEY (column_name)
-);
+    CONSTRAINT table_name_check_column_name CHECK (column_name != '')
+) PRIMARY KEY (column_name);
 `
 		actual, err := Diff(before, after)
 		require.NoError(t, err)
@@ -213,7 +221,7 @@ func TestDiff(t *testing.T) {
 		after := &DDL{
 			Stmts: []Stmt{
 				&CreateTableStmt{
-					Name: &ObjectName{Schema: &Ident{Name: "public", Raw: "public"}, Name: &Ident{Name: "table_name", Raw: "table_name"}},
+					Name: &ObjectName{Name: &Ident{Name: "table_name", Raw: "table_name"}},
 					Columns: []*Column{
 						{
 							Name: &Ident{Name: "column_name", Raw: "column_name"},
@@ -224,22 +232,30 @@ func TestDiff(t *testing.T) {
 						},
 					},
 					Constraints: []Constraint{
-						&PrimaryKeyConstraint{
-							Columns: []*ColumnIdent{
-								{
-									Ident: &Ident{Name: "column_name", Raw: "column_name"},
+						&CheckConstraint{
+							Name: NewRawIdent("table_name_check_column_name"),
+							Expr: &Expr{
+								Idents: []*Ident{
+									NewRawIdent("("),
+									NewRawIdent("column_name"),
+									NewRawIdent("!="),
+									NewRawIdent("''"),
+									NewRawIdent(")"),
 								},
 							},
 						},
+					},
+					Options: []*Option{
+						{Name: "PRIMARY KEY", Value: &Expr{Idents: []*Ident{NewRawIdent("("), NewRawIdent("column_name"), NewRawIdent(")")}}},
 					},
 				},
 			},
 		}
 
-		expected := `CREATE TABLE public.table_name (
+		expected := `CREATE TABLE table_name (
     column_name STRING NOT NULL,
-    PRIMARY KEY (column_name)
-);
+    CONSTRAINT table_name_check_column_name CHECK (column_name != '')
+) PRIMARY KEY (column_name);
 `
 		actual, err := Diff(before, after)
 		require.NoError(t, err)
@@ -284,9 +300,7 @@ func TestDiff(t *testing.T) {
     username STRING(256) NOT NULL,
     is_verified BOOL NOT NULL DEFAULT (false),
     created_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP()),
-    CONSTRAINT users_pkey PRIMARY KEY (user_id ASC),
-    INDEX users_idx_by_username (username DESC)
-);
+) PRIMARY KEY (user_id);
 `)).Parse()
 		require.NoError(t, err)
 
@@ -296,9 +310,7 @@ func TestDiff(t *testing.T) {
     is_verified BOOL NOT NULL DEFAULT (false),
     created_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP()),
     updated_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP()),
-    CONSTRAINT users_pkey PRIMARY KEY (user_id ASC),
-    INDEX users_idx_by_username (username DESC)
-);
+) PRIMARY KEY (user_id);
 `)).Parse()
 		require.NoError(t, err)
 
@@ -318,32 +330,33 @@ ALTER TABLE public.users ADD COLUMN updated_at TIMESTAMP NOT NULL DEFAULT (CURRE
 	t.Run("success,before,after,Table,Asc", func(t *testing.T) {
 		t.Parallel()
 
-		before, err := NewParser(NewLexer(`CREATE TABLE public.users (
+		before, err := NewParser(NewLexer(`CREATE TABLE users (
     user_id STRING(36) NOT NULL,
     username STRING(256) NOT NULL,
     is_verified BOOL NOT NULL DEFAULT (false),
     created_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP()),
     updated_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP()),
-    CONSTRAINT users_pkey PRIMARY KEY (user_id ASC),
-    INDEX users_idx_by_username (username DESC)
-);
+) PRIMARY KEY (user_id);
+CREATE INDEX users_idx_by_username ON users (username DESC);
 `)).Parse()
 		require.NoError(t, err)
 
-		after, err := NewParser(NewLexer(`CREATE TABLE public.users (
+		after, err := NewParser(NewLexer(`CREATE TABLE users (
     user_id STRING(36) NOT NULL,
     username STRING(256) NOT NULL,
     is_verified BOOL NOT NULL DEFAULT (false),
     created_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP()),
     updated_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP()),
-    CONSTRAINT users_pkey PRIMARY KEY (user_id ASC),
-    INDEX users_idx_by_username (username ASC)
-);
+) PRIMARY KEY (user_id);
+CREATE INDEX users_idx_by_username ON users (username ASC);
 `)).Parse()
 		require.NoError(t, err)
 
-		expected := `DROP INDEX public.users_idx_by_username;
-CREATE INDEX public.users_idx_by_username ON public.users (username ASC);
+		expected := `-- -CREATE INDEX users_idx_by_username ON users (username DESC);
+-- +CREATE INDEX users_idx_by_username ON users (username ASC);
+--  
+DROP INDEX users_idx_by_username;
+CREATE INDEX users_idx_by_username ON users (username ASC);
 `
 		actual, err := Diff(before, after)
 		require.NoError(t, err)
@@ -405,6 +418,24 @@ ALTER TABLE public.users ALTER COLUMN username STRING(11) NOT NULL;
 		require.NoError(t, err)
 
 		after, err := NewParser(NewLexer(`CREATE TABLE public.passwords ( user_id STRING(36) NOT NULL, password STRING NOT NULL, is_verified BOOL NOT NULL DEFAULT (FALSE), is_expired BOOL NOT NULL DEFAULT (TRUE) );`)).Parse()
+		require.NoError(t, err)
+
+		expected := ``
+		actual, err := Diff(before, after)
+		assert.ErrorIs(t, err, ddl.ErrNoDifference)
+
+		if !assert.Equal(t, expected, actual.String()) {
+			t.Errorf("❌: %s: stmt: %%#v: \n%#v", t.Name(), actual)
+		}
+	})
+
+	t.Run("success,ddl.ErrNoDifference,SameContent", func(t *testing.T) {
+		t.Parallel()
+
+		before, err := NewParser(NewLexer(`CREATE TABLE passwords ( user_id STRING(36) NOT NULL, password STRING NOT NULL, is_verified BOOL NOT NULL DEFAULT (false), is_expired BOOL NOT NULL DEFAULT (true) );`)).Parse()
+		require.NoError(t, err)
+
+		after, err := NewParser(NewLexer(`CREATE TABLE "passwords" ( "user_id" STRING(36) NOT NULL, "password" STRING NOT NULL, "is_verified" BOOL NOT NULL DEFAULT (FALSE), "is_expired" BOOL NOT NULL DEFAULT (TRUE) );`)).Parse()
 		require.NoError(t, err)
 
 		expected := ``
