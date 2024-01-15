@@ -52,6 +52,15 @@ func DiffCreateTable(before, after *CreateTableStmt, opts ...DiffCreateTableOpti
 			Name: before.Name,
 		})
 		return result, nil
+	case before.Options.StringForDiff() != after.Options.StringForDiff():
+		result.Stmts = append(result.Stmts,
+			&DropTableStmt{
+				Comment: simplediff.Diff(before.Options.String(), after.Options.String()).String(),
+				Name:    before.Name,
+			},
+			after,
+		)
+		return result, nil
 	case (before == nil && after == nil) || reflect.DeepEqual(before, after) || before.String() == after.String():
 		return nil, apperr.Errorf("before: %s, after: %s: %w", before.GetNameForDiff(), after.GetNameForDiff(), ddl.ErrNoDifference)
 	}
@@ -127,10 +136,6 @@ func DiffCreateTable(before, after *CreateTableStmt, opts ...DiffCreateTableOpti
 				NotValid:   config.UseAlterTableAddConstraintNotValid,
 			},
 		})
-	}
-
-	if before.Options.StringForDiff() != after.Options.StringForDiff() {
-		return nil, apperr.Errorf("before: %s, after: %s: %w", before.Options, after.Options, ddl.ErrAlterOptionNotSupported)
 	}
 
 	if len(result.Stmts) == 0 {

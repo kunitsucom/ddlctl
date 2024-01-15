@@ -304,7 +304,7 @@ ALTER TABLE "users" ALTER COLUMN "age" INT64;
 		t.Logf("✅: %s: actual: %%#v:\n%#v", t.Name(), actual)
 	})
 
-	t.Run("failure,ALTER_PRIMARY_KEY", func(t *testing.T) {
+	t.Run("success,ALTER_PRIMARY_KEY", func(t *testing.T) {
 		t.Parallel()
 
 		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING) PRIMARY KEY ("id");`
@@ -320,8 +320,22 @@ ALTER TABLE "users" ALTER COLUMN "age" INT64;
 			afterDDL.Stmts[0].(*CreateTableStmt),
 			DiffCreateTableUseAlterTableAddConstraintNotValid(false),
 		)
-		assert.ErrorIs(t, err, ddl.ErrAlterOptionNotSupported)
-		assert.Nil(t, actual)
+		assert.NoError(t, err)
+		expected := `-- -PRIMARY KEY ("id")
+-- +PRIMARY KEY ("id", name)
+DROP TABLE "users";
+CREATE TABLE "users" (
+    id STRING(36) NOT NULL,
+    group_id STRING(36) NOT NULL,
+    "name" STRING(255) NOT NULL,
+    "age" INT64 NOT NULL DEFAULT 0,
+    description STRING,
+    CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id) REFERENCES "groups" ("id"),
+    CONSTRAINT users_age_check CHECK ("age" >= 0)
+) PRIMARY KEY ("id", name);
+`
+
+		assert.Equal(t, expected, actual.String())
 	})
 
 	t.Run("success,DROP_ADD_FOREIGN_KEY", func(t *testing.T) {
@@ -543,27 +557,5 @@ ALTER TABLE "users" ADD CONSTRAINT users_age_check CHECK ("age" >= 0) NOT VALID;
 		}, ddls)
 
 		t.Logf("✅: %s:\n%s", t.Name(), ddls)
-	})
-
-	t.Run("success,NoAsc", func(t *testing.T) {
-		t.Parallel()
-
-		beforeDDL, err := NewParser(NewLexer(`CREATE TABLE "users" (id STRING(36) NOT NULL) PRIMARY KEY ("id" ASC);`)).Parse()
-		require.NoError(t, err)
-
-		afterDDL, err := NewParser(NewLexer(`CREATE TABLE "users" (id STRING(36) NOT NULL) PRIMARY KEY ("id");`)).Parse()
-		require.NoError(t, err)
-
-		actual, err := DiffCreateTable(
-			beforeDDL.Stmts[0].(*CreateTableStmt),
-			afterDDL.Stmts[0].(*CreateTableStmt),
-			DiffCreateTableUseAlterTableAddConstraintNotValid(false),
-		)
-
-		assert.ErrorIs(t, err, ddl.ErrAlterOptionNotSupported)
-		assert.Nil(t, actual)
-
-		t.Logf("✅: %s: actual: %%#v: \n%#v", t.Name(), actual)
-		t.Logf("✅: %s: actual: %%s: \n%s", t.Name(), actual)
 	})
 }
