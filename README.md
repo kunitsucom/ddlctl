@@ -1,5 +1,8 @@
 # [ddlctl](https://github.com/kunitsucom/ddlctl)
 
+> [!WARNING]
+> This project is experimental. It is operational in the author's environment, but it is not known if it can be operated in other environments without trouble.  
+
 [![license](https://img.shields.io/github/license/kunitsucom/ddlctl)](LICENSE)
 [![pkg](https://pkg.go.dev/badge/github.com/kunitsucom/ddlctl)](https://pkg.go.dev/github.com/kunitsucom/ddlctl)
 [![goreportcard](https://goreportcard.com/badge/github.com/kunitsucom/ddlctl)](https://goreportcard.com/report/github.com/kunitsucom/ddlctl)
@@ -27,7 +30,7 @@
 - `show` subcommand
   - dialect
     - [x] Support `mysql` (beta)
-    - [x] Support `postgres` (beta)
+    - [x] Support `postgres` (alpha)
     - [x] Support `cockroachdb` (beta)
     - [x] Support `spanner` (alpha)
     - [ ] Support `sqlite3`
@@ -36,14 +39,14 @@
     - [x] Support `mysql` (alpha)
     - [x] Support `postgres` (alpha)
     - [x] Support `cockroachdb` (alpha)
-    - [ ] Support `spanner`
+    - [x] Support `spanner` (alpha)
     - [ ] Support `sqlite3`
 - `apply` subcommand
   - dialect
     - [x] Support `mysql` (alpha)
     - [x] Support `postgres` (alpha)
     - [x] Support `cockroachdb` (alpha)
-    - [ ] Support `spanner`
+    - [x] Support `spanner` (alpha)
     - [ ] Support `sqlite3`
 
 ## Example

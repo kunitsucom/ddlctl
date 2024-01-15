@@ -14,11 +14,10 @@ import (
 	"strings"
 	"unicode"
 
-	errorz "github.com/kunitsucom/util.go/errors"
 	filepathz "github.com/kunitsucom/util.go/path/filepath"
 	slicez "github.com/kunitsucom/util.go/slices"
 
-	apperr "github.com/kunitsucom/ddlctl/pkg/errors"
+	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 	"github.com/kunitsucom/ddlctl/pkg/internal/config"
 	ddlast "github.com/kunitsucom/ddlctl/pkg/internal/generator"
 	langutil "github.com/kunitsucom/ddlctl/pkg/internal/lang/util"
@@ -38,14 +37,14 @@ func Parse(ctx context.Context, src string) (*ddlast.DDL, error) {
 
 	info, err := os.Stat(sourceAbs)
 	if err != nil {
-		return nil, errorz.Errorf("os.Stat: %w", err)
+		return nil, apperr.Errorf("os.Stat: %w", err)
 	}
 
 	ddl := ddlast.NewDDL(ctx)
 
 	if info.IsDir() {
 		if err := filepath.WalkDir(sourceAbs, walkDirFn(ctx, ddl)); err != nil {
-			return nil, errorz.Errorf("filepath.WalkDir: %w", err)
+			return nil, apperr.Errorf("filepath.WalkDir: %w", err)
 		}
 
 		return ddl, nil
@@ -53,7 +52,7 @@ func Parse(ctx context.Context, src string) (*ddlast.DDL, error) {
 
 	stmts, err := parseFile(ctx, sourceAbs)
 	if err != nil {
-		return nil, errorz.Errorf("Parse: %w", err)
+		return nil, apperr.Errorf("Parse: %w", err)
 	}
 	ddl.Stmts = append(ddl.Stmts, stmts...)
 
@@ -79,7 +78,7 @@ func walkDirFn(ctx context.Context, ddl *ddlast.DDL) func(path string, d os.DirE
 				logs.Debug.Printf("parseFile: %s: %v", path, err)
 				return nil
 			}
-			return errorz.Errorf("parseFile: %w", err)
+			return apperr.Errorf("parseFile: %w", err)
 		}
 
 		ddl.Stmts = append(ddl.Stmts, stmts...)
@@ -93,12 +92,12 @@ func parseFile(ctx context.Context, filename string) ([]ddlast.Stmt, error) {
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, filename, nil, parser.ParseComments)
 	if err != nil {
-		return nil, errorz.Errorf("parser.ParseFile: %w", err)
+		return nil, apperr.Errorf("parser.ParseFile: %w", err)
 	}
 
 	ddlSrc, err := extractDDLSourceFromDDLTagGo(ctx, fset, f)
 	if err != nil {
-		return nil, errorz.Errorf("extractDDLSourceFromDDLTagGo: %w", err)
+		return nil, apperr.Errorf("extractDDLSourceFromDDLTagGo: %w", err)
 	}
 
 	dumpDDLSource(fset, ddlSrc)

@@ -7,6 +7,7 @@ import (
 )
 
 // MEMO: https://dev.mysql.com/doc/refman/8.0/ja/alter-table.html
+// NOTE: https://dev.mysql.com/doc/refman/8.0/ja/alter-table-examples.html
 
 var _ Stmt = (*AlterTableStmt)(nil)
 
@@ -49,18 +50,16 @@ func (s *AlterTableStmt) String() string {
 	case *DropColumn:
 		str += "DROP COLUMN " + a.Name.String()
 	case *AlterColumn:
-		str += "ALTER COLUMN " + a.Name.String() + " "
 		switch ca := a.Action.(type) {
-		case *AlterColumnSetDataType:
-			str += "SET DATA TYPE " + ca.DataType.String()
+		case *AlterColumnDataType:
+			str += "MODIFY " + a.Name.String() + " " + ca.DataType.String()
+			if ca.NotNull {
+				str += " NOT NULL"
+			}
 		case *AlterColumnSetDefault:
-			str += "SET " + ca.Default.String()
+			str += "ALTER " + a.Name.String() + " " + "SET " + ca.Default.String()
 		case *AlterColumnDropDefault:
-			str += "DROP DEFAULT"
-		case *AlterColumnSetNotNull:
-			str += "SET NOT NULL"
-		case *AlterColumnDropNotNull:
-			str += "DROP NOT NULL"
+			str += "ALTER " + a.Name.String() + " " + "DROP DEFAULT"
 		}
 	case *AddConstraint:
 		str += "ADD " + a.Constraint.String()
@@ -160,14 +159,16 @@ type AlterColumnAction interface {
 	GoString() string
 }
 
-// AlterColumnSetDataType represents ALTER TABLE table_name ALTER COLUMN column_name SET DATA TYPE.
-type AlterColumnSetDataType struct {
+// AlterColumnDataType represents ALTER TABLE table_name MODIFY column_name data_type NOT NULL.
+// NOTE: https://dev.mysql.com/doc/refman/8.0/ja/alter-table-examples.html
+type AlterColumnDataType struct {
 	DataType *DataType
+	NotNull  bool
 }
 
-func (*AlterColumnSetDataType) isAlterColumnAction() {}
+func (*AlterColumnDataType) isAlterColumnAction() {}
 
-func (s *AlterColumnSetDataType) GoString() string { return internal.GoString(*s) }
+func (s *AlterColumnDataType) GoString() string { return internal.GoString(*s) }
 
 // AlterColumnSetDefault represents ALTER TABLE table_name ALTER COLUMN column_name SET DEFAULT.
 type AlterColumnSetDefault struct {
@@ -184,20 +185,6 @@ type AlterColumnDropDefault struct{}
 func (*AlterColumnDropDefault) isAlterColumnAction() {}
 
 func (s *AlterColumnDropDefault) GoString() string { return internal.GoString(*s) }
-
-// AlterColumnSetNotNull represents ALTER TABLE table_name ALTER COLUMN column_name SET NOT NULL.
-type AlterColumnSetNotNull struct{}
-
-func (*AlterColumnSetNotNull) isAlterColumnAction() {}
-
-func (s *AlterColumnSetNotNull) GoString() string { return internal.GoString(*s) }
-
-// AlterColumnDropNotNull represents ALTER TABLE table_name ALTER COLUMN column_name DROP NOT NULL.
-type AlterColumnDropNotNull struct{}
-
-func (*AlterColumnDropNotNull) isAlterColumnAction() {}
-
-func (s *AlterColumnDropNotNull) GoString() string { return internal.GoString(*s) }
 
 // AddConstraint represents ALTER TABLE table_name ADD CONSTRAINT.
 type AddConstraint struct {

@@ -3,8 +3,9 @@ package mysql
 import (
 	"reflect"
 
-	errorz "github.com/kunitsucom/util.go/errors"
 	"github.com/kunitsucom/util.go/exp/diff/simplediff"
+
+	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 
 	"github.com/kunitsucom/ddlctl/pkg/ddl"
 )
@@ -53,7 +54,7 @@ func DiffCreateTable(before, after *CreateTableStmt, opts ...DiffCreateTableOpti
 		})
 		return result, nil
 	case (before == nil && after == nil) || reflect.DeepEqual(before, after) || before.String() == after.String():
-		return nil, errorz.Errorf("before: %s, after: %s: %w", before.GetNameForDiff(), after.GetNameForDiff(), ddl.ErrNoDifference)
+		return nil, apperr.Errorf("before: %s, after: %s: %w", before.GetNameForDiff(), after.GetNameForDiff(), ddl.ErrNoDifference)
 	}
 
 	if before.Name.StringForDiff() != after.Name.StringForDiff() {
@@ -181,7 +182,7 @@ func DiffCreateTable(before, after *CreateTableStmt, opts ...DiffCreateTableOpti
 	}
 
 	if len(result.Stmts) == 0 {
-		return nil, errorz.Errorf("before: %s, after: %s: %w", before.GetNameForDiff(), after.GetNameForDiff(), ddl.ErrNoDifference)
+		return nil, apperr.Errorf("before: %s, after: %s: %w", before.GetNameForDiff(), after.GetNameForDiff(), ddl.ErrNoDifference)
 	}
 
 	return result, nil
@@ -203,16 +204,33 @@ func (config *DiffCreateTableConfig) diffCreateTableColumn(ddls *DDL, before, af
 			continue
 		}
 
-		if beforeColumn.DataType.StringForDiff() != afterColumn.DataType.StringForDiff() {
-			// ALTER TABLE table_name ALTER COLUMN column_name SET DATA TYPE data_type;
+		if beforeColumn.DataType.StringForDiff() != afterColumn.DataType.StringForDiff() ||
+			beforeColumn.NotNull && !afterColumn.NotNull ||
+			!beforeColumn.NotNull && afterColumn.NotNull {
+			// ALTER TABLE table_name MODIFY column_name data_type NOT NULL;
 			ddls.Stmts = append(ddls.Stmts, &AlterTableStmt{
 				Comment: simplediff.Diff(beforeColumn.String(), afterColumn.String()).String(),
 				Name:    after.Name,
 				Action: &AlterColumn{
-					Name:   afterColumn.Name,
-					Action: &AlterColumnSetDataType{DataType: afterColumn.DataType},
+					Name: afterColumn.Name,
+					Action: &AlterColumnDataType{
+						DataType: afterColumn.DataType,
+						NotNull:  afterColumn.NotNull,
+					},
 				},
 			})
+
+			if afterColumn.Default != nil {
+				// ALTER TABLE table_name ALTER COLUMN column_name SET DEFAULT default_value;
+				ddls.Stmts = append(ddls.Stmts, &AlterTableStmt{
+					Comment: simplediff.Diff(beforeColumn.String(), afterColumn.String()).String(),
+					Name:    after.Name,
+					Action: &AlterColumn{
+						Name:   afterColumn.Name,
+						Action: &AlterColumnSetDefault{Default: afterColumn.Default},
+					},
+				})
+			}
 		}
 
 		switch {
@@ -234,29 +252,6 @@ func (config *DiffCreateTableConfig) diffCreateTableColumn(ddls *DDL, before, af
 				Action: &AlterColumn{
 					Name:   afterColumn.Name,
 					Action: &AlterColumnSetDefault{Default: afterColumn.Default},
-				},
-			})
-		}
-
-		switch {
-		case beforeColumn.NotNull && !afterColumn.NotNull:
-			// ALTER TABLE table_name ALTER COLUMN column_name DROP NOT NULL;
-			ddls.Stmts = append(ddls.Stmts, &AlterTableStmt{
-				Comment: simplediff.Diff(beforeColumn.String(), afterColumn.String()).String(),
-				Name:    after.Name,
-				Action: &AlterColumn{
-					Name:   afterColumn.Name,
-					Action: &AlterColumnDropNotNull{},
-				},
-			})
-		case !beforeColumn.NotNull && afterColumn.NotNull:
-			// ALTER TABLE table_name ALTER COLUMN column_name SET NOT NULL;
-			ddls.Stmts = append(ddls.Stmts, &AlterTableStmt{
-				Comment: simplediff.Diff(beforeColumn.String(), afterColumn.String()).String(),
-				Name:    after.Name,
-				Action: &AlterColumn{
-					Name:   afterColumn.Name,
-					Action: &AlterColumnSetNotNull{},
 				},
 			})
 		}

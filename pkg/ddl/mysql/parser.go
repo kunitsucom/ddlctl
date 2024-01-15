@@ -7,9 +7,10 @@ import (
 	"runtime"
 	"strings"
 
-	errorz "github.com/kunitsucom/util.go/errors"
 	filepathz "github.com/kunitsucom/util.go/path/filepath"
 	stringz "github.com/kunitsucom/util.go/strings"
+
+	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 
 	"github.com/kunitsucom/ddlctl/pkg/ddl"
 	"github.com/kunitsucom/ddlctl/pkg/ddl/logs"
@@ -82,7 +83,7 @@ LabelDDL:
 		case TOKEN_CREATE:
 			stmt, err := p.parseCreateStatement()
 			if err != nil {
-				return nil, errorz.Errorf("parseCreateStatement: %w", err)
+				return nil, apperr.Errorf("parseCreateStatement: %w", err)
 			}
 			d.Stmts = append(d.Stmts, stmt)
 		case TOKEN_CLOSE_PAREN:
@@ -92,7 +93,7 @@ LabelDDL:
 		case TOKEN_EOF:
 			break LabelDDL
 		default:
-			return nil, errorz.Errorf("currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
+			return nil, apperr.Errorf("currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
 		}
 
 		p.nextToken()
@@ -109,7 +110,7 @@ func (p *Parser) parseCreateStatement() (Stmt, error) { //nolint:ireturn
 	case TOKEN_INDEX, TOKEN_UNIQUE:
 		return p.parseCreateIndexStmt()
 	default:
-		return nil, errorz.Errorf("currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
+		return nil, apperr.Errorf("currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
 	}
 }
 
@@ -122,11 +123,11 @@ func (p *Parser) parseCreateTableStmt() (*CreateTableStmt, error) {
 	if p.isPeekToken(TOKEN_IF) {
 		p.nextToken() // current = IF
 		if err := p.checkPeekToken(TOKEN_NOT); err != nil {
-			return nil, errorz.Errorf("checkPeekToken: %w", err)
+			return nil, apperr.Errorf("checkPeekToken: %w", err)
 		}
 		p.nextToken() // current = NOT
 		if err := p.checkPeekToken(TOKEN_EXISTS); err != nil {
-			return nil, errorz.Errorf("checkPeekToken: %w", err)
+			return nil, apperr.Errorf("checkPeekToken: %w", err)
 		}
 		p.nextToken() // current = EXISTS
 		createTableStmt.IfNotExists = true
@@ -134,7 +135,7 @@ func (p *Parser) parseCreateTableStmt() (*CreateTableStmt, error) {
 
 	p.nextToken() // current = table_name
 	if err := p.checkCurrentToken(TOKEN_IDENT); err != nil {
-		return nil, errorz.Errorf("checkCurrentToken: %w", err)
+		return nil, apperr.Errorf("checkCurrentToken: %w", err)
 	}
 
 	createTableStmt.Name = NewObjectName(p.currentToken.Literal.Str)
@@ -143,7 +144,7 @@ func (p *Parser) parseCreateTableStmt() (*CreateTableStmt, error) {
 	p.nextToken() // current = (
 
 	if err := p.checkCurrentToken(TOKEN_OPEN_PAREN); err != nil {
-		return nil, errorz.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+		return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 	}
 
 	p.nextToken() // current = column_name
@@ -154,7 +155,7 @@ LabelColumns:
 		case p.isCurrentToken(TOKEN_IDENT):
 			column, constraints, err := p.parseColumn(createTableStmt.Name.Name)
 			if err != nil {
-				return nil, errorz.Errorf(errFmtPrefix+"parseColumn: %w", err)
+				return nil, apperr.Errorf(errFmtPrefix+"parseColumn: %w", err)
 			}
 			createTableStmt.Columns = append(createTableStmt.Columns, column)
 			if len(constraints) > 0 {
@@ -165,7 +166,7 @@ LabelColumns:
 		case isConstraint(p.currentToken.Type):
 			constraint, err := p.parseTableConstraint(createTableStmt.Name.Name)
 			if err != nil {
-				return nil, errorz.Errorf(errFmtPrefix+"parseConstraint: %w", err)
+				return nil, apperr.Errorf(errFmtPrefix+"parseConstraint: %w", err)
 			}
 			createTableStmt.Constraints = createTableStmt.Constraints.Append(constraint)
 		case p.isCurrentToken(TOKEN_COMMA):
@@ -175,7 +176,7 @@ LabelColumns:
 			p.nextToken()
 			break LabelColumns
 		default:
-			return nil, errorz.Errorf(errFmtPrefix+"currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
+			return nil, apperr.Errorf(errFmtPrefix+"currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
 		}
 	}
 
@@ -187,43 +188,43 @@ LabelTableOptions:
 			opt.Name = "ENGINE"
 			p.nextToken() // current = `=`
 			if err := p.checkCurrentToken(TOKEN_EQUAL); err != nil {
-				return nil, errorz.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 			}
 			p.nextToken() // current = TOKEN_IDENT
 			if err := p.checkCurrentToken(TOKEN_IDENT); err != nil {
-				return nil, errorz.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 			}
 			opt.Value = NewRawIdent(p.currentToken.Literal.Str)
 		case TOKEN_DEFAULT:
 			if err := p.checkPeekToken(TOKEN_CHARSET); err != nil {
-				return nil, errorz.Errorf(errFmtPrefix+"checkPeekToken: %w", err)
+				return nil, apperr.Errorf(errFmtPrefix+"checkPeekToken: %w", err)
 			}
 			p.nextToken() // current = CHARSET
 			opt.Name = "DEFAULT CHARSET"
 			p.nextToken() // current = `=`
 			if err := p.checkCurrentToken(TOKEN_EQUAL); err != nil {
-				return nil, errorz.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 			}
 			p.nextToken() // current = TOKEN_IDENT
 			if err := p.checkCurrentToken(TOKEN_IDENT); err != nil {
-				return nil, errorz.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 			}
 			opt.Value = NewRawIdent(p.currentToken.Literal.Str)
 		case TOKEN_COLLATE:
 			opt.Name = "COLLATE"
 			p.nextToken() // current = `=`
 			if err := p.checkCurrentToken(TOKEN_EQUAL); err != nil {
-				return nil, errorz.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 			}
 			p.nextToken() // current = TOKEN_IDENT
 			if err := p.checkCurrentToken(TOKEN_IDENT); err != nil {
-				return nil, errorz.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 			}
 			opt.Value = NewRawIdent(p.currentToken.Literal.Str)
 		case TOKEN_SEMICOLON, TOKEN_EOF:
 			break LabelTableOptions
 		default:
-			return nil, errorz.Errorf(errFmtPrefix+"peekToken=%#v: %w", p.peekToken, ddl.ErrUnexpectedToken)
+			return nil, apperr.Errorf(errFmtPrefix+"peekToken=%#v: %w", p.peekToken, ddl.ErrUnexpectedToken)
 		}
 		createTableStmt.Options = append(createTableStmt.Options, opt)
 		p.nextToken()
@@ -244,11 +245,11 @@ func (p *Parser) parseCreateIndexStmt() (*CreateIndexStmt, error) {
 	if p.isPeekToken(TOKEN_IF) {
 		p.nextToken() // current = IF
 		if err := p.checkPeekToken(TOKEN_NOT); err != nil {
-			return nil, errorz.Errorf("checkPeekToken: %w", err)
+			return nil, apperr.Errorf("checkPeekToken: %w", err)
 		}
 		p.nextToken() // current = NOT
 		if err := p.checkPeekToken(TOKEN_EXISTS); err != nil {
-			return nil, errorz.Errorf("checkPeekToken: %w", err)
+			return nil, apperr.Errorf("checkPeekToken: %w", err)
 		}
 		p.nextToken() // current = EXISTS
 		createIndexStmt.IfNotExists = true
@@ -256,7 +257,7 @@ func (p *Parser) parseCreateIndexStmt() (*CreateIndexStmt, error) {
 
 	p.nextToken() // current = index_name
 	if err := p.checkCurrentToken(TOKEN_IDENT); err != nil {
-		return nil, errorz.Errorf("checkCurrentToken: %w", err)
+		return nil, apperr.Errorf("checkCurrentToken: %w", err)
 	}
 
 	createIndexStmt.Name = NewObjectName(p.currentToken.Literal.Str)
@@ -265,13 +266,13 @@ func (p *Parser) parseCreateIndexStmt() (*CreateIndexStmt, error) {
 	p.nextToken() // current = ON
 
 	if err := p.checkCurrentToken(TOKEN_ON); err != nil {
-		return nil, errorz.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+		return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 	}
 
 	p.nextToken() // current = table_name
 
 	if err := p.checkCurrentToken(TOKEN_IDENT); err != nil {
-		return nil, errorz.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+		return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 	}
 
 	createIndexStmt.TableName = NewObjectName(p.currentToken.Literal.Str)
@@ -285,12 +286,12 @@ func (p *Parser) parseCreateIndexStmt() (*CreateIndexStmt, error) {
 	}
 
 	if err := p.checkCurrentToken(TOKEN_OPEN_PAREN); err != nil {
-		return nil, errorz.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+		return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 	}
 
 	idents, err := p.parseColumnIdents()
 	if err != nil {
-		return nil, errorz.Errorf(errFmtPrefix+"parseColumnIdents: %w", err)
+		return nil, apperr.Errorf(errFmtPrefix+"parseColumnIdents: %w", err)
 	}
 
 	createIndexStmt.Columns = idents
@@ -304,7 +305,7 @@ func (p *Parser) parseColumn(tableName *Ident) (*Column, []Constraint, error) {
 	constraints := make(Constraints, 0)
 
 	if err := p.checkCurrentToken(TOKEN_IDENT); err != nil {
-		return nil, nil, errorz.Errorf("checkCurrentToken: %w", err)
+		return nil, nil, apperr.Errorf("checkCurrentToken: %w", err)
 	}
 
 	column.Name = NewRawIdent(p.currentToken.Literal.Str)
@@ -316,7 +317,7 @@ func (p *Parser) parseColumn(tableName *Ident) (*Column, []Constraint, error) {
 	case isDataType(p.currentToken.Type):
 		dataType, err := p.parseDataType()
 		if err != nil {
-			return nil, nil, errorz.Errorf(errFmtPrefix+"parseDataType: %w", err)
+			return nil, nil, apperr.Errorf(errFmtPrefix+"parseDataType: %w", err)
 		}
 		column.DataType = dataType
 
@@ -326,7 +327,7 @@ func (p *Parser) parseColumn(tableName *Ident) (*Column, []Constraint, error) {
 			switch p.currentToken.Type { //nolint:exhaustive
 			case TOKEN_NOT:
 				if err := p.checkPeekToken(TOKEN_NULL); err != nil {
-					return nil, nil, errorz.Errorf(errFmtPrefix+"checkPeekToken: %w", err)
+					return nil, nil, apperr.Errorf(errFmtPrefix+"checkPeekToken: %w", err)
 				}
 				p.nextToken() // current = NULL
 				column.NotNull = true
@@ -336,7 +337,7 @@ func (p *Parser) parseColumn(tableName *Ident) (*Column, []Constraint, error) {
 				p.nextToken() // current = default_value
 				def, err := p.parseColumnDefault()
 				if err != nil {
-					return nil, nil, errorz.Errorf(errFmtPrefix+"parseColumnDefault: %w", err)
+					return nil, nil, apperr.Errorf(errFmtPrefix+"parseColumnDefault: %w", err)
 				}
 				column.Default = def
 				continue
@@ -349,7 +350,7 @@ func (p *Parser) parseColumn(tableName *Ident) (*Column, []Constraint, error) {
 
 		cs, err := p.parseColumnConstraints(tableName, column)
 		if err != nil {
-			return nil, nil, errorz.Errorf(errFmtPrefix+"parseColumnConstraints: %w", err)
+			return nil, nil, apperr.Errorf(errFmtPrefix+"parseColumnConstraints: %w", err)
 		}
 		if len(cs) > 0 {
 			for _, c := range cs {
@@ -357,7 +358,7 @@ func (p *Parser) parseColumn(tableName *Ident) (*Column, []Constraint, error) {
 			}
 		}
 	default:
-		return nil, nil, errorz.Errorf(errFmtPrefix+"currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
+		return nil, nil, apperr.Errorf(errFmtPrefix+"currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
 	}
 
 	return column, constraints, nil
@@ -375,7 +376,7 @@ LabelDefault:
 		case TOKEN_OPEN_PAREN:
 			ids, err := p.parseExpr()
 			if err != nil {
-				return nil, errorz.Errorf("parseExpr: %w", err)
+				return nil, apperr.Errorf("parseExpr: %w", err)
 			}
 			def.Value = def.Value.Append(ids...)
 			continue
@@ -402,7 +403,7 @@ LabelDefault:
 			if isConstraint(p.currentToken.Type) {
 				break LabelDefault
 			}
-			return nil, errorz.Errorf("currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
+			return nil, apperr.Errorf("currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
 		}
 
 		p.nextToken()
@@ -411,11 +412,12 @@ LabelDefault:
 	return def, nil
 }
 
+//nolint:funlen,cyclop
 func (p *Parser) parseExpr() ([]*Ident, error) {
 	idents := make([]*Ident, 0)
 
 	if err := p.checkCurrentToken(TOKEN_OPEN_PAREN); err != nil {
-		return nil, errorz.Errorf("checkCurrentToken: %w", err)
+		return nil, apperr.Errorf("checkCurrentToken: %w", err)
 	}
 	idents = append(idents, NewRawIdent(p.currentToken.Literal.Str))
 	p.nextToken() // current = IDENT
@@ -426,7 +428,7 @@ LabelExpr:
 		case TOKEN_OPEN_PAREN:
 			ids, err := p.parseExpr()
 			if err != nil {
-				return nil, errorz.Errorf("parseExpr: %w", err)
+				return nil, apperr.Errorf("parseExpr: %w", err)
 			}
 			idents = append(idents, ids...)
 			continue
@@ -443,9 +445,13 @@ LabelExpr:
 			}
 			idents = append(idents, NewRawIdent(value))
 		case TOKEN_EOF:
-			return nil, errorz.Errorf("currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
+			return nil, apperr.Errorf("currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
 		default:
-			idents = append(idents, NewRawIdent(p.currentToken.Literal.Str))
+			if isReservedValue(p.currentToken.Type) {
+				idents = append(idents, NewRawIdent(p.currentToken.Type.String()))
+			} else {
+				idents = append(idents, NewRawIdent(p.currentToken.Literal.Str))
+			}
 		}
 
 		p.nextToken()
@@ -463,7 +469,7 @@ LabelConstraints:
 		switch p.currentToken.Type { //nolint:exhaustive
 		case TOKEN_PRIMARY:
 			if err := p.checkPeekToken(TOKEN_KEY); err != nil {
-				return nil, errorz.Errorf("checkPeekToken: %w", err)
+				return nil, apperr.Errorf("checkPeekToken: %w", err)
 			}
 			p.nextToken() // current = KEY
 			constraints = constraints.Append(&PrimaryKeyConstraint{
@@ -472,7 +478,7 @@ LabelConstraints:
 			})
 		case TOKEN_REFERENCES:
 			if err := p.checkPeekToken(TOKEN_IDENT); err != nil {
-				return nil, errorz.Errorf("checkPeekToken: %w", err)
+				return nil, apperr.Errorf("checkPeekToken: %w", err)
 			}
 			p.nextToken() // current = table_name
 			constraint := &ForeignKeyConstraint{
@@ -483,7 +489,7 @@ LabelConstraints:
 			p.nextToken() // current = (
 			idents, err := p.parseColumnIdents()
 			if err != nil {
-				return nil, errorz.Errorf("parseColumnIdents: %w", err)
+				return nil, apperr.Errorf("parseColumnIdents: %w", err)
 			}
 			constraint.RefColumns = idents
 			constraints = constraints.Append(constraint)
@@ -495,7 +501,7 @@ LabelConstraints:
 			})
 		case TOKEN_CHECK:
 			if err := p.checkPeekToken(TOKEN_OPEN_PAREN); err != nil {
-				return nil, errorz.Errorf("checkPeekToken: %w", err)
+				return nil, apperr.Errorf("checkPeekToken: %w", err)
 			}
 			p.nextToken() // current = (
 			constraint := &CheckConstraint{
@@ -503,14 +509,14 @@ LabelConstraints:
 			}
 			idents, err := p.parseExpr()
 			if err != nil {
-				return nil, errorz.Errorf("parseExpr: %w", err)
+				return nil, apperr.Errorf("parseExpr: %w", err)
 			}
 			constraint.Expr = constraint.Expr.Append(idents...)
 			constraints = constraints.Append(constraint)
 		case TOKEN_IDENT, TOKEN_COMMA, TOKEN_CLOSE_PAREN:
 			break LabelConstraints
 		default:
-			return nil, errorz.Errorf("currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
+			return nil, apperr.Errorf("currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
 		}
 
 		p.nextToken()
@@ -525,7 +531,7 @@ func (p *Parser) parseTableConstraint(tableName *Ident) (Constraint, error) { //
 	if p.isCurrentToken(TOKEN_CONSTRAINT) {
 		p.nextToken() // current = constraint_name
 		if p.currentToken.Type != TOKEN_IDENT {
-			return nil, errorz.Errorf("currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
+			return nil, apperr.Errorf("currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
 		}
 		constraintName = NewRawIdent(p.currentToken.Literal.Str)
 		p.nextToken() // current = PRIMARY or CHECK
@@ -534,16 +540,16 @@ func (p *Parser) parseTableConstraint(tableName *Ident) (Constraint, error) { //
 	switch p.currentToken.Type { //nolint:exhaustive
 	case TOKEN_PRIMARY:
 		if err := p.checkPeekToken(TOKEN_KEY); err != nil {
-			return nil, errorz.Errorf("checkPeekToken: %w", err)
+			return nil, apperr.Errorf("checkPeekToken: %w", err)
 		}
 		p.nextToken() // current = KEY
 		if err := p.checkPeekToken(TOKEN_OPEN_PAREN); err != nil {
-			return nil, errorz.Errorf("checkPeekToken: %w", err)
+			return nil, apperr.Errorf("checkPeekToken: %w", err)
 		}
 		p.nextToken() // current = (
 		idents, err := p.parseColumnIdents()
 		if err != nil {
-			return nil, errorz.Errorf("parseColumnIdents: %w", err)
+			return nil, apperr.Errorf("parseColumnIdents: %w", err)
 		}
 		return &PrimaryKeyConstraint{
 			Name:    NewRawIdent("PRIMARY KEY"),
@@ -551,30 +557,30 @@ func (p *Parser) parseTableConstraint(tableName *Ident) (Constraint, error) { //
 		}, nil
 	case TOKEN_FOREIGN:
 		if err := p.checkPeekToken(TOKEN_KEY); err != nil {
-			return nil, errorz.Errorf("checkPeekToken: %w", err)
+			return nil, apperr.Errorf("checkPeekToken: %w", err)
 		}
 		p.nextToken() // current = KEY
 		if err := p.checkPeekToken(TOKEN_OPEN_PAREN); err != nil {
-			return nil, errorz.Errorf("checkPeekToken: %w", err)
+			return nil, apperr.Errorf("checkPeekToken: %w", err)
 		}
 		p.nextToken() // current = (
 		idents, err := p.parseColumnIdents()
 		if err != nil {
-			return nil, errorz.Errorf("parseColumnIdents: %w", err)
+			return nil, apperr.Errorf("parseColumnIdents: %w", err)
 		}
 		if err := p.checkCurrentToken(TOKEN_REFERENCES); err != nil {
-			return nil, errorz.Errorf("checkPeekToken: %w", err)
+			return nil, apperr.Errorf("checkPeekToken: %w", err)
 		}
 		p.nextToken() // current = ref_table_name
 		if err := p.checkCurrentToken(TOKEN_IDENT); err != nil {
-			return nil, errorz.Errorf("checkCurrentToken: %w", err)
+			return nil, apperr.Errorf("checkCurrentToken: %w", err)
 		}
 		refName := NewRawIdent(p.currentToken.Literal.Str)
 
 		p.nextToken() // current = (
 		identsRef, err := p.parseColumnIdents()
 		if err != nil {
-			return nil, errorz.Errorf("parseColumnIdents: %w", err)
+			return nil, apperr.Errorf("parseColumnIdents: %w", err)
 		}
 		if constraintName == nil {
 			name := tableName.StringForDiff()
@@ -598,20 +604,20 @@ func (p *Parser) parseTableConstraint(tableName *Ident) (Constraint, error) { //
 			p.nextToken() // current = KEY or INDEX
 		}
 		if err := p.checkCurrentToken(TOKEN_INDEX, TOKEN_KEY); err != nil {
-			return nil, errorz.Errorf("checkCurrentToken: %w", err)
+			return nil, apperr.Errorf("checkCurrentToken: %w", err)
 		}
 		p.nextToken() // current = index_name
 		if err := p.checkCurrentToken(TOKEN_IDENT); err != nil {
-			return nil, errorz.Errorf("checkCurrentToken: %w", err)
+			return nil, apperr.Errorf("checkCurrentToken: %w", err)
 		}
 		constraintName := NewRawIdent(p.currentToken.Literal.Str)
 		if err := p.checkPeekToken(TOKEN_OPEN_PAREN); err != nil {
-			return nil, errorz.Errorf("checkPeekToken: %w", err)
+			return nil, apperr.Errorf("checkPeekToken: %w", err)
 		}
 		p.nextToken() // current = (
 		idents, err := p.parseColumnIdents()
 		if err != nil {
-			return nil, errorz.Errorf("parseColumnIdents: %w", err)
+			return nil, apperr.Errorf("parseColumnIdents: %w", err)
 		}
 		c.Name = constraintName
 		c.Columns = idents
@@ -619,12 +625,12 @@ func (p *Parser) parseTableConstraint(tableName *Ident) (Constraint, error) { //
 	case TOKEN_CHECK:
 		constraint := &CheckConstraint{}
 		if err := p.checkPeekToken(TOKEN_OPEN_PAREN); err != nil {
-			return nil, errorz.Errorf("checkPeekToken: %w", err)
+			return nil, apperr.Errorf("checkPeekToken: %w", err)
 		}
 		p.nextToken() // current = (
 		idents, err := p.parseExpr()
 		if err != nil {
-			return nil, errorz.Errorf("parseExpr: %w", err)
+			return nil, apperr.Errorf("parseExpr: %w", err)
 		}
 		if constraintName == nil {
 			// TODO: handle CONSTRAINT name
@@ -634,7 +640,7 @@ func (p *Parser) parseTableConstraint(tableName *Ident) (Constraint, error) { //
 		constraint.Expr = constraint.Expr.Append(idents...)
 		return constraint, nil
 	default:
-		return nil, errorz.Errorf("currentToken=%s: %w", p.currentToken.Type, ddl.ErrUnexpectedToken)
+		return nil, apperr.Errorf("currentToken=%s: %w", p.currentToken.Type, ddl.ErrUnexpectedToken)
 	}
 }
 
@@ -662,7 +668,7 @@ func (p *Parser) parseDataType() (*DataType, error) {
 	case TOKEN_DOUBLE:
 		dataType.Name = p.currentToken.Literal.String()
 		if err := p.checkPeekToken(TOKEN_PRECISION); err != nil {
-			return nil, errorz.Errorf("checkPeekToken: %w", err)
+			return nil, apperr.Errorf("checkPeekToken: %w", err)
 		}
 		p.nextToken() // current = PRECISION
 		dataType.Name += " " + p.currentToken.Literal.String()
@@ -670,7 +676,7 @@ func (p *Parser) parseDataType() (*DataType, error) {
 	case TOKEN_CHARACTER:
 		dataType.Name = p.currentToken.Literal.String()
 		if err := p.checkPeekToken(TOKEN_VARYING); err != nil {
-			return nil, errorz.Errorf("checkPeekToken: %w", err)
+			return nil, apperr.Errorf("checkPeekToken: %w", err)
 		}
 		p.nextToken() // current = VARYING
 		dataType.Name += " " + p.currentToken.Literal.String()
@@ -687,7 +693,7 @@ func (p *Parser) parseDataType() (*DataType, error) {
 		p.nextToken() // current = (
 		idents, err := p.parseIdents()
 		if err != nil {
-			return nil, errorz.Errorf("parseIdents: %w", err)
+			return nil, apperr.Errorf("parseIdents: %w", err)
 		}
 		dataType.Expr = dataType.Expr.Append(idents...)
 	}
@@ -722,7 +728,7 @@ LabelIdents:
 			p.nextToken()
 			break LabelIdents
 		default:
-			return nil, errorz.Errorf("currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
+			return nil, apperr.Errorf("currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
 		}
 		p.nextToken()
 	}
@@ -743,7 +749,7 @@ LabelIdents:
 		case TOKEN_CLOSE_PAREN:
 			break LabelIdents
 		case TOKEN_EOF, TOKEN_ILLEGAL:
-			return nil, errorz.Errorf("currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
+			return nil, apperr.Errorf("currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
 		default:
 			idents = append(idents, NewRawIdent(p.currentToken.Literal.Str))
 		}
@@ -825,7 +831,7 @@ func (p *Parser) checkCurrentToken(expectedTypes ...TokenType) error {
 			return nil
 		}
 	}
-	return errorz.Errorf("currentToken: expected=%s, but got=%#v: %w", stringz.JoinStringers(",", expectedTypes...), p.currentToken, ddl.ErrUnexpectedToken)
+	return apperr.Errorf("currentToken: expected=%s, but got=%#v: %w", stringz.JoinStringers(",", expectedTypes...), p.currentToken, ddl.ErrUnexpectedToken)
 }
 
 func (p *Parser) isPeekToken(expectedTypes ...TokenType) bool {
@@ -843,5 +849,5 @@ func (p *Parser) checkPeekToken(expectedTypes ...TokenType) error {
 			return nil
 		}
 	}
-	return errorz.Errorf("peekToken: expected=%s, but got=%#v: %w", stringz.JoinStringers(",", expectedTypes...), p.peekToken, ddl.ErrUnexpectedToken)
+	return apperr.Errorf("peekToken: expected=%s, but got=%#v: %w", stringz.JoinStringers(",", expectedTypes...), p.peekToken, ddl.ErrUnexpectedToken)
 }

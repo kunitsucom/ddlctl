@@ -6,11 +6,6 @@ import (
 
 // MEMO: https://www.postgresql.jp/docs/11/datatype.html
 
-const (
-	QuotationChar = '"'
-	QuotationStr  = string(QuotationChar)
-)
-
 // Token はSQL文のトークンを表す型です。
 type Token struct {
 	Type    TokenType
@@ -62,6 +57,8 @@ const (
 	TOKEN_DROP     TokenType = "DROP"
 	TOKEN_RENAME   TokenType = "RENAME"
 	TOKEN_TRUNCATE TokenType = "TRUNCATE"
+	TOKEN_DELETE   TokenType = "DELETE"
+	TOKEN_UPDATE   TokenType = "UPDATE"
 
 	// OBJECT.
 	TOKEN_TABLE TokenType = "TABLE"
@@ -107,6 +104,9 @@ const (
 	TOKEN_NOT     TokenType = "NOT"
 	TOKEN_ASC     TokenType = "ASC"
 	TOKEN_DESC    TokenType = "DESC"
+	TOKEN_CASCADE TokenType = "CASCADE"
+	TOKEN_NO      TokenType = "NO"
+	TOKEN_ACTION  TokenType = "ACTION"
 
 	// CONSTRAINT.
 	TOKEN_CONSTRAINT TokenType = "CONSTRAINT"
@@ -154,6 +154,10 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_RENAME
 	case "TRUNCATE":
 		return TOKEN_TRUNCATE
+	case "DELETE":
+		return TOKEN_DELETE
+	case "UPDATE":
+		return TOKEN_UPDATE
 	case "TABLE":
 		return TOKEN_TABLE
 	case "INDEX":
@@ -222,6 +226,12 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_ASC
 	case "DESC":
 		return TOKEN_DESC
+	case "CASCADE":
+		return TOKEN_CASCADE
+	case "NO":
+		return TOKEN_NO
+	case "ACTION":
+		return TOKEN_ACTION
 	case "CONSTRAINT":
 		return TOKEN_CONSTRAINT
 	case "PRIMARY":

@@ -12,7 +12,7 @@ import (
 	"github.com/kunitsucom/util.go/testing/assert"
 	"github.com/kunitsucom/util.go/testing/require"
 
-	apperr "github.com/kunitsucom/ddlctl/pkg/errors"
+	"github.com/kunitsucom/ddlctl/pkg/apperr"
 	"github.com/kunitsucom/ddlctl/pkg/internal/config"
 	"github.com/kunitsucom/ddlctl/pkg/internal/fixture"
 	ddlast "github.com/kunitsucom/ddlctl/pkg/internal/generator"

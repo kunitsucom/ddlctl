@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	Dialect       = "postgres"
-	DriverName    = "postgres"
+	Dialect       = "postgres" //diff:ignore-line-postgres-cockroach
+	DriverName    = "postgres" //diff:ignore-line-postgres-cockroach
 	Indent        = "    "
 	CommentPrefix = "-- "
 )

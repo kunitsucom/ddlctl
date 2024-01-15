@@ -5,7 +5,7 @@ go 1.21.5
 require (
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/googleapis/go-sql-spanner v1.1.1
-	github.com/kunitsucom/util.go v0.0.61-0.20240112184211-8b1d5e248ad7
+	github.com/kunitsucom/util.go v0.0.62-rc.1
 	github.com/lib/pq v1.10.9
 )
 

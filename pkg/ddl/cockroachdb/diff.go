@@ -6,6 +6,8 @@ import (
 	errorz "github.com/kunitsucom/util.go/errors"
 	"github.com/kunitsucom/util.go/exp/diff/simplediff"
 
+	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
+
 	"github.com/kunitsucom/ddlctl/pkg/ddl"
 )
 
@@ -29,7 +31,7 @@ func Diff(before, after *DDL) (*DDL, error) {
 					Name: s.Name,
 				})
 			default:
-				return nil, errorz.Errorf("%s: %T: %w", s.GetNameForDiff(), s, ddl.ErrNotSupported)
+				return nil, apperr.Errorf("%s: %T: %w", s.GetNameForDiff(), s, ddl.ErrNotSupported)
 			}
 		}
 		return result, nil
@@ -49,7 +51,7 @@ func Diff(before, after *DDL) (*DDL, error) {
 				Name: beforeStmt.Name,
 			})
 		default:
-			return nil, errorz.Errorf("%s: %T: %w", beforeStmt.GetNameForDiff(), beforeStmt, ddl.ErrNotSupported)
+			return nil, apperr.Errorf("%s: %T: %w", beforeStmt.GetNameForDiff(), beforeStmt, ddl.ErrNotSupported)
 		}
 	}
 
@@ -61,7 +63,7 @@ func Diff(before, after *DDL) (*DDL, error) {
 		case *CreateIndexStmt:
 			result.Stmts = append(result.Stmts, afterStmt)
 		default:
-			return nil, errorz.Errorf("%s: %T: %w", afterStmt.GetNameForDiff(), afterStmt, ddl.ErrNotSupported)
+			return nil, apperr.Errorf("%s: %T: %w", afterStmt.GetNameForDiff(), afterStmt, ddl.ErrNotSupported)
 		}
 	}
 

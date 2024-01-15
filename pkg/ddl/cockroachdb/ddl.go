@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	Dialect       = "cockroachdb"
-	DriverName    = "postgres" // cockroachdb's driver is postgres
+	Dialect       = "cockroachdb" //diff:ignore-line-postgres-cockroach
+	DriverName    = "postgres"    // cockroachdb's driver is postgres //diff:ignore-line-postgres-cockroach
 	Indent        = "    "
 	CommentPrefix = "-- "
 )

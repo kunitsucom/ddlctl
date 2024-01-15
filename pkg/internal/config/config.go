@@ -8,6 +8,7 @@ import (
 	errorz "github.com/kunitsucom/util.go/errors"
 	cliz "github.com/kunitsucom/util.go/exp/cli"
 
+	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 	"github.com/kunitsucom/ddlctl/pkg/internal/logs"
 )
 
@@ -38,7 +39,7 @@ var (
 func MustLoad(ctx context.Context) (rollback func()) {
 	rollback, err := Load(ctx)
 	if err != nil {
-		err = errorz.Errorf("Load: %w", err)
+		err = apperr.Errorf("Load: %w", err)
 		panic(err)
 	}
 	return rollback
@@ -51,7 +52,7 @@ func Load(ctx context.Context) (rollback func(), err error) {
 
 	cfg, err := load(ctx)
 	if err != nil {
-		return nil, errorz.Errorf("load: %w", err)
+		return nil, apperr.Errorf("load: %w", err)
 	}
 
 	globalConfig = cfg
@@ -71,7 +72,7 @@ func Load(ctx context.Context) (rollback func(), err error) {
 func load(ctx context.Context) (cfg *config, err error) { //nolint:unparam
 	cmd, err := cliz.FromContext(ctx)
 	if err != nil {
-		return nil, errorz.Errorf("cliz.FromContext: %w", err)
+		return nil, apperr.Errorf("cliz.FromContext: %w", err)
 	}
 
 	c := &config{
@@ -87,14 +88,16 @@ func load(ctx context.Context) (cfg *config, err error) { //nolint:unparam
 		PKTagGo:     loadPKTagGo(ctx, cmd),
 	}
 
-	if c.Debug {
-		logs.Debug = logs.NewDebug()
-		logs.Debug.Print("debug mode enabled")
-	}
-	if c.Trace {
+	switch {
+	case c.Trace:
+		apperr.Errorf = errorz.Errorf //nolint:reassign
 		logs.Trace = logs.NewTrace()
 		logs.Debug = logs.NewDebug()
 		logs.Trace.Print("trace mode enabled")
+	case c.Debug:
+		apperr.Errorf = errorz.Errorf //nolint:reassign
+		logs.Debug = logs.NewDebug()
+		logs.Debug.Print("debug mode enabled")
 	}
 
 	if err := json.NewEncoder(logs.Debug).Encode(c); err != nil {

@@ -6,15 +6,11 @@ import (
 	"fmt"
 	"os"
 
-	errorz "github.com/kunitsucom/util.go/errors"
 	cliz "github.com/kunitsucom/util.go/exp/cli"
 	"github.com/kunitsucom/util.go/version"
 
+	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 	"github.com/kunitsucom/ddlctl/pkg/internal/consts"
-)
-
-const (
-	_spanner = "spanner" // TODO: remove after spanner ddl diff implemented
 )
 
 //nolint:gochecknoglobals
@@ -138,7 +134,7 @@ func DDLCtl(ctx context.Context) error {
 		RunFunc: func(ctx context.Context, args []string) error {
 			cmd, err := cliz.FromContext(ctx)
 			if err != nil {
-				return errorz.Errorf("cliz.FromContext: %w", err)
+				return apperr.Errorf("cliz.FromContext: %w", err)
 			}
 
 			cmd.ShowUsage()
@@ -150,7 +146,8 @@ func DDLCtl(ctx context.Context) error {
 		if errors.Is(err, cliz.ErrHelp) {
 			return nil
 		}
-		return errorz.Errorf("cmd.Run: %w", err)
+
+		return apperr.Errorf("cmd.Run: %w", err)
 	}
 
 	return nil

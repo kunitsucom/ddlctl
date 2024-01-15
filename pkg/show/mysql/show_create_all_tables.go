@@ -6,7 +6,8 @@ import (
 	"fmt"
 
 	sqlz "github.com/kunitsucom/util.go/database/sql"
-	errorz "github.com/kunitsucom/util.go/errors"
+
+	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 )
 
 type sqlQueryerContext = interface {
@@ -53,7 +54,7 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 	tableNames := new([]*TableName)
 	tableNamesQuery := fmt.Sprintf("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = %s", databaseQuoted)
 	if err := dbz.QueryContext(ctx, tableNames, tableNamesQuery); err != nil {
-		return "", errorz.Errorf("dbz.QueryContext: q=%s: %w", tableNamesQuery, err)
+		return "", apperr.Errorf("dbz.QueryContext: q=%s: %w", tableNamesQuery, err)
 	}
 
 	// type CreateStatement struct {
@@ -67,7 +68,7 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 		showCreateTable := new(ShowCreateTable)
 		showCreateTableQuery := fmt.Sprintf("SHOW CREATE TABLE `%s`", tn.TableName)
 		if err := dbz.QueryContext(ctx, showCreateTable, showCreateTableQuery); err != nil {
-			return "", errorz.Errorf("dbz.QueryContext: q=%s: %w", showCreateTableQuery, err)
+			return "", apperr.Errorf("dbz.QueryContext: q=%s: %w", showCreateTableQuery, err)
 		}
 		query += showCreateTable.CreateStatement + ";\n"
 
@@ -75,7 +76,7 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 		// showCreateIndex := fmt.Sprintf("SELECT CONCAT('CREATE INDEX ', INDEX_NAME, ' ON ', TABLE_NAME, ' (', GROUP_CONCAT(COLUMN_NAME ORDER BY SEQ_IN_INDEX), ');') AS 'create_statement' FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = %s AND INDEX_NAME IS NOT NULL AND INDEX_NAME != 'PRIMARY' AND TABLE_NAME = '%s' GROUP BY INDEX_NAME, TABLE_NAME;", databaseQuoted, tn.TableName)
 		// createStatements := new([]*CreateStatement)
 		// if err := dbz.QueryContext(ctx, createStatements, showCreateIndex); err != nil {
-		// 	return "", errorz.Errorf("dbz.QueryContext: q=%s: %w", showCreateIndex, err)
+		// 	return "", apperr.Errorf("dbz.QueryContext: q=%s: %w", showCreateIndex, err)
 		// }
 		// for _, createStatement := range *createStatements {
 		// 	query += createStatement.CreateStatement + "\n"

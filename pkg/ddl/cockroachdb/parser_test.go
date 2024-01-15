@@ -21,17 +21,13 @@ func TestParser_Parse(t *testing.T) {
 	})
 	logs.TraceLog = log.New(os.Stderr, "TRACE: ", log.LstdFlags|log.Lshortfile)
 
-	successTests := []struct {
-		name    string
-		input   string
-		wantErr error
-		wantStr string
-	}{
-		{
-			name:    "success,CREATE_TABLE",
-			input:   `CREATE TABLE "groups" ("id" UUID NOT NULL PRIMARY KEY, description TEXT); CREATE TABLE "users" (id UUID NOT NULL, group_id UUID NOT NULL REFERENCES "groups" ("id"), "name" VARCHAR(255) NOT NULL UNIQUE, "age" INT DEFAULT 0 CHECK ("age" >= 0), description TEXT, PRIMARY KEY ("id"));`,
-			wantErr: nil,
-			wantStr: `CREATE TABLE "groups" (
+	t.Run("success,CREATE_TABLE", func(t *testing.T) {
+		l := NewLexer(`CREATE TABLE "groups" ("id" UUID NOT NULL PRIMARY KEY, description TEXT); CREATE TABLE "users" (id UUID NOT NULL, group_id UUID NOT NULL REFERENCES "groups" ("id") ON DELETE NO ACTION, "name" VARCHAR(255) NOT NULL UNIQUE, "age" INT DEFAULT 0 CHECK ("age" >= 0), description TEXT, PRIMARY KEY ("id"));`)
+		p := NewParser(l)
+		actualDDL, err := p.Parse()
+		require.NoError(t, err)
+
+		const expected = `CREATE TABLE "groups" (
     "id" UUID NOT NULL,
     description TEXT,
     CONSTRAINT groups_pkey PRIMARY KEY ("id")
@@ -43,15 +39,23 @@ CREATE TABLE "users" (
     "age" INT DEFAULT 0,
     description TEXT,
     CONSTRAINT users_pkey PRIMARY KEY ("id"),
-    CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id) REFERENCES "groups" ("id"),
+    CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id) REFERENCES "groups" ("id") ON DELETE NO ACTION,
     UNIQUE INDEX users_unique_name ("name"),
     CONSTRAINT users_age_check CHECK ("age" >= 0)
 );
-`,
-		},
-		{
-			name: "success,complex_defaults",
-			input: `-- table: complex_defaults
+`
+		actual := actualDDL.String()
+
+		if !assert.Equal(t, expected, actual) {
+			t.Fail()
+		}
+
+		t.Logf("✅: %s: actual: %%#v: \n%#v", t.Name(), actualDDL)
+		t.Logf("✅: %s: actual: %%s: \n%s", t.Name(), actualDDL)
+	})
+
+	t.Run("success,complex_defaults", func(t *testing.T) {
+		l := NewLexer(`-- table: complex_defaults
 CREATE TABLE IF NOT EXISTS complex_defaults (
     -- id is the primary key.
     id SERIAL PRIMARY KEY,
@@ -63,9 +67,12 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
     json_data JSONB DEFAULT '{}',
     calculated_value INTEGER DEFAULT (SELECT COUNT(*) FROM another_table)
 );
-`,
-			wantErr: nil,
-			wantStr: `CREATE TABLE IF NOT EXISTS complex_defaults (
+`)
+		p := NewParser(l)
+		actualDDL, err := p.Parse()
+		require.NoError(t, err)
+
+		const expected = `CREATE TABLE IF NOT EXISTS complex_defaults (
     id SERIAL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -76,11 +83,19 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
     calculated_value INTEGER DEFAULT (SELECT COUNT(*) FROM another_table),
     CONSTRAINT complex_defaults_pkey PRIMARY KEY (id)
 );
-`,
-		},
-		{
-			name: "success,CREATE_TABLE_TYPE_ANNOTATION",
-			input: `CREATE TABLE IF NOT EXISTS public.users (
+`
+		actual := actualDDL.String()
+
+		if !assert.Equal(t, expected, actual) {
+			t.Fail()
+		}
+
+		t.Logf("✅: %s: actual: %%#v: \n%#v", t.Name(), actualDDL)
+		t.Logf("✅: %s: actual: %%s: \n%s", t.Name(), actualDDL)
+	})
+
+	t.Run("success,CREATE_TABLE_TYPE_ANNOTATION", func(t *testing.T) {
+		l := NewLexer(`CREATE TABLE IF NOT EXISTS public.users (
     user_id UUID NOT NULL,
     username VARCHAR(256) NOT NULL,
     is_verified BOOL NOT NULL DEFAULT false,
@@ -89,9 +104,12 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
     CONSTRAINT users_pkey PRIMARY KEY (user_id ASC),
     INDEX users_idx_by_username (username DESC)
 );
-`,
-			wantErr: nil,
-			wantStr: `CREATE TABLE IF NOT EXISTS public.users (
+`)
+		p := NewParser(l)
+		actualDDL, err := p.Parse()
+		require.NoError(t, err)
+
+		const expected = `CREATE TABLE IF NOT EXISTS public.users (
     user_id UUID NOT NULL,
     username VARCHAR(256) NOT NULL,
     is_verified BOOL NOT NULL DEFAULT false,
@@ -100,9 +118,23 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
     CONSTRAINT users_pkey PRIMARY KEY (user_id ASC),
     INDEX users_idx_by_username (username DESC)
 );
-`,
-		},
-	}
+`
+		actual := actualDDL.String()
+
+		if !assert.Equal(t, expected, actual) {
+			t.Fail()
+		}
+
+		t.Logf("✅: %s: actual: %%#v: \n%#v", t.Name(), actualDDL)
+		t.Logf("✅: %s: actual: %%s: \n%s", t.Name(), actualDDL)
+	})
+
+	successTests := []struct {
+		name    string
+		input   string
+		wantErr error
+		wantStr string
+	}{}
 
 	for _, tt := range successTests {
 		tt := tt
@@ -250,6 +282,26 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 			wantErr: ddl.ErrUnexpectedToken,
 		},
 		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_REFERENCES_INVALID",
+			input:   `CREATE TABLE "users" ("id" UUID REFERENCES foo (foo_id) ON`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_REFERENCES_INVALID",
+			input:   `CREATE TABLE "users" ("id" UUID REFERENCES foo (foo_id) ON DELETE`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_REFERENCES_INVALID",
+			input:   `CREATE TABLE "users" ("id" UUID REFERENCES foo (foo_id) ON DELETE NO`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_REFERENCES_INVALID",
+			input:   `CREATE TABLE "users" ("id" UUID REFERENCES foo (foo_id) ON DELETE NO ACTION`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_INVALID_FOREIGN",
 			input:   `CREATE TABLE "users" ("id" UUID, FOREIGN NOT`,
 			wantErr: ddl.ErrUnexpectedToken,
@@ -282,6 +334,26 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_FOREIGN_KEY_IDENTS_REFERENCES_INVALID_CLOSE_PAREN",
 			input:   `CREATE TABLE "users" ("id" UUID, FOREIGN KEY ("group_id") REFERENCES "groups" ("id")`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_FOREIGN_KEY_IDENTS_REFERENCES_ON_INVALID",
+			input:   `CREATE TABLE "users" ("id" UUID, FOREIGN KEY ("group_id") REFERENCES "groups" ("id") ON`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_FOREIGN_KEY_IDENTS_REFERENCES_ON_DELETE_INVALID",
+			input:   `CREATE TABLE "users" ("id" UUID, FOREIGN KEY ("group_id") REFERENCES "groups" ("id") ON DELETE`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_FOREIGN_KEY_IDENTS_REFERENCES_ON_DELETE_NO_INVALID",
+			input:   `CREATE TABLE "users" ("id" UUID, FOREIGN KEY ("group_id") REFERENCES "groups" ("id") ON DELETE NO`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_FOREIGN_KEY_IDENTS_REFERENCES_ON_DELETE_NO_INVALID",
+			input:   `CREATE TABLE "users" ("id" UUID, FOREIGN KEY ("group_id") REFERENCES "groups" ("id") ON DELETE NO ACTION`,
 			wantErr: ddl.ErrUnexpectedToken,
 		},
 		{
@@ -413,6 +485,16 @@ func TestParser_parseColumn(t *testing.T) {
 
 func TestParser_parseExpr(t *testing.T) {
 	t.Parallel()
+
+	t.Run("success,isReservedValue", func(t *testing.T) {
+		t.Parallel()
+
+		p := NewParser(NewLexer(`(null)`))
+		p.nextToken()
+		p.nextToken()
+		_, err := p.parseExpr()
+		require.NoError(t, err)
+	})
 
 	t.Run("failure,invalid", func(t *testing.T) {
 		t.Parallel()
