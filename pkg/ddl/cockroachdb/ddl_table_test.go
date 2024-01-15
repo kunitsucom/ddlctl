@@ -66,11 +66,16 @@ func TestForeignKeyConstraint(t *testing.T) {
 			Columns:    []*ColumnIdent{{Ident: &Ident{Name: "group_id", QuotationMark: `"`, Raw: `"group_id"`}}},
 			Ref:        &Ident{Name: "groups", QuotationMark: `"`, Raw: `"groups"`},
 			RefColumns: []*ColumnIdent{{Ident: &Ident{Name: "id", QuotationMark: `"`, Raw: `"id"`}}},
+			OnAction:   "ON DELETE NO ACTION",
 		}
 
-		expected := `CONSTRAINT "fk_users_groups" FOREIGN KEY ("group_id") REFERENCES "groups" ("id")`
-		actual := foreignKeyConstraint.String()
-		require.Equal(t, expected, actual)
+		expectedString := `CONSTRAINT "fk_users_groups" FOREIGN KEY ("group_id") REFERENCES "groups" ("id") ON DELETE NO ACTION`
+		actualString := foreignKeyConstraint.String()
+		require.Equal(t, expectedString, actualString)
+
+		expectedStringForDiff := `CONSTRAINT fk_users_groups FOREIGN KEY (group_id ASC) REFERENCES groups (id ASC) ON DELETE NO ACTION`
+		actualStringForDiff := foreignKeyConstraint.StringForDiff()
+		require.Equal(t, expectedStringForDiff, actualStringForDiff)
 
 		t.Logf("✅: %s: foreignKeyConstraint: %#v", t.Name(), foreignKeyConstraint)
 	})

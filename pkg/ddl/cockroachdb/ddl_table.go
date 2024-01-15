@@ -102,6 +102,9 @@ func (c *ForeignKeyConstraint) String() string {
 	str += " (" + stringz.JoinStringers(", ", c.Columns...) + ")"
 	str += " REFERENCES " + c.Ref.String()
 	str += " (" + stringz.JoinStringers(", ", c.RefColumns...) + ")"
+	if c.OnAction != "" {
+		str += " " + c.OnAction
+	}
 	return str
 }
 

@@ -444,6 +444,28 @@ LabelConstraints:
 				return nil, apperr.Errorf("parseColumnIdents: %w", err)
 			}
 			// TODO: support ON DELETE, ON UPDATE
+			//nolint:nestif
+			if p.isCurrentToken(TOKEN_ON) {
+				onAction := p.currentToken.Literal.String() // current = ON
+				p.nextToken()                               // current = DELETE or UPDATE
+				if err := p.checkCurrentToken(TOKEN_DELETE, TOKEN_UPDATE); err != nil {
+					return nil, apperr.Errorf("checkCurrentToken: %w", err)
+				}
+				onAction += " " + p.currentToken.Literal.String()
+				if err := p.checkPeekToken(TOKEN_CASCADE, TOKEN_NO); err != nil {
+					return nil, apperr.Errorf("checkPeekToken: %w", err)
+				}
+				p.nextToken()                                     // current = CASCADE or NO
+				onAction += " " + p.currentToken.Literal.String() // current = CASCADE or NO
+				if p.isCurrentToken(TOKEN_NO) {
+					if err := p.checkPeekToken(TOKEN_ACTION); err != nil {
+						return nil, apperr.Errorf("checkPeekToken: %w", err)
+					}
+					p.nextToken()                                     // current = ACTION
+					onAction += " " + p.currentToken.Literal.String() // current = ACTION
+				}
+				constraint.OnAction = onAction
+			}
 			constraint.RefColumns = idents
 			constraints = constraints.Append(constraint)
 		case TOKEN_UNIQUE:
@@ -538,6 +560,25 @@ func (p *Parser) parseTableConstraint(tableName *Ident) (Constraint, error) { //
 		if err != nil {
 			return nil, apperr.Errorf("parseColumnIdents: %w", err)
 		}
+		// TODO: support ON DELETE, ON UPDATE
+		var onAction string
+		if p.isCurrentToken(TOKEN_ON) {
+			onAction = p.currentToken.Literal.String() // current = ON
+			p.nextToken()                              // current = DELETE or UPDATE
+			if err := p.checkCurrentToken(TOKEN_DELETE, TOKEN_UPDATE); err != nil {
+				return nil, apperr.Errorf("checkCurrentToken: %w", err)
+			}
+			onAction += " " + p.currentToken.Literal.String()
+			if err := p.checkPeekToken(TOKEN_CASCADE, TOKEN_NO); err != nil {
+				return nil, apperr.Errorf("checkPeekToken: %w", err)
+			}
+			p.nextToken()                                     // current = CASCADE or NO
+			onAction += " " + p.currentToken.Literal.String() // current = CASCADE or NO
+			if p.isCurrentToken(TOKEN_NO) && p.isPeekToken(TOKEN_ACTION) {
+				p.nextToken()                                     // current = ACTION
+				onAction += " " + p.currentToken.Literal.String() // current = ACTION
+			}
+		}
 		if constraintName == nil {
 			name := tableName.StringForDiff()
 			for _, ident := range idents {
@@ -551,6 +592,7 @@ func (p *Parser) parseTableConstraint(tableName *Ident) (Constraint, error) { //
 			Columns:    idents,
 			Ref:        refName,
 			RefColumns: identsRef,
+			OnAction:   onAction,
 		}, nil
 
 	case TOKEN_UNIQUE, TOKEN_INDEX: //diff:ignore-line-postgres-cockroach
