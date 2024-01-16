@@ -78,6 +78,20 @@ ORDER BY
     clmn.table_schema, clmn.table_name
 ;
 `
+	// 	formatShowCreateAllIndexes = `-- CREATE INDEX
+	// SELECT
+	//     indexdef AS create_statement
+	// FROM
+	//     pg_indexes
+	// WHERE
+	//     schemaname = '%s' AND indexname NOT IN (
+	//         SELECT constraint_name
+	//         FROM information_schema.table_constraints
+	//         WHERE constraint_type = 'PRIMARY KEY' AND table_schema = '%s'
+	//     )
+	// ;
+	// `
+	// MEMO: PRIMARY KEY 以外にも UNIQUE 制約も INDEX として扱われるため PRIMARY KEY 以外も除外するようにした
 	formatShowCreateAllIndexes = `-- CREATE INDEX
 SELECT
     indexdef AS create_statement
@@ -87,7 +101,7 @@ WHERE
     schemaname = '%s' AND indexname NOT IN (
         SELECT constraint_name
         FROM information_schema.table_constraints
-        WHERE constraint_type = 'PRIMARY KEY' AND table_schema = '%s'
+        WHERE table_schema = '%s'
     )
 ;
 `
