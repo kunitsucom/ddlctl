@@ -156,9 +156,10 @@ Description:
 
 sub commands:
     version: show version
-    generate: command "generate" description
-    diff: command "diff" description
-    apply: command "apply" description
+    generate: generate DDL from source (file or directory) to destination (file or directory).
+    show: show DDL from DSN like `SHOW CREATE TABLE`.
+    diff: diff DDL from <before DDL source> to <after DDL source>.
+    apply: apply DDL from <DDL source> to <DSN to apply>.
 
 options:
     --trace (env: DDLCTL_TRACE, default: false)
@@ -177,7 +178,7 @@ Usage:
     ddlctl generate [options] --dialect <DDL dialect> --src <source> --dst <destination>
 
 Description:
-    command "ddlctl generate" description
+    generate DDL from source (file or directory) to destination (file or directory).
 
 options:
     --lang (env: DDLCTL_LANGUAGE, default: go)
@@ -198,15 +199,32 @@ options:
         show usage
 ```
 
+### `ddlctl show`
+
+```console
+$ ddlctl show --help
+Usage:
+    ddlctl show --dialect <DDL dialect> <DSN>
+
+Description:
+    show DDL from DSN like `SHOW CREATE TABLE`.
+
+options:
+    --dialect (env: DDLCTL_DIALECT, default: )
+        SQL dialect to generate DDL
+    --help (default: false)
+        show usage
+```
+
 ### `ddlctl diff`
 
 ```console
 $ ddlctl diff --help
 Usage:
-    ddlctl diff [options] --dialect <DDL dialect> <DDL source before> <DDL source after>
+    ddlctl diff [options] --dialect <DDL dialect> <before DDL source> <after DDL source>
 
 Description:
-    command "ddlctl diff" description
+    diff DDL from <before DDL source> to <after DDL source>.
 
 options:
     --lang (env: DDLCTL_LANGUAGE, default: go)
@@ -231,7 +249,7 @@ Usage:
     ddlctl apply [options] --dialect <DDL dialect> <DSN to apply> <DDL source>
 
 Description:
-    command "ddlctl apply" description
+    apply DDL from <DDL source> to <DSN to apply>.
 
 options:
     --lang (env: DDLCTL_LANGUAGE, default: go)
