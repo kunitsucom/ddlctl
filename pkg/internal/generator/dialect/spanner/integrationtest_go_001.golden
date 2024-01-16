@@ -17,8 +17,7 @@ CREATE TABLE `Users` (
     -- Age is a user age.
     `Age`    INT64       NOT NULL,
     CONSTRAINT AgeGTEZero CHECK(Age >= 0)
-)
-PRIMARY KEY (`UserId`);
+) PRIMARY KEY (`UserId`);
 
 -- source: spanner/integrationtest_go_001.source:8
 -- spanddl:      index: CREATE INDEX `IndexUsersByName` ON `Users` (`Name`)
@@ -71,8 +70,7 @@ CREATE TABLE `Books` (
     -- WARN: the "Book" struct's "Title" field does not have a tag for column name (`dbtest:"<ColumnName>"`), so the field name "Title" is used as the column name.
     -- Title is a book title.
     `Title`    STRING(255) NOT NULL
-)
-PRIMARY KEY (`AuthorID`, `ID`),
+) PRIMARY KEY (`AuthorID`, `ID`),
 INTERLEAVE IN PARENT `Author` ON DELETE CASCADE;
 
 -- source: spanner/integrationtest_go_001.source:61

@@ -57,7 +57,7 @@ func DDLCtl(ctx context.Context) error {
 	cmd := cliz.Command{
 		Name:        "ddlctl",
 		Usage:       "ddlctl [options]",
-		Description: `ddlctl is a tool for control RDBMS DDL.`,
+		Description: "ddlctl is a tool for control RDBMS DDL.",
 		SubCommands: []*cliz.Command{
 			{
 				Name:        "version",
@@ -72,9 +72,10 @@ func DDLCtl(ctx context.Context) error {
 				},
 			},
 			{
-				Name:  "generate",
-				Short: "gen",
-				Usage: "ddlctl generate [options] --dialect <DDL dialect> --src <source> --dst <destination>",
+				Name:        "generate",
+				Short:       "gen",
+				Usage:       "ddlctl generate [options] --dialect <DDL dialect> --src <source> --dst <destination>",
+				Description: "generate DDL from source (file or directory) to destination (file or directory).",
 				Options: append(opts,
 					&cliz.StringOption{
 						Name:        consts.OptionSource,
@@ -92,20 +93,23 @@ func DDLCtl(ctx context.Context) error {
 				RunFunc: Generate,
 			},
 			{
-				Name:    "show",
-				Usage:   "ddlctl show --dialect <DDL dialect> <DSN>",
-				Options: []cliz.Option{optDialect},
-				RunFunc: Show,
+				Name:        "show",
+				Usage:       "ddlctl show --dialect <DDL dialect> <DSN>",
+				Description: "show DDL from DSN like `SHOW CREATE TABLE`.",
+				Options:     []cliz.Option{optDialect},
+				RunFunc:     Show,
 			},
 			{
-				Name:    "diff",
-				Usage:   "ddlctl diff [options] --dialect <DDL dialect> <DDL source before> <DDL source after>",
-				Options: opts,
-				RunFunc: Diff,
+				Name:        "diff",
+				Usage:       "ddlctl diff [options] --dialect <DDL dialect> <before DDL source> <after DDL source>",
+				Description: "diff DDL from <before DDL source> to <after DDL source>.",
+				Options:     opts,
+				RunFunc:     Diff,
 			},
 			{
-				Name:  "apply",
-				Usage: "ddlctl apply [options] --dialect <DDL dialect> <DSN to apply> <DDL source>",
+				Name:        "apply",
+				Usage:       "ddlctl apply [options] --dialect <DDL dialect> <DSN to apply> <DDL source>",
+				Description: "apply DDL from <DDL source> to <DSN to apply>.",
 				Options: append(opts,
 					&cliz.BoolOption{
 						Name:        consts.OptionAutoApprove,
