@@ -45,8 +45,7 @@ func fprintCreateTable(buf *string, indent string, stmt *ddlast.CreateTableStmt)
 
 		// PRIMARY KEY
 		if len(stmt.PrimaryKey) > 0 {
-			*buf += "\n"
-			*buf += "PRIMARY KEY ("
+			*buf += " PRIMARY KEY ("
 			for i, primaryKey := range stmt.PrimaryKey {
 				*buf += Quotation + primaryKey + Quotation
 				if lastPrimaryKeyIndex := len(stmt.PrimaryKey) - 1; i != lastPrimaryKeyIndex {
