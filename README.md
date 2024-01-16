@@ -320,7 +320,7 @@ done
 ### pre-built binary
 
 ```bash
-VERSION=v0.0.7
+VERSION=v0.0.8
 
 # download
 curl -fLROSs https://github.com/kunitsucom/ddlctl/releases/download/${VERSION}/ddlctl_${VERSION}_darwin_arm64.zip
@@ -332,7 +332,7 @@ unzip -j ddlctl_${VERSION}_darwin_arm64.zip '*/ddlctl'
 ### go install
 
 ```bash
-go install github.com/kunitsucom/ddlctl/cmd/ddlctl@v0.0.7
+go install github.com/kunitsucom/ddlctl/cmd/ddlctl@v0.0.8
 ```
 
 ## Usage
