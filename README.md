@@ -16,6 +16,10 @@
 
 `ddlctl` is a tool for control RDBMS DDL.
 
+## Demo
+
+![ddlctl_demo](https://github.com/kunitsucom/ddlctl/assets/29125616/2ff6bd76-037e-4695-aef1-5ca87a528e07)
+
 ## TODO
 
 - `generate` subcommand
@@ -109,7 +113,7 @@ type Group struct {
 EOF
 ```
 
-### 2. generate DDL
+### 2. Generate DDL
 
 Please execute the ddlctl command as follows:  
 
@@ -119,7 +123,7 @@ INFO: 2023/11/16 16:10:39 ddlctl.go:44: source: /tmp/sample.go
 INFO: 2023/11/16 16:10:39 ddlctl.go:73: destination: /tmp/sample.sql
 ```
 
-### 3. Check generated DDL
+### 3. Check generated DDL file
 
 Please check the contents of the outputted DDL:  
 
@@ -236,10 +240,10 @@ CREATE TABLE IF NOT EXISTS public.groups (
 CREATE UNIQUE INDEX "index_groups_group_name" ON public.groups ("group_name");
 ```
 
-### 3. Apply differences
+### 3. Apply DDL
 
 ```console
-$ ddlctl apply --dialect postgres "postgres://postgres:password@localhost/testdb?sslmode=disable" /tmp/sample.sql
+$ ddlctl apply --dialect postgres "postgres://postgres:password@localhost/testdb?sslmode=disable" /tmp/sample.sql --auto-approve
 
 ddlctl will exec the following DDL queries:
 
@@ -268,7 +272,7 @@ Do you want to apply these DDL queries?
   ddlctl will exec the DDL queries described above.
   Only 'yes' will be accepted to approve.
 
-Enter a value: yes
+Enter a value: yes (via --auto-approve option)
 
 executing...
 done
@@ -292,7 +296,7 @@ done
 apply:
 
 ```console
-$ ddlctl apply --dialect postgres "postgres://postgres:password@localhost/testdb?sslmode=disable" /tmp/sample.sql
+$ ddlctl apply --dialect postgres "postgres://postgres:password@localhost/testdb?sslmode=disable" /tmp/sample.sql --auto-approve
 
 ddlctl will exec the following DDL queries:
 
@@ -309,7 +313,7 @@ Do you want to apply these DDL queries?
   ddlctl will exec the DDL queries described above.
   Only 'yes' will be accepted to approve.
 
-Enter a value: yes
+Enter a value: yes (via --auto-approve option)
 
 executing...
 done
