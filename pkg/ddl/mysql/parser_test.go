@@ -24,7 +24,7 @@ func TestParser_Parse(t *testing.T) {
 	t.Run("success,CREATE_TABLE", func(t *testing.T) {
 		// t.Parallel()
 
-		l := NewLexer("CREATE TABLE `groups` (`group_id` VARCHAR(36) NOT NULL PRIMARY KEY, description TEXT) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci; CREATE TABLE `users` (user_id VARCHAR(36) NOT NULL, group_id VARCHAR(36) NOT NULL REFERENCES `groups` (`group_id`), `name` VARCHAR(255) COLLATE utf8mb4_bin NOT NULL UNIQUE, `age` INT DEFAULT 0 CHECK (`age` >= 0), birthdate DATE, country char(3), description TEXT, PRIMARY KEY (`user_id`)) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;")
+		l := NewLexer("CREATE TABLE `groups` (`group_id` VARCHAR(36) NOT NULL PRIMARY KEY, description TEXT) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci; CREATE TABLE `users` (user_id VARCHAR(36) NOT NULL, group_id VARCHAR(36) NOT NULL REFERENCES `groups` (`group_id`), `name` VARCHAR(255) COLLATE utf8mb4_bin NOT NULL UNIQUE, `age` INT DEFAULT 0 CHECK (`age` >= 0), birthdate DATE, country char(3), description LONGTEXT, PRIMARY KEY (`user_id`)) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;")
 		p := NewParser(l)
 		actual, err := p.Parse()
 		require.NoError(t, err)
@@ -41,7 +41,7 @@ CREATE TABLE ` + "`" + `users` + "`" + ` (
     ` + "`" + `age` + "`" + ` INT DEFAULT 0,
     birthdate DATE,
     country char(3),
-    description TEXT,
+    description LONGTEXT,
     PRIMARY KEY (` + "`" + `user_id` + "`" + `),
     CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id) REFERENCES ` + "`" + `groups` + "`" + ` (` + "`" + `group_id` + "`" + `),
     UNIQUE KEY users_unique_name (` + "`" + `name` + "`" + `),
