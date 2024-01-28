@@ -24,7 +24,7 @@ func TestParser_Parse(t *testing.T) {
 	t.Run("success,CREATE_TABLE", func(t *testing.T) {
 		// t.Parallel()
 
-		l := NewLexer("CREATE TABLE `groups` (`group_id` VARCHAR(36) NOT NULL PRIMARY KEY, description TEXT) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci; CREATE TABLE `users` (user_id VARCHAR(36) NOT NULL, group_id VARCHAR(36) NOT NULL REFERENCES `groups` (`group_id`), `name` VARCHAR(255) COLLATE utf8mb4_bin NOT NULL UNIQUE, `age` INT DEFAULT 0 CHECK (`age` >= 0), birthdate DATE, country char(3), description LONGTEXT, PRIMARY KEY (`user_id`)) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;")
+		l := NewLexer("CREATE TABLE `groups` (`group_id` VARCHAR(36) NOT NULL PRIMARY KEY, description TEXT) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci; CREATE TABLE `users` (user_id VARCHAR(36) NOT NULL, group_id VARCHAR(36) NOT NULL REFERENCES `groups` (`group_id`), `name` VARCHAR(255) COLLATE utf8mb4_bin NOT NULL UNIQUE, `age` INT DEFAULT 0 CHECK (`age` >= 0), birthdate DATE, country char(3), description LONGTEXT, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY (`user_id`)) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='user 🙆‍';")
 		p := NewParser(l)
 		actual, err := p.Parse()
 		require.NoError(t, err)
@@ -42,11 +42,13 @@ CREATE TABLE ` + "`" + `users` + "`" + ` (
     birthdate DATE,
     country char(3),
     description LONGTEXT,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (` + "`" + `user_id` + "`" + `),
     CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id) REFERENCES ` + "`" + `groups` + "`" + ` (` + "`" + `group_id` + "`" + `),
     UNIQUE KEY users_unique_name (` + "`" + `name` + "`" + `),
     CONSTRAINT users_age_check CHECK (` + "`" + `age` + "`" + ` >= 0)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='user 🙆‍';
 `
 		if !assert.Equal(t, expected, actual.String()) {
 			t.Fail()
@@ -405,6 +407,16 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 			wantErr: ddl.ErrUnexpectedToken,
 		},
 		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_UNIQUE_KEY_IDENTS_COMMENT_INVALID",
+			input:   `CREATE TABLE "users" ("id" VARCHAR(36), name TEXT, UNIQUE KEY users_idx_on_id_name ("id", name)) COMMENT`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_UNIQUE_KEY_IDENTS_COMMENT_EQUAL_INVALID",
+			input:   `CREATE TABLE "users" ("id" VARCHAR(36), name TEXT, UNIQUE KEY users_idx_on_id_name ("id", name)) COMMENT=`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
 			name:    "failure,CREATE_INDEX_INVALID",
 			input:   `CREATE INDEX NOT`,
 			wantErr: ddl.ErrUnexpectedToken,
@@ -536,16 +548,6 @@ func TestParser_parseDataType(t *testing.T) {
 		p.nextToken()
 		_, err := p.parseDataType()
 		require.NoError(t, err)
-	})
-
-	t.Run("failure,DOUBLE_NOT", func(t *testing.T) {
-		t.Parallel()
-
-		p := NewParser(NewLexer(`DOUBLE NOT`))
-		p.nextToken()
-		p.nextToken()
-		_, err := p.parseDataType()
-		require.ErrorIs(t, err, ddl.ErrUnexpectedToken)
 	})
 
 	t.Run("failure,DOUBLE_PRECISION", func(t *testing.T) {

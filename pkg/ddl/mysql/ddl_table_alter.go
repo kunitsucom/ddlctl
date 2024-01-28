@@ -59,6 +59,9 @@ func (s *AlterTableStmt) String() string {
 			if ca.AutoIncrement {
 				str += " AUTO_INCREMENT"
 			}
+			if ca.OnAction != "" {
+				str += " " + ca.OnAction
+			}
 		case *AlterColumnSetDefault:
 			str += "ALTER " + a.Name.String() + " " + "SET " + ca.Default.String()
 		case *AlterColumnDropDefault:
@@ -169,6 +172,7 @@ type AlterColumnDataType struct {
 	Collate       *Ident
 	NotNull       bool
 	AutoIncrement bool
+	OnAction      string
 }
 
 func (*AlterColumnDataType) isAlterColumnAction() {}

@@ -209,7 +209,9 @@ func (config *DiffCreateTableConfig) diffCreateTableColumn(ddls *DDL, before, af
 			(beforeColumn.NotNull && !afterColumn.NotNull) ||
 			(!beforeColumn.NotNull && afterColumn.NotNull) ||
 			(beforeColumn.AutoIncrement && !afterColumn.AutoIncrement) ||
-			(!beforeColumn.AutoIncrement && afterColumn.AutoIncrement) {
+			(!beforeColumn.AutoIncrement && afterColumn.AutoIncrement) ||
+			(beforeColumn.OnAction != afterColumn.Comment) ||
+			(beforeColumn.Comment != afterColumn.Comment) {
 			// ALTER TABLE table_name MODIFY column_name data_type NOT NULL;
 			ddls.Stmts = append(ddls.Stmts, &AlterTableStmt{
 				Comment: simplediff.Diff(beforeColumn.String(), afterColumn.String()).String(),

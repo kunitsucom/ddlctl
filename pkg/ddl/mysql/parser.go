@@ -370,8 +370,7 @@ func (p *Parser) parseColumn(tableName *Ident) (*Column, []Constraint, error) {
 					return nil, nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 				}
 				column.OnAction += " " + p.currentToken.Literal.String()
-				p.nextToken() // current = CASCADE or RESTRICT or SET or ...
-				column.OnAction += " " + p.currentToken.Literal.String()
+				p.nextToken()                // current = CASCADE or RESTRICT or SET or ...
 				switch p.currentToken.Type { //nolint:exhaustive
 				case TOKEN_CASCADE, TOKEN_RESTRICT, TOKEN_CURRENT_TIMESTAMP:
 					column.OnAction += " " + p.currentToken.Literal.String()

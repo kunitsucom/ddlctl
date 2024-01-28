@@ -351,6 +351,9 @@ func (c *Column) String() string {
 	if c.AutoIncrement {
 		str += " AUTO_INCREMENT"
 	}
+	if c.OnAction != "" {
+		str += " " + c.OnAction
+	}
 	return str
 }
 
