@@ -415,4 +415,26 @@ ALTER TABLE public.users MODIFY username VARCHAR(11) NOT NULL;
 			t.Errorf("❌: %s: stmt: %%#v: \n%#v", t.Name(), actual)
 		}
 	})
+
+	t.Run("success,AUTO_INCREMENT", func(t *testing.T) {
+		t.Parallel()
+
+		before, err := NewParser(NewLexer(`CREATE TABLE users ( user_id BIGINT(36) NOT NULL, PRIMARY KEY (user_id) );`)).Parse()
+		require.NoError(t, err)
+
+		after, err := NewParser(NewLexer(`CREATE TABLE users ( user_id BIGINT(36) NOT NULL AUTO_INCREMENT, PRIMARY KEY (user_id) );`)).Parse()
+		require.NoError(t, err)
+
+		expected := `-- -user_id BIGINT(36) NOT NULL
+-- +user_id BIGINT(36) NOT NULL AUTO_INCREMENT
+ALTER TABLE users MODIFY user_id BIGINT(36) NOT NULL AUTO_INCREMENT;
+`
+
+		actual, err := Diff(before, after)
+		require.NoError(t, err)
+
+		if !assert.Equal(t, expected, actual.String()) {
+			t.Errorf("❌: %s: stmt: %%#v: \n%#v", t.Name(), actual)
+		}
+	})
 }

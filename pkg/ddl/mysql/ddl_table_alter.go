@@ -56,6 +56,9 @@ func (s *AlterTableStmt) String() string {
 			if ca.NotNull {
 				str += " NOT NULL"
 			}
+			if ca.AutoIncrement {
+				str += " AUTO_INCREMENT"
+			}
 		case *AlterColumnSetDefault:
 			str += "ALTER " + a.Name.String() + " " + "SET " + ca.Default.String()
 		case *AlterColumnDropDefault:
@@ -162,8 +165,9 @@ type AlterColumnAction interface {
 // AlterColumnDataType represents ALTER TABLE table_name MODIFY column_name data_type NOT NULL.
 // NOTE: https://dev.mysql.com/doc/refman/8.0/ja/alter-table-examples.html
 type AlterColumnDataType struct {
-	DataType *DataType
-	NotNull  bool
+	DataType      *DataType
+	NotNull       bool
+	AutoIncrement bool
 }
 
 func (*AlterColumnDataType) isAlterColumnAction() {}

@@ -254,10 +254,11 @@ func (t *ObjectName) StringForDiff() string {
 }
 
 type Column struct {
-	Name     *Ident
-	DataType *DataType
-	Default  *Default
-	NotNull  bool
+	Name          *Ident
+	DataType      *DataType
+	Default       *Default
+	NotNull       bool
+	AutoIncrement bool
 }
 
 type Default struct {
@@ -339,6 +340,9 @@ func (c *Column) String() string {
 	}
 	if c.Default != nil {
 		str += " " + c.Default.String()
+	}
+	if c.AutoIncrement {
+		str += " AUTO_INCREMENT"
 	}
 	return str
 }

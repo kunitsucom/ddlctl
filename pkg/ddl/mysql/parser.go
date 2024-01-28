@@ -195,6 +195,17 @@ LabelTableOptions:
 				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 			}
 			opt.Value = NewRawIdent(p.currentToken.Literal.Str)
+		case TOKEN_AUTO_INCREMENT:
+			opt.Name = "AUTO_INCREMENT"
+			p.nextToken() // current = `=`
+			if err := p.checkCurrentToken(TOKEN_EQUAL); err != nil {
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			p.nextToken() // current = TOKEN_IDENT
+			if err := p.checkCurrentToken(TOKEN_IDENT); err != nil {
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			opt.Value = NewRawIdent(p.currentToken.Literal.Str)
 		case TOKEN_DEFAULT:
 			if err := p.checkPeekToken(TOKEN_CHARSET); err != nil {
 				return nil, apperr.Errorf(errFmtPrefix+"checkPeekToken: %w", err)
@@ -341,6 +352,8 @@ func (p *Parser) parseColumn(tableName *Ident) (*Column, []Constraint, error) {
 				}
 				column.Default = def
 				continue
+			case TOKEN_AUTO_INCREMENT:
+				column.AutoIncrement = true
 			default:
 				break LabelDefaultNotNull
 			}
@@ -785,12 +798,13 @@ func isReservedValue(tokenType TokenType) bool {
 func isDataType(tokenType TokenType) bool {
 	switch tokenType { //nolint:exhaustive
 	case TOKEN_BOOLEAN,
-		TOKEN_TINYINT,
+		TOKEN_BIT, TOKEN_TINYINT,
 		TOKEN_SMALLINT, TOKEN_INTEGER, TOKEN_BIGINT,
 		TOKEN_DECIMAL, TOKEN_NUMERIC,
 		TOKEN_REAL, TOKEN_DOUBLE, /* TOKEN_PRECISION, */
 		TOKEN_SMALLSERIAL, TOKEN_SERIAL, TOKEN_BIGSERIAL,
 		TOKEN_JSON,
+		TOKEN_CHAR,
 		TOKEN_CHARACTER, TOKEN_VARYING,
 		TOKEN_VARCHAR, TOKEN_TEXT,
 		TOKEN_TIMESTAMP, TOKEN_DATE, TOKEN_TIME,

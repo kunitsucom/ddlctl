@@ -73,6 +73,7 @@ const (
 
 	// DATA TYPE.
 	TOKEN_BOOLEAN           TokenType = "BOOLEAN"
+	TOKEN_BIT               TokenType = "BIT"
 	TOKEN_TINYINT           TokenType = "TINYINT"
 	TOKEN_SMALLINT          TokenType = "SMALLINT"
 	TOKEN_MEDIUMINT         TokenType = "MEDIUMINT"
@@ -88,6 +89,7 @@ const (
 	TOKEN_SERIAL            TokenType = "SERIAL"
 	TOKEN_BIGSERIAL         TokenType = "BIGSERIAL"
 	TOKEN_JSON              TokenType = "JSON"
+	TOKEN_CHAR              TokenType = "CHAR"
 	TOKEN_CHARACTER_VARYING TokenType = "CHARACTER VARYING"
 	TOKEN_CHARACTER         TokenType = "CHARACTER"
 	TOKEN_VARYING           TokenType = "VARYING"
@@ -120,7 +122,8 @@ const (
 	TOKEN_COLLATE TokenType = "COLLATE"
 
 	// FUNCTION.
-	TOKEN_NULLIF TokenType = "NULLIF"
+	TOKEN_NULLIF         TokenType = "NULLIF"
+	TOKEN_AUTO_INCREMENT TokenType = "AUTO_INCREMENT" //nolint:gosec
 
 	// VALUE.
 	TOKEN_NULL  TokenType = "NULL"
@@ -174,6 +177,8 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_TO
 	case "BOOLEAN":
 		return TOKEN_BOOLEAN
+	case "BIT":
+		return TOKEN_BIT
 	case "TINYINT":
 		return TOKEN_TINYINT
 	case "SMALLINT":
@@ -202,6 +207,8 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_BIGSERIAL
 	case "JSON":
 		return TOKEN_JSON
+	case "CHAR":
+		return TOKEN_CHAR
 	case "CHARACTER":
 		return TOKEN_CHARACTER
 	case "VARYING":
@@ -248,6 +255,8 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_CHARSET
 	case "COLLATE":
 		return TOKEN_COLLATE
+	case "AUTO_INCREMENT":
+		return TOKEN_AUTO_INCREMENT
 	case "NULLIF":
 		return TOKEN_NULLIF
 	case "NULL":
