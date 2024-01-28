@@ -260,6 +260,7 @@ type Column struct {
 	Default       *Default
 	NotNull       bool
 	AutoIncrement bool
+	OnAction      string
 }
 
 type Default struct {

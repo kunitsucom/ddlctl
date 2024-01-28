@@ -69,6 +69,8 @@ const (
 	TOKEN_EXISTS TokenType = "EXISTS"
 	TOKEN_USING  TokenType = "USING"
 	TOKEN_ON     TokenType = "ON"
+	TOKEN_UPDATE TokenType = "UPDATE"
+	TOKEN_DELETE TokenType = "DELETE"
 	TOKEN_TO     TokenType = "TO"
 
 	// DATA TYPE.

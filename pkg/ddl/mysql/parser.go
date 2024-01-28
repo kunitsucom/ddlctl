@@ -352,6 +352,14 @@ func (p *Parser) parseColumn(tableName *Ident) (*Column, []Constraint, error) {
 				}
 				column.Default = def
 				continue
+			case TOKEN_ON:
+				p.nextToken() // current = UPDATE or DELETE
+				if err := p.checkCurrentToken(TOKEN_UPDATE, TOKEN_DELETE); err != nil {
+					return nil, nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+				}
+				column.OnAction += p.currentToken.Literal.String()
+				p.nextToken() // current = CASCADE or RESTRICT or SET or ...
+				column.OnAction += " " + p.currentToken.Literal.String()
 			case TOKEN_COLLATE:
 				p.nextToken() // current = collate_value
 				column.Collate = NewRawIdent(p.currentToken.Literal.Str)
