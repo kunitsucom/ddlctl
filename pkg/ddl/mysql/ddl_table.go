@@ -256,6 +256,7 @@ func (t *ObjectName) StringForDiff() string {
 type Column struct {
 	Name          *Ident
 	DataType      *DataType
+	Collate       *Ident
 	Default       *Default
 	NotNull       bool
 	AutoIncrement bool
@@ -335,6 +336,9 @@ func (d *Default) StringForDiff() string {
 func (c *Column) String() string {
 	str := c.Name.String() + " " +
 		c.DataType.String()
+	if c.Collate != nil {
+		str += " COLLATE " + c.Collate.String()
+	}
 	if c.NotNull {
 		str += " NOT NULL"
 	}

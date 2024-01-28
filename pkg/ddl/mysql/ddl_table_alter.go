@@ -166,6 +166,7 @@ type AlterColumnAction interface {
 // NOTE: https://dev.mysql.com/doc/refman/8.0/ja/alter-table-examples.html
 type AlterColumnDataType struct {
 	DataType      *DataType
+	Collate       *Ident
 	NotNull       bool
 	AutoIncrement bool
 }

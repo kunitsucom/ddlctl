@@ -352,6 +352,9 @@ func (p *Parser) parseColumn(tableName *Ident) (*Column, []Constraint, error) {
 				}
 				column.Default = def
 				continue
+			case TOKEN_COLLATE:
+				p.nextToken() // current = collate_value
+				column.Collate = NewRawIdent(p.currentToken.Literal.Str)
 			case TOKEN_AUTO_INCREMENT:
 				column.AutoIncrement = true
 			default:

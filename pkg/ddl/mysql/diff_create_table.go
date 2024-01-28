@@ -205,6 +205,7 @@ func (config *DiffCreateTableConfig) diffCreateTableColumn(ddls *DDL, before, af
 		}
 
 		if beforeColumn.DataType.StringForDiff() != afterColumn.DataType.StringForDiff() ||
+			beforeColumn.Collate.StringForDiff() != afterColumn.Collate.StringForDiff() ||
 			(beforeColumn.NotNull && !afterColumn.NotNull) ||
 			(!beforeColumn.NotNull && afterColumn.NotNull) ||
 			(beforeColumn.AutoIncrement && !afterColumn.AutoIncrement) ||
@@ -217,6 +218,7 @@ func (config *DiffCreateTableConfig) diffCreateTableColumn(ddls *DDL, before, af
 					Name: afterColumn.Name,
 					Action: &AlterColumnDataType{
 						DataType:      afterColumn.DataType,
+						Collate:       afterColumn.Collate,
 						NotNull:       afterColumn.NotNull,
 						AutoIncrement: afterColumn.AutoIncrement,
 					},
