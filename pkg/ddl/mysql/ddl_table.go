@@ -87,6 +87,7 @@ type ForeignKeyConstraint struct {
 	Columns    []*ColumnIdent
 	Ref        *Ident
 	RefColumns []*ColumnIdent
+	OnAction   string
 }
 
 var _ Constraint = (*ForeignKeyConstraint)(nil)
@@ -261,6 +262,7 @@ type Column struct {
 	NotNull       bool
 	AutoIncrement bool
 	OnAction      string
+	Comment       string
 }
 
 type Default struct {

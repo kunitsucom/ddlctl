@@ -65,13 +65,17 @@ const (
 	TOKEN_VIEW  TokenType = "VIEW"
 
 	// OTHER.
-	TOKEN_IF     TokenType = "IF"
-	TOKEN_EXISTS TokenType = "EXISTS"
-	TOKEN_USING  TokenType = "USING"
-	TOKEN_ON     TokenType = "ON"
-	TOKEN_UPDATE TokenType = "UPDATE"
-	TOKEN_DELETE TokenType = "DELETE"
-	TOKEN_TO     TokenType = "TO"
+	TOKEN_IF       TokenType = "IF"
+	TOKEN_EXISTS   TokenType = "EXISTS"
+	TOKEN_USING    TokenType = "USING"
+	TOKEN_ON       TokenType = "ON"
+	TOKEN_UPDATE   TokenType = "UPDATE"
+	TOKEN_DELETE   TokenType = "DELETE"
+	TOKEN_CASCADE  TokenType = "CASCADE"
+	TOKEN_RESTRICT TokenType = "RESTRICT"
+	TOKEN_NO       TokenType = "NO"
+	TOKEN_ACTION   TokenType = "ACTION"
+	TOKEN_TO       TokenType = "TO"
 
 	// DATA TYPE.
 	TOKEN_BOOLEAN           TokenType = "BOOLEAN"
@@ -109,6 +113,7 @@ const (
 	TOKEN_NOT     TokenType = "NOT"
 	TOKEN_ASC     TokenType = "ASC"
 	TOKEN_DESC    TokenType = "DESC"
+	TOKEN_COMMENT TokenType = "COMMENT"
 
 	// CONSTRAINT.
 	TOKEN_CONSTRAINT TokenType = "CONSTRAINT"
@@ -125,8 +130,9 @@ const (
 	TOKEN_COLLATE TokenType = "COLLATE"
 
 	// FUNCTION.
-	TOKEN_NULLIF         TokenType = "NULLIF"
-	TOKEN_AUTO_INCREMENT TokenType = "AUTO_INCREMENT" //nolint:gosec
+	TOKEN_AUTO_INCREMENT    TokenType = "AUTO_INCREMENT" //nolint:gosec
+	TOKEN_CURRENT_TIMESTAMP TokenType = "CURRENT_TIMESTAMP"
+	TOKEN_NULLIF            TokenType = "NULLIF"
 
 	// VALUE.
 	TOKEN_NULL  TokenType = "NULL"
@@ -176,6 +182,18 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_USING
 	case "ON":
 		return TOKEN_ON
+	case "UPDATE":
+		return TOKEN_UPDATE
+	case "DELETE":
+		return TOKEN_DELETE
+	case "CASCADE":
+		return TOKEN_CASCADE
+	case "RESTRICT":
+		return TOKEN_RESTRICT
+	case "NO":
+		return TOKEN_NO
+	case "ACTION":
+		return TOKEN_ACTION
 	case "TO":
 		return TOKEN_TO
 	case "BOOLEAN":
@@ -240,6 +258,8 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_ASC
 	case "DESC":
 		return TOKEN_DESC
+	case "COMMENT":
+		return TOKEN_COMMENT
 	case "CONSTRAINT":
 		return TOKEN_CONSTRAINT
 	case "PRIMARY":
@@ -262,6 +282,8 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_COLLATE
 	case "AUTO_INCREMENT":
 		return TOKEN_AUTO_INCREMENT
+	case "CURRENT_TIMESTAMP":
+		return TOKEN_CURRENT_TIMESTAMP
 	case "NULLIF":
 		return TOKEN_NULLIF
 	case "NULL":
