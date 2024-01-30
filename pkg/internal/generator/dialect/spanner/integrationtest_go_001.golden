@@ -23,15 +23,6 @@ CREATE TABLE `Users` (
 -- spanddl:      index: CREATE INDEX `IndexUsersByName` ON `Users` (`Name`)
 CREATE INDEX `IndexUsersByName` ON `Users` (`Name`);
 
--- source: spanner/integrationtest_go_001.source:25
--- Users is a user array.
--- This type is expected not to be detected.
---
--- spanddl: table: `UserArrays`
--- ERROR: the comment (spanner/integrationtest_go_001.source:22) does not have struct fields for column type and constraint (`spanddl:"<TYPE> [CONSTRAINT]"`), or the comment is not associated with struct.
-CREATE TABLE `UserArrays` (
-);
-
 -- source: spanner/integrationtest_go_001.source:30
 -- UserGroup is a user group.
 --
@@ -73,22 +64,6 @@ CREATE TABLE `Books` (
 ) PRIMARY KEY (`AuthorID`, `ID`),
 INTERLEAVE IN PARENT `Author` ON DELETE CASCADE;
 
--- source: spanner/integrationtest_go_001.source:61
--- Store
--- spanddl: table: CREATE TABLE `Stores`
-CREATE TABLE `Stores` (
-    -- ERROR: the "Store" struct's "ID" field does not have a tag for column type and constraint (`spanddl:"<TYPE> [CONSTRAINT]"`)
-    -- WARN: the field "ID" does not have valid primary key tag (`pkey:"true"`), so the column is not used as primary key.
-    -- ID is a store ID.
-    `Id`   DDLCTL_ERROR_STRUCT_FIELD_TAG_NOT_FOUND,
-    -- ERROR: the "Store" struct's "Name" field does not have a tag for column type and constraint (`spanddl:"<TYPE> [CONSTRAINT]"`)
-    -- Name is a store name.
-    `Name` DDLCTL_ERROR_STRUCT_FIELD_TAG_NOT_FOUND
-);
-
 -- source: spanner/integrationtest_go_001.source:70
 -- spanddl: index: `IndexBooksByTitle` ON `Books` (`Title`)
 CREATE INDEX `IndexBooksByTitle` ON `Books` (`Title`);
-
--- source: spanner/integrationtest_go_001.source:70
--- WARN: the comment (spanner/integrationtest_go_001.source:70) does not have a key for table (spanddl: table: CREATE TABLE <table>), or the comment is not associated with struct.

@@ -229,7 +229,7 @@ func (config *DiffCreateTableConfig) diffCreateTableColumn(ddls *DDL, before, af
 				},
 			})
 
-			if afterColumn.Default != nil && beforeColumn.Default.StringForDiff() != afterColumn.Default.StringForDiff() {
+			if afterColumn.Default != nil {
 				// ALTER TABLE table_name ALTER COLUMN column_name SET DEFAULT default_value;
 				ddls.Stmts = append(ddls.Stmts, &AlterTableStmt{
 					Comment: simplediff.Diff(beforeColumn.String(), afterColumn.String()).String(),

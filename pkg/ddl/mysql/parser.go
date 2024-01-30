@@ -431,7 +431,7 @@ LabelDefault:
 			break LabelDefault
 		default:
 			if isReservedValue(p.currentToken.Type) {
-				def.Value = def.Value.Append(NewRawIdent(p.currentToken.Literal.String()))
+				def.Value = def.Value.Append(NewIdent(string(p.currentToken.Type), "", p.currentToken.Literal.String()))
 				p.nextToken()
 				continue
 			}

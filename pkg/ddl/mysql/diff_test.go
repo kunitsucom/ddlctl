@@ -412,7 +412,7 @@ ALTER TABLE public.users MODIFY username VARCHAR(11) NOT NULL;
 		assert.ErrorIs(t, err, ddl.ErrNoDifference)
 
 		if !assert.Equal(t, expected, actual.String()) {
-			t.Errorf("❌: %s: stmt: %%#v: \n%#v", t.Name(), actual)
+			t.Errorf("❌: %s: stmt: %%s: \n%s\n %%#v: \n%#v", t.Name(), actual, actual)
 		}
 	})
 
