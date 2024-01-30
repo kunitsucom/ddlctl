@@ -337,8 +337,7 @@ func (d *Default) StringForDiff() string {
 }
 
 func (c *Column) String() string {
-	str := c.Name.String() + " " +
-		c.DataType.String()
+	str := c.Name.String() + " " + c.DataType.String()
 	if c.Collate != nil {
 		str += " COLLATE " + c.Collate.String()
 	}
@@ -353,6 +352,9 @@ func (c *Column) String() string {
 	}
 	if c.OnAction != "" {
 		str += " " + c.OnAction
+	}
+	if c.Comment != "" {
+		str += " COMMENT " + c.Comment
 	}
 	return str
 }

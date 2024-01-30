@@ -427,11 +427,11 @@ LabelDefault:
 			}
 			def.Value = def.Value.Append(ids...)
 			continue
-		case TOKEN_NOT, TOKEN_NULL, TOKEN_ON, TOKEN_COMMENT, TOKEN_COMMA, TOKEN_CLOSE_PAREN:
+		case TOKEN_NOT, TOKEN_ON, TOKEN_COMMENT, TOKEN_COMMA, TOKEN_CLOSE_PAREN:
 			break LabelDefault
 		default:
 			if isReservedValue(p.currentToken.Type) {
-				def.Value = def.Value.Append(NewIdent(string(p.currentToken.Type), "", p.currentToken.Literal.String()))
+				def.Value = def.Value.Append(NewRawIdent(p.currentToken.Literal.String()))
 				p.nextToken()
 				continue
 			}
@@ -904,7 +904,7 @@ func isDataType(tokenType TokenType) bool {
 		TOKEN_CHAR,
 		TOKEN_CHARACTER, TOKEN_VARYING,
 		TOKEN_VARCHAR, TOKEN_TEXT,
-		TOKEN_LONGTEXT,
+		TOKEN_MEDIUMTEXT, TOKEN_LONGTEXT,
 		TOKEN_TIMESTAMP, TOKEN_DATE, TOKEN_TIME,
 		TOKEN_DATETIME,
 		TOKEN_ENUM:

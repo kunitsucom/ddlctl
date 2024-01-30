@@ -101,6 +101,7 @@ const (
 	TOKEN_VARYING           TokenType = "VARYING"
 	TOKEN_VARCHAR           TokenType = "VARCHAR"
 	TOKEN_TEXT              TokenType = "TEXT"
+	TOKEN_MEDIUMTEXT        TokenType = "MEDIUMTEXT"
 	TOKEN_LONGTEXT          TokenType = "LONGTEXT"
 	TOKEN_DATETIME          TokenType = "DATETIME"
 	TOKEN_TIMESTAMP         TokenType = "TIMESTAMP"
@@ -238,6 +239,8 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_VARCHAR
 	case "TEXT":
 		return TOKEN_TEXT
+	case "MEDIUMTEXT":
+		return TOKEN_MEDIUMTEXT
 	case "LONGTEXT":
 		return TOKEN_LONGTEXT
 	case "TIMESTAMP":

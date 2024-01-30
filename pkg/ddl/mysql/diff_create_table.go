@@ -210,7 +210,7 @@ func (config *DiffCreateTableConfig) diffCreateTableColumn(ddls *DDL, before, af
 			(!beforeColumn.NotNull && afterColumn.NotNull) ||
 			(beforeColumn.AutoIncrement && !afterColumn.AutoIncrement) ||
 			(!beforeColumn.AutoIncrement && afterColumn.AutoIncrement) ||
-			(beforeColumn.OnAction != afterColumn.Comment) ||
+			(beforeColumn.OnAction != afterColumn.OnAction) ||
 			(beforeColumn.Comment != afterColumn.Comment) {
 			// ALTER TABLE table_name MODIFY column_name data_type NOT NULL;
 			ddls.Stmts = append(ddls.Stmts, &AlterTableStmt{
@@ -223,18 +223,22 @@ func (config *DiffCreateTableConfig) diffCreateTableColumn(ddls *DDL, before, af
 						Collate:       afterColumn.Collate,
 						NotNull:       afterColumn.NotNull,
 						AutoIncrement: afterColumn.AutoIncrement,
+						OnAction:      afterColumn.OnAction,
+						Comment:       afterColumn.Comment,
 					},
 				},
 			})
 
-			if afterColumn.Default != nil {
+			if afterColumn.Default != nil && beforeColumn.Default.StringForDiff() != afterColumn.Default.StringForDiff() {
 				// ALTER TABLE table_name ALTER COLUMN column_name SET DEFAULT default_value;
 				ddls.Stmts = append(ddls.Stmts, &AlterTableStmt{
 					Comment: simplediff.Diff(beforeColumn.String(), afterColumn.String()).String(),
 					Name:    after.Name,
 					Action: &AlterColumn{
-						Name:   afterColumn.Name,
-						Action: &AlterColumnSetDefault{Default: afterColumn.Default},
+						Name: afterColumn.Name,
+						Action: &AlterColumnSetDefault{
+							Default: afterColumn.Default,
+						},
 					},
 				})
 			}

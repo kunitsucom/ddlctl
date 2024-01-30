@@ -53,6 +53,9 @@ func (s *AlterTableStmt) String() string {
 		switch ca := a.Action.(type) {
 		case *AlterColumnDataType:
 			str += "MODIFY " + a.Name.String() + " " + ca.DataType.String()
+			if ca.Collate != nil {
+				str += " COLLATE " + ca.Collate.String()
+			}
 			if ca.NotNull {
 				str += " NOT NULL"
 			}
@@ -61,6 +64,9 @@ func (s *AlterTableStmt) String() string {
 			}
 			if ca.OnAction != "" {
 				str += " " + ca.OnAction
+			}
+			if ca.Comment != "" {
+				str += " COMMENT " + ca.Comment
 			}
 		case *AlterColumnSetDefault:
 			str += "ALTER " + a.Name.String() + " " + "SET " + ca.Default.String()
@@ -173,6 +179,7 @@ type AlterColumnDataType struct {
 	NotNull       bool
 	AutoIncrement bool
 	OnAction      string
+	Comment       string
 }
 
 func (*AlterColumnDataType) isAlterColumnAction() {}
