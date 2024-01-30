@@ -406,7 +406,7 @@ LabelDefault:
 			}
 			def.Value = def.Value.Append(ids...)
 			continue
-		case TOKEN_NOT, TOKEN_NULL, TOKEN_COMMA, TOKEN_CLOSE_PAREN:
+		case TOKEN_NOT, TOKEN_COMMA, TOKEN_CLOSE_PAREN:
 			break LabelDefault
 		default:
 			if isReservedValue(p.currentToken.Type) {
