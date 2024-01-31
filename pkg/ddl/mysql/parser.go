@@ -114,7 +114,7 @@ func (p *Parser) parseCreateStatement() (Stmt, error) { //nolint:ireturn
 	}
 }
 
-//nolint:cyclop,funlen,gocognit
+//nolint:cyclop,funlen,gocognit,gocyclo
 func (p *Parser) parseCreateTableStmt() (*CreateTableStmt, error) {
 	createTableStmt := &CreateTableStmt{
 		Indent: Indent,
@@ -195,6 +195,17 @@ LabelTableOptions:
 				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 			}
 			opt.Value = NewRawIdent(p.currentToken.Literal.Str)
+		case TOKEN_AUTO_INCREMENT:
+			opt.Name = "AUTO_INCREMENT"
+			p.nextToken() // current = `=`
+			if err := p.checkCurrentToken(TOKEN_EQUAL); err != nil {
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			p.nextToken() // current = TOKEN_IDENT
+			if err := p.checkCurrentToken(TOKEN_IDENT); err != nil {
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			opt.Value = NewRawIdent(p.currentToken.Literal.Str)
 		case TOKEN_DEFAULT:
 			if err := p.checkPeekToken(TOKEN_CHARSET); err != nil {
 				return nil, apperr.Errorf(errFmtPrefix+"checkPeekToken: %w", err)
@@ -221,6 +232,17 @@ LabelTableOptions:
 				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 			}
 			opt.Value = NewRawIdent(p.currentToken.Literal.Str)
+		case TOKEN_COMMENT:
+			opt.Name = "COMMENT"
+			p.nextToken() // current = `=`
+			if err := p.checkCurrentToken(TOKEN_EQUAL); err != nil {
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			p.nextToken() // current = TOKEN_IDENT
+			if err := p.checkCurrentToken(TOKEN_IDENT); err != nil {
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			opt.Value = NewRawIdent(p.currentToken.Literal.String())
 		case TOKEN_SEMICOLON, TOKEN_EOF:
 			break LabelTableOptions
 		default:
@@ -341,6 +363,25 @@ func (p *Parser) parseColumn(tableName *Ident) (*Column, []Constraint, error) {
 				}
 				column.Default = def
 				continue
+			case TOKEN_ON:
+				column.OnAction = "ON"
+				p.nextToken() // current = UPDATE or DELETE
+				if err := p.checkCurrentToken(TOKEN_UPDATE, TOKEN_DELETE); err != nil {
+					return nil, nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+				}
+				column.OnAction += " " + p.currentToken.Literal.String()
+				p.nextToken()                // current = CASCADE or RESTRICT or SET or ...
+				switch p.currentToken.Type { //nolint:exhaustive
+				case TOKEN_CASCADE, TOKEN_RESTRICT, TOKEN_CURRENT_TIMESTAMP:
+					column.OnAction += " " + p.currentToken.Literal.String()
+				default:
+					return nil, nil, apperr.Errorf(errFmtPrefix+"currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
+				}
+			case TOKEN_COLLATE:
+				p.nextToken() // current = collate_value
+				column.Collate = NewRawIdent(p.currentToken.Literal.Str)
+			case TOKEN_AUTO_INCREMENT:
+				column.AutoIncrement = true
 			default:
 				break LabelDefaultNotNull
 			}
@@ -357,6 +398,12 @@ func (p *Parser) parseColumn(tableName *Ident) (*Column, []Constraint, error) {
 				constraints = constraints.Append(c)
 			}
 		}
+
+		if p.isCurrentToken(TOKEN_COMMENT) {
+			p.nextToken() // current = comment_value
+			column.Comment = p.currentToken.Literal.String()
+			p.nextToken() // current = COMMA or CLOSE_PAREN
+		}
 	default:
 		return nil, nil, apperr.Errorf(errFmtPrefix+"currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
 	}
@@ -371,7 +418,7 @@ func (p *Parser) parseColumnDefault() (*Default, error) {
 LabelDefault:
 	for {
 		switch p.currentToken.Type { //nolint:exhaustive
-		case TOKEN_IDENT:
+		case TOKEN_IDENT, TOKEN_CURRENT_TIMESTAMP:
 			def.Value = def.Value.Append(NewRawIdent(p.currentToken.Literal.String()))
 		case TOKEN_OPEN_PAREN:
 			ids, err := p.parseExpr()
@@ -380,7 +427,7 @@ LabelDefault:
 			}
 			def.Value = def.Value.Append(ids...)
 			continue
-		case TOKEN_NOT, TOKEN_NULL, TOKEN_COMMA, TOKEN_CLOSE_PAREN:
+		case TOKEN_NOT, TOKEN_ON, TOKEN_COMMENT, TOKEN_COMMA, TOKEN_CLOSE_PAREN:
 			break LabelDefault
 		default:
 			if isReservedValue(p.currentToken.Type) {
@@ -491,6 +538,22 @@ LabelConstraints:
 			if err != nil {
 				return nil, apperr.Errorf("parseColumnIdents: %w", err)
 			}
+			// TODO: refactoring
+			if p.isCurrentToken(TOKEN_ON) { // ON DELETE or ON UPDATE
+				onAction, err := p.parseOnAction()
+				if err != nil {
+					return nil, apperr.Errorf("parseOnAction: %w", err)
+				}
+				constraint.OnAction = onAction
+			}
+			if p.isCurrentToken(TOKEN_ON) { // ON UPDATE or ON DELETE
+				onAction, err := p.parseOnAction()
+				if err != nil {
+					return nil, apperr.Errorf("parseOnAction: %w", err)
+				}
+				constraint.OnAction = onAction
+			}
+
 			constraint.RefColumns = idents
 			constraints = constraints.Append(constraint)
 		case TOKEN_UNIQUE:
@@ -513,7 +576,7 @@ LabelConstraints:
 			}
 			constraint.Expr = constraint.Expr.Append(idents...)
 			constraints = constraints.Append(constraint)
-		case TOKEN_IDENT, TOKEN_COMMA, TOKEN_CLOSE_PAREN:
+		case TOKEN_IDENT, TOKEN_COMMA, TOKEN_CLOSE_PAREN, TOKEN_COMMENT:
 			break LabelConstraints
 		default:
 			return nil, apperr.Errorf("currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
@@ -582,6 +645,24 @@ func (p *Parser) parseTableConstraint(tableName *Ident) (Constraint, error) { //
 		if err != nil {
 			return nil, apperr.Errorf("parseColumnIdents: %w", err)
 		}
+
+		// TODO: refactoring
+		var onActions string
+		if p.isCurrentToken(TOKEN_ON) { // ON DELETE or ON UPDATE
+			onAction, err := p.parseOnAction()
+			if err != nil {
+				return nil, apperr.Errorf("parseOnAction: %w", err)
+			}
+			onActions += onAction
+		}
+		if p.isCurrentToken(TOKEN_ON) { // ON UPDATE or ON DELETE
+			onAction, err := p.parseOnAction()
+			if err != nil {
+				return nil, apperr.Errorf("parseOnAction: %w", err)
+			}
+			onActions += " " + onAction
+		}
+
 		if constraintName == nil {
 			name := tableName.StringForDiff()
 			for _, ident := range idents {
@@ -595,6 +676,7 @@ func (p *Parser) parseTableConstraint(tableName *Ident) (Constraint, error) { //
 			Columns:    idents,
 			Ref:        refName,
 			RefColumns: identsRef,
+			OnAction:   onActions,
 		}, nil
 
 	case TOKEN_UNIQUE, TOKEN_INDEX, TOKEN_KEY:
@@ -667,12 +749,12 @@ func (p *Parser) parseDataType() (*DataType, error) {
 		dataType.Type = TOKEN_DATETIME
 	case TOKEN_DOUBLE:
 		dataType.Name = p.currentToken.Literal.String()
-		if err := p.checkPeekToken(TOKEN_PRECISION); err != nil {
-			return nil, apperr.Errorf("checkPeekToken: %w", err)
+		dataType.Type = TOKEN_DOUBLE
+		if p.isPeekToken(TOKEN_PRECISION) {
+			p.nextToken() // current = PRECISION
+			dataType.Name += " " + p.currentToken.Literal.String()
+			dataType.Type = TOKEN_DOUBLE_PRECISION
 		}
-		p.nextToken() // current = PRECISION
-		dataType.Name += " " + p.currentToken.Literal.String()
-		dataType.Type = TOKEN_DOUBLE_PRECISION
 	case TOKEN_CHARACTER:
 		dataType.Name = p.currentToken.Literal.String()
 		if err := p.checkPeekToken(TOKEN_VARYING); err != nil {
@@ -736,6 +818,34 @@ LabelIdents:
 	return idents, nil
 }
 
+func (p *Parser) parseOnAction() (onAction string, err error) {
+	if err := p.checkCurrentToken(TOKEN_ON); err != nil {
+		return "", apperr.Errorf("checkCurrentToken: %w", err)
+	}
+
+	onAction = p.currentToken.Literal.String() // current = ON
+	p.nextToken()                              // current = DELETE or UPDATE
+	if err := p.checkCurrentToken(TOKEN_DELETE, TOKEN_UPDATE); err != nil {
+		return "", apperr.Errorf("checkCurrentToken: %w", err)
+	}
+	onAction += " " + p.currentToken.Literal.String()
+	if err := p.checkPeekToken(TOKEN_CASCADE, TOKEN_NO); err != nil {
+		return "", apperr.Errorf("checkPeekToken: %w", err)
+	}
+	p.nextToken()                                     // current = CASCADE or NO
+	onAction += " " + p.currentToken.Literal.String() // current = CASCADE or NO
+	if p.isCurrentToken(TOKEN_NO) {
+		if err := p.checkPeekToken(TOKEN_ACTION); err != nil {
+			return "", apperr.Errorf("checkPeekToken: %w", err)
+		}
+		p.nextToken()                                     // current = ACTION
+		onAction += " " + p.currentToken.Literal.String() // current = ACTION
+	}
+	p.nextToken() // current = any
+
+	return onAction, nil
+}
+
 func (p *Parser) parseIdents() ([]*Ident, error) {
 	idents := make([]*Ident, 0)
 
@@ -785,14 +895,16 @@ func isReservedValue(tokenType TokenType) bool {
 func isDataType(tokenType TokenType) bool {
 	switch tokenType { //nolint:exhaustive
 	case TOKEN_BOOLEAN,
-		TOKEN_TINYINT,
+		TOKEN_BIT, TOKEN_TINYINT,
 		TOKEN_SMALLINT, TOKEN_INTEGER, TOKEN_BIGINT,
 		TOKEN_DECIMAL, TOKEN_NUMERIC,
 		TOKEN_REAL, TOKEN_DOUBLE, /* TOKEN_PRECISION, */
 		TOKEN_SMALLSERIAL, TOKEN_SERIAL, TOKEN_BIGSERIAL,
 		TOKEN_JSON,
+		TOKEN_CHAR,
 		TOKEN_CHARACTER, TOKEN_VARYING,
 		TOKEN_VARCHAR, TOKEN_TEXT,
+		TOKEN_MEDIUMTEXT, TOKEN_LONGTEXT,
 		TOKEN_TIMESTAMP, TOKEN_DATE, TOKEN_TIME,
 		TOKEN_DATETIME,
 		TOKEN_ENUM:

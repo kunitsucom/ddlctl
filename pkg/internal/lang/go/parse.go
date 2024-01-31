@@ -177,8 +177,10 @@ func parseFile(ctx context.Context, filename string) ([]ddlast.Stmt, error) {
 				// column type and constraint
 				switch columnTypeConstraint := tag.Get(config.DDLTagGo()); columnTypeConstraint {
 				case "", "-":
-					column.Comments = append(column.Comments, fmt.Sprintf("ERROR: the \"%s\" struct's \"%s\" field does not have a tag for column type and constraint (`%s:\"<TYPE> [CONSTRAINT]\"`)", r.TypeSpec.Name, field.Names[0], config.DDLTagGo()))
-					column.TypeConstraint = DDLCTL_ERROR_STRUCT_FIELD_TAG_NOT_FOUND
+					// NOTE: ignore no-annotation fields
+					// column.Comments = append(column.Comments, fmt.Sprintf("ERROR: the \"%s\" struct's \"%s\" field does not have a tag for column type and constraint (`%s:\"<TYPE> [CONSTRAINT]\"`)", r.TypeSpec.Name, field.Names[0], config.DDLTagGo()))
+					// column.TypeConstraint = DDLCTL_ERROR_STRUCT_FIELD_TAG_NOT_FOUND
+					continue
 				default:
 					column.TypeConstraint = columnTypeConstraint
 				}
@@ -211,7 +213,12 @@ func parseFile(ctx context.Context, filename string) ([]ddlast.Stmt, error) {
 			createTableStmt.Comments = append(createTableStmt.Comments, fmt.Sprintf("ERROR: the comment (%s:%d) does not have struct fields for column type and constraint (`%s:\"<TYPE> [CONSTRAINT]\"`), or the comment is not associated with struct.", filepathz.Short(source.Filename), source.Line, config.DDLTagGo()))
 		}
 
-		stmts = append(stmts, createTableStmt)
+		if len(createTableStmt.Columns) > 0 {
+			// NOTE: append only if there are columns
+			stmts = append(stmts, createTableStmt)
+		} else {
+			logs.Warn.Printf("parseFile: %s:%d: %s", createTableStmt.SourceFile, createTableStmt.SourceLine, "no columns")
+		}
 	}
 
 	sort.Slice(stmts, func(i, j int) bool {

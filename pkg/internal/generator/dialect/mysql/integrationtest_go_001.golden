@@ -24,15 +24,6 @@ CREATE TABLE `users` (
 -- myddl:      index: CREATE INDEX `index_users_by_name` ON `users` (`name`)
 CREATE INDEX `index_users_by_name` ON `users` (`name`);
 
--- source: mysql/integrationtest_go_001.source:25
--- Users is a user array.
--- This type is expected not to be detected.
---
--- myddl: table: `UserArrays`
--- ERROR: the comment (mysql/integrationtest_go_001.source:22) does not have struct fields for column type and constraint (`myddl:"<TYPE> [CONSTRAINT]"`), or the comment is not associated with struct.
-CREATE TABLE `UserArrays` (
-);
-
 -- source: mysql/integrationtest_go_001.source:30
 -- UserGroup is a user group.
 --
@@ -73,22 +64,6 @@ CREATE TABLE `books` (
     PRIMARY KEY (`AuthorID`, `ID`)
 );
 
--- source: mysql/integrationtest_go_001.source:60
--- Store
--- myddl: table: CREATE TABLE `stores`
-CREATE TABLE `stores` (
-    -- ERROR: the "Store" struct's "ID" field does not have a tag for column type and constraint (`myddl:"<TYPE> [CONSTRAINT]"`)
-    -- WARN: the field "ID" does not have valid primary key tag (`pkey:"true"`), so the column is not used as primary key.
-    -- ID is a store ID.
-    `id`   DDLCTL_ERROR_STRUCT_FIELD_TAG_NOT_FOUND,
-    -- ERROR: the "Store" struct's "Name" field does not have a tag for column type and constraint (`myddl:"<TYPE> [CONSTRAINT]"`)
-    -- Name is a store name.
-    `name` DDLCTL_ERROR_STRUCT_FIELD_TAG_NOT_FOUND
-);
-
 -- source: mysql/integrationtest_go_001.source:69
 -- myddl: index: `index_books_by_title` ON `books` (`title`)
 CREATE INDEX `index_books_by_title` ON `books` (`title`);
-
--- source: mysql/integrationtest_go_001.source:69
--- WARN: the comment (mysql/integrationtest_go_001.source:69) does not have a key for table (myddl: table: CREATE TABLE <table>), or the comment is not associated with struct.

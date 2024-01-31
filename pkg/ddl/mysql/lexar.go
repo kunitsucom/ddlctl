@@ -65,14 +65,21 @@ const (
 	TOKEN_VIEW  TokenType = "VIEW"
 
 	// OTHER.
-	TOKEN_IF     TokenType = "IF"
-	TOKEN_EXISTS TokenType = "EXISTS"
-	TOKEN_USING  TokenType = "USING"
-	TOKEN_ON     TokenType = "ON"
-	TOKEN_TO     TokenType = "TO"
+	TOKEN_IF       TokenType = "IF"
+	TOKEN_EXISTS   TokenType = "EXISTS"
+	TOKEN_USING    TokenType = "USING"
+	TOKEN_ON       TokenType = "ON"
+	TOKEN_UPDATE   TokenType = "UPDATE"
+	TOKEN_DELETE   TokenType = "DELETE"
+	TOKEN_CASCADE  TokenType = "CASCADE"
+	TOKEN_RESTRICT TokenType = "RESTRICT"
+	TOKEN_NO       TokenType = "NO"
+	TOKEN_ACTION   TokenType = "ACTION"
+	TOKEN_TO       TokenType = "TO"
 
 	// DATA TYPE.
 	TOKEN_BOOLEAN           TokenType = "BOOLEAN"
+	TOKEN_BIT               TokenType = "BIT"
 	TOKEN_TINYINT           TokenType = "TINYINT"
 	TOKEN_SMALLINT          TokenType = "SMALLINT"
 	TOKEN_MEDIUMINT         TokenType = "MEDIUMINT"
@@ -88,11 +95,14 @@ const (
 	TOKEN_SERIAL            TokenType = "SERIAL"
 	TOKEN_BIGSERIAL         TokenType = "BIGSERIAL"
 	TOKEN_JSON              TokenType = "JSON"
+	TOKEN_CHAR              TokenType = "CHAR"
 	TOKEN_CHARACTER_VARYING TokenType = "CHARACTER VARYING"
 	TOKEN_CHARACTER         TokenType = "CHARACTER"
 	TOKEN_VARYING           TokenType = "VARYING"
 	TOKEN_VARCHAR           TokenType = "VARCHAR"
 	TOKEN_TEXT              TokenType = "TEXT"
+	TOKEN_MEDIUMTEXT        TokenType = "MEDIUMTEXT"
+	TOKEN_LONGTEXT          TokenType = "LONGTEXT"
 	TOKEN_DATETIME          TokenType = "DATETIME"
 	TOKEN_TIMESTAMP         TokenType = "TIMESTAMP"
 	TOKEN_DATE              TokenType = "DATE"
@@ -104,6 +114,7 @@ const (
 	TOKEN_NOT     TokenType = "NOT"
 	TOKEN_ASC     TokenType = "ASC"
 	TOKEN_DESC    TokenType = "DESC"
+	TOKEN_COMMENT TokenType = "COMMENT"
 
 	// CONSTRAINT.
 	TOKEN_CONSTRAINT TokenType = "CONSTRAINT"
@@ -120,7 +131,9 @@ const (
 	TOKEN_COLLATE TokenType = "COLLATE"
 
 	// FUNCTION.
-	TOKEN_NULLIF TokenType = "NULLIF"
+	TOKEN_AUTO_INCREMENT    TokenType = "AUTO_INCREMENT" //nolint:gosec
+	TOKEN_CURRENT_TIMESTAMP TokenType = "CURRENT_TIMESTAMP"
+	TOKEN_NULLIF            TokenType = "NULLIF"
 
 	// VALUE.
 	TOKEN_NULL  TokenType = "NULL"
@@ -134,7 +147,7 @@ const (
 	TOKEN_IDENT TokenType = "IDENT"
 )
 
-//nolint:funlen,cyclop,gocognit,gocyclo
+//nolint:funlen,cyclop,gocognit,gocyclo,maintidx
 func lookupIdent(ident string) TokenType {
 	token := strings.ToUpper(ident)
 	// MEMO: bash lexar-gen.sh lexar.go | pbcopy
@@ -170,10 +183,24 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_USING
 	case "ON":
 		return TOKEN_ON
+	case "UPDATE":
+		return TOKEN_UPDATE
+	case "DELETE":
+		return TOKEN_DELETE
+	case "CASCADE":
+		return TOKEN_CASCADE
+	case "RESTRICT":
+		return TOKEN_RESTRICT
+	case "NO":
+		return TOKEN_NO
+	case "ACTION":
+		return TOKEN_ACTION
 	case "TO":
 		return TOKEN_TO
 	case "BOOLEAN":
 		return TOKEN_BOOLEAN
+	case "BIT":
+		return TOKEN_BIT
 	case "TINYINT":
 		return TOKEN_TINYINT
 	case "SMALLINT":
@@ -202,6 +229,8 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_BIGSERIAL
 	case "JSON":
 		return TOKEN_JSON
+	case "CHAR":
+		return TOKEN_CHAR
 	case "CHARACTER":
 		return TOKEN_CHARACTER
 	case "VARYING":
@@ -210,6 +239,10 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_VARCHAR
 	case "TEXT":
 		return TOKEN_TEXT
+	case "MEDIUMTEXT":
+		return TOKEN_MEDIUMTEXT
+	case "LONGTEXT":
+		return TOKEN_LONGTEXT
 	case "TIMESTAMP":
 		return TOKEN_TIMESTAMP
 	case "DATETIME":
@@ -228,6 +261,8 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_ASC
 	case "DESC":
 		return TOKEN_DESC
+	case "COMMENT":
+		return TOKEN_COMMENT
 	case "CONSTRAINT":
 		return TOKEN_CONSTRAINT
 	case "PRIMARY":
@@ -248,6 +283,10 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_CHARSET
 	case "COLLATE":
 		return TOKEN_COLLATE
+	case "AUTO_INCREMENT":
+		return TOKEN_AUTO_INCREMENT
+	case "CURRENT_TIMESTAMP":
+		return TOKEN_CURRENT_TIMESTAMP
 	case "NULLIF":
 		return TOKEN_NULLIF
 	case "NULL":

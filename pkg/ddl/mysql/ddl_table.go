@@ -87,6 +87,7 @@ type ForeignKeyConstraint struct {
 	Columns    []*ColumnIdent
 	Ref        *Ident
 	RefColumns []*ColumnIdent
+	OnAction   string
 }
 
 var _ Constraint = (*ForeignKeyConstraint)(nil)
@@ -254,10 +255,14 @@ func (t *ObjectName) StringForDiff() string {
 }
 
 type Column struct {
-	Name     *Ident
-	DataType *DataType
-	Default  *Default
-	NotNull  bool
+	Name          *Ident
+	DataType      *DataType
+	Collate       *Ident
+	Default       *Default
+	NotNull       bool
+	AutoIncrement bool
+	OnAction      string
+	Comment       string
 }
 
 type Default struct {
@@ -332,13 +337,24 @@ func (d *Default) StringForDiff() string {
 }
 
 func (c *Column) String() string {
-	str := c.Name.String() + " " +
-		c.DataType.String()
+	str := c.Name.String() + " " + c.DataType.String()
+	if c.Collate != nil {
+		str += " COLLATE " + c.Collate.String()
+	}
 	if c.NotNull {
 		str += " NOT NULL"
 	}
 	if c.Default != nil {
 		str += " " + c.Default.String()
+	}
+	if c.AutoIncrement {
+		str += " AUTO_INCREMENT"
+	}
+	if c.OnAction != "" {
+		str += " " + c.OnAction
+	}
+	if c.Comment != "" {
+		str += " COMMENT " + c.Comment
 	}
 	return str
 }

@@ -24,7 +24,7 @@ func (s *AlterTableStmt) GetNameForDiff() string {
 	return s.Name.StringForDiff()
 }
 
-//nolint:cyclop,funlen
+//nolint:cyclop,funlen,gocognit
 func (s *AlterTableStmt) String() string {
 	var str string
 	if s.Comment != "" {
@@ -53,8 +53,20 @@ func (s *AlterTableStmt) String() string {
 		switch ca := a.Action.(type) {
 		case *AlterColumnDataType:
 			str += "MODIFY " + a.Name.String() + " " + ca.DataType.String()
+			if ca.Collate != nil {
+				str += " COLLATE " + ca.Collate.String()
+			}
 			if ca.NotNull {
 				str += " NOT NULL"
+			}
+			if ca.AutoIncrement {
+				str += " AUTO_INCREMENT"
+			}
+			if ca.OnAction != "" {
+				str += " " + ca.OnAction
+			}
+			if ca.Comment != "" {
+				str += " COMMENT " + ca.Comment
 			}
 		case *AlterColumnSetDefault:
 			str += "ALTER " + a.Name.String() + " " + "SET " + ca.Default.String()
@@ -162,8 +174,12 @@ type AlterColumnAction interface {
 // AlterColumnDataType represents ALTER TABLE table_name MODIFY column_name data_type NOT NULL.
 // NOTE: https://dev.mysql.com/doc/refman/8.0/ja/alter-table-examples.html
 type AlterColumnDataType struct {
-	DataType *DataType
-	NotNull  bool
+	DataType      *DataType
+	Collate       *Ident
+	NotNull       bool
+	AutoIncrement bool
+	OnAction      string
+	Comment       string
 }
 
 func (*AlterColumnDataType) isAlterColumnAction() {}
