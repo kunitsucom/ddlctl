@@ -344,8 +344,8 @@ func (c *Column) String() string {
 	if c.NotNull { //diff:ignore-line-postgres-cockroach
 		str += " NOT NULL" //diff:ignore-line-postgres-cockroach
 	} //diff:ignore-line-postgres-cockroach
-	if c.Default != nil { //diff:ignore-line-postgres-cockroach
-		str += " " + c.Default.String() //diff:ignore-line-postgres-cockroach
+	if s := c.Default.String(); s != "" { //diff:ignore-line-postgres-cockroach
+		str += " " + s //diff:ignore-line-postgres-cockroach
 	}
 	return str
 }
