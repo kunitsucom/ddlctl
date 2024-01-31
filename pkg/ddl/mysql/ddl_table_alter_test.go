@@ -22,6 +22,7 @@ func Test_isAlterTableAction(t *testing.T) {
 	(&AddConstraint{}).isAlterTableAction()
 	(&DropConstraint{}).isAlterTableAction()
 	(&AlterConstraint{}).isAlterTableAction()
+	(&AlterTableOption{}).isAlterTableAction()
 }
 
 func TestAlterTableStmt_String(t *testing.T) {

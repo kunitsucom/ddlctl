@@ -229,14 +229,84 @@ func TestOption(t *testing.T) {
 
 		t.Logf("✅: %s: option: %#v", t.Name(), option)
 	})
+	t.Run("success,Option", func(t *testing.T) {
+		t.Parallel()
 
-	t.Run("success,Option,empty", func(t *testing.T) {
+		option := &Option{Name: "KEY", Value: &Expr{[]*Ident{NewRawIdent("("), NewRawIdent("sample"), NewRawIdent("value"), NewRawIdent(")")}}}
+
+		expected := `KEY=(sample value)`
+		actual := option.String()
+		require.Equal(t, expected, actual)
+
+		expectedDiff := "KEY=( sample value )"
+		actualDiff := option.StringForDiff()
+		require.Equal(t, expectedDiff, actualDiff)
+
+		t.Logf("✅: %s: option: %#v", t.Name(), option)
+	})
+
+	t.Run("success,Option,empty,1", func(t *testing.T) {
 		t.Parallel()
 
 		option := &Option{}
 		expected := ""
 		actual := option.String()
 		require.Equal(t, expected, actual)
+
+		actualDiff := option.StringForDiff()
+		require.Equal(t, expected, actualDiff)
+
+		t.Logf("✅: %s: option: %#v", t.Name(), option)
+	})
+}
+
+func TestOptions(t *testing.T) {
+	t.Parallel()
+
+	t.Run("success,Option", func(t *testing.T) {
+		t.Parallel()
+
+		option := Options{
+			{Name: "ENGINE", Value: &Expr{[]*Ident{NewRawIdent("InnoDB")}}},
+			{Name: "CHARSET", Value: &Expr{[]*Ident{NewRawIdent("utf8mb4")}}},
+		}
+
+		expected := `ENGINE=InnoDB CHARSET=utf8mb4`
+		actual := option.String()
+		require.Equal(t, expected, actual)
+
+		expectedDiff := "ENGINE=InnoDB CHARSET=utf8mb4"
+		actualDiff := option.StringForDiff()
+		require.Equal(t, expectedDiff, actualDiff)
+
+		t.Logf("✅: %s: option: %#v", t.Name(), option)
+	})
+	t.Run("success,Option", func(t *testing.T) {
+		t.Parallel()
+
+		option := Options{{Name: "KEY", Value: &Expr{[]*Ident{NewRawIdent("("), NewRawIdent("sample"), NewRawIdent("value"), NewRawIdent(")")}}}}
+
+		expected := `KEY=(sample value)`
+		actual := option.String()
+		require.Equal(t, expected, actual)
+
+		expectedDiff := "KEY=( sample value )"
+		actualDiff := option.StringForDiff()
+		require.Equal(t, expectedDiff, actualDiff)
+
+		t.Logf("✅: %s: option: %#v", t.Name(), option)
+	})
+
+	t.Run("success,Option,empty,1", func(t *testing.T) {
+		t.Parallel()
+
+		option := Options{{}}
+		expected := ""
+		actual := option.String()
+		require.Equal(t, expected, actual)
+
+		actualDiff := option.StringForDiff()
+		require.Equal(t, expected, actualDiff)
 
 		t.Logf("✅: %s: option: %#v", t.Name(), option)
 	})
