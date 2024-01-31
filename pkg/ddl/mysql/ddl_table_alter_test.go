@@ -131,12 +131,53 @@ func TestAlterTableStmt_String(t *testing.T) {
 		stmt := &AlterTableStmt{
 			Name: &ObjectName{Name: &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`}},
 			Action: &AlterColumn{
-				Name:   &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
-				Action: &AlterColumnDataType{DataType: &DataType{Name: "INTEGER"}},
+				Name: &Ident{Name: "description", QuotationMark: `"`, Raw: `"description"`},
+				Action: &AlterColumnDataType{
+					DataType: &DataType{
+						Type: TOKEN_TEXT,
+						Name: "TEXT",
+					},
+					CharacterSet: &Ident{
+						Name: "utf8mb4",
+						Raw:  "utf8mb4",
+					},
+					Collate: &Ident{
+						Name: "utf8mb4_general_ci",
+						Raw:  "utf8mb4_general_ci",
+					},
+					Comment: "'my comment'",
+				},
 			},
 		}
 
-		expected := `ALTER TABLE "users" MODIFY "age" INTEGER;` + "\n"
+		expected := `ALTER TABLE "users" MODIFY "description" TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT 'my comment';` + "\n"
+		actual := stmt.String()
+
+		if !assert.Equal(t, expected, actual) {
+			assert.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
+		}
+		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
+	})
+
+	t.Run("success,AlterColumnSetDataType,OnActions", func(t *testing.T) {
+		t.Parallel()
+
+		stmt := &AlterTableStmt{
+			Name: &ObjectName{Name: &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`}},
+			Action: &AlterColumn{
+				Name: &Ident{Name: "updated_at", QuotationMark: `"`, Raw: `"updated_at"`},
+				Action: &AlterColumnDataType{
+					DataType: &DataType{
+						Type: TOKEN_DATETIME,
+						Name: "DATETIME",
+					},
+					NotNull:  true,
+					OnAction: "ON UPDATE CURRENT_TIMESTAMP",
+				},
+			},
+		}
+
+		expected := `ALTER TABLE "users" MODIFY "updated_at" DATETIME NOT NULL ON UPDATE CURRENT_TIMESTAMP;` + "\n"
 		actual := stmt.String()
 
 		if !assert.Equal(t, expected, actual) {

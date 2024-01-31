@@ -76,6 +76,7 @@ const (
 	TOKEN_NO       TokenType = "NO"
 	TOKEN_ACTION   TokenType = "ACTION"
 	TOKEN_TO       TokenType = "TO"
+	TOKEN_SET      TokenType = "SET"
 
 	// DATA TYPE.
 	TOKEN_BOOLEAN           TokenType = "BOOLEAN"
@@ -197,6 +198,8 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_ACTION
 	case "TO":
 		return TOKEN_TO
+	case "SET":
+		return TOKEN_SET
 	case "BOOLEAN":
 		return TOKEN_BOOLEAN
 	case "BIT":

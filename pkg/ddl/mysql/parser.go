@@ -377,9 +377,16 @@ func (p *Parser) parseColumn(tableName *Ident) (*Column, []Constraint, error) {
 				default:
 					return nil, nil, apperr.Errorf(errFmtPrefix+"currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
 				}
+			case TOKEN_CHARACTER:
+				p.nextToken() // current = SET
+				if err := p.checkCurrentToken(TOKEN_SET); err != nil {
+					return nil, nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+				}
+				p.nextToken() // current = charset_value
+				column.CharacterSet = NewRawIdent(p.currentToken.Literal.String())
 			case TOKEN_COLLATE:
 				p.nextToken() // current = collate_value
-				column.Collate = NewRawIdent(p.currentToken.Literal.Str)
+				column.Collate = NewRawIdent(p.currentToken.Literal.String())
 			case TOKEN_AUTO_INCREMENT:
 				column.AutoIncrement = true
 			default:

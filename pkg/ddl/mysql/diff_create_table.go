@@ -205,6 +205,7 @@ func (config *DiffCreateTableConfig) diffCreateTableColumn(ddls *DDL, before, af
 		}
 
 		if beforeColumn.DataType.StringForDiff() != afterColumn.DataType.StringForDiff() ||
+			beforeColumn.CharacterSet.StringForDiff() != afterColumn.CharacterSet.StringForDiff() ||
 			beforeColumn.Collate.StringForDiff() != afterColumn.Collate.StringForDiff() ||
 			(beforeColumn.NotNull && !afterColumn.NotNull) ||
 			(!beforeColumn.NotNull && afterColumn.NotNull) ||
