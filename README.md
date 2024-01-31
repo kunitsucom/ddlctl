@@ -1,5 +1,7 @@
 # [ddlctl](https://github.com/kunitsucom/ddlctl)
 
+`ddlctl` is a tool to control RDBMS DDLs: output all RDBMS DDLs, generate DDLs from tagged Golang source code, view differences between RDBMS and your DDL, and automate migrations.
+
 > [!WARNING]
 > This project is experimental. It is operational in the author's environment, but it is not known if it can be operated in other environments without trouble.  
 
@@ -12,13 +14,18 @@
 [![codecov](https://codecov.io/gh/kunitsucom/ddlctl/graph/badge.svg?token=8Jtk2bpTe2)](https://codecov.io/gh/kunitsucom/ddlctl)
 [![sourcegraph](https://sourcegraph.com/github.com/kunitsucom/ddlctl/-/badge.svg)](https://sourcegraph.com/github.com/kunitsucom/ddlctl)
 
-## Overview
-
-`ddlctl` is a tool for control RDBMS DDL.
-
 ## Demo
 
 ![ddlctl_demo](https://github.com/kunitsucom/ddlctl/assets/29125616/2ff6bd76-037e-4695-aef1-5ca87a528e07)
+
+## Overview
+
+ddlctl can do the following:  
+
+- Output all RDBMS DDLs
+- Generate DDL from tagged Golang source code
+- Output differences between the RDBMS and your DDL
+- Automated Migration
 
 ## TODO
 
