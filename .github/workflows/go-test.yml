@@ -49,7 +49,8 @@ env:
   DOCKER_BUILD_CACHE_FROM: /tmp/.docker-build-buildx-cache-from
   DOCKER_BUILD_CACHE_TO: /tmp/.docker-build-buildx-cache-to
   WORKDIR: .
-  COVER: ${{ github.event_name == 'schedule' || github.event.inputs.COVER == 'true' || endsWith(github.event.pull_request.title, '[cover]') }}
+  # COVER: ${{ github.event_name == 'schedule' || github.event.inputs.COVER == 'true' || endsWith(github.event.pull_request.title, '[cover]') }}
+  COVER: true  # always run with coverage
 
 defaults:
   run:
