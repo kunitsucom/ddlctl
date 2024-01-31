@@ -17,7 +17,7 @@ type CreateTableStmt struct {
 	Name        *ObjectName
 	Columns     []*Column
 	Constraints Constraints
-	Options     []*Option
+	Options     Options
 }
 
 func (s *CreateTableStmt) GetNameForDiff() string {
@@ -65,14 +65,7 @@ func (s *CreateTableStmt) String() string {
 	}
 	str += ")"
 	if len(s.Options) > 0 {
-		str += " "
-		lastIndex := len(s.Options) - 1
-		for i, v := range s.Options {
-			str += v.String()
-			if i != lastIndex {
-				str += " "
-			}
-		}
+		str += " " + s.Options.String()
 	}
 
 	str += ";\n"

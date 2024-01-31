@@ -194,7 +194,7 @@ LabelTableOptions:
 			if err := p.checkCurrentToken(TOKEN_IDENT); err != nil {
 				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 			}
-			opt.Value = NewRawIdent(p.currentToken.Literal.Str)
+			opt.Value = opt.Value.Append(NewRawIdent(p.currentToken.Literal.Str))
 		case TOKEN_AUTO_INCREMENT:
 			opt.Name = "AUTO_INCREMENT"
 			p.nextToken() // current = `=`
@@ -205,7 +205,7 @@ LabelTableOptions:
 			if err := p.checkCurrentToken(TOKEN_IDENT); err != nil {
 				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 			}
-			opt.Value = NewRawIdent(p.currentToken.Literal.Str)
+			opt.Value = opt.Value.Append(NewRawIdent(p.currentToken.Literal.Str))
 		case TOKEN_DEFAULT:
 			if err := p.checkPeekToken(TOKEN_CHARSET); err != nil {
 				return nil, apperr.Errorf(errFmtPrefix+"checkPeekToken: %w", err)
@@ -220,7 +220,7 @@ LabelTableOptions:
 			if err := p.checkCurrentToken(TOKEN_IDENT); err != nil {
 				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 			}
-			opt.Value = NewRawIdent(p.currentToken.Literal.Str)
+			opt.Value = opt.Value.Append(NewRawIdent(p.currentToken.Literal.Str))
 		case TOKEN_COLLATE:
 			opt.Name = "COLLATE"
 			p.nextToken() // current = `=`
@@ -231,7 +231,7 @@ LabelTableOptions:
 			if err := p.checkCurrentToken(TOKEN_IDENT); err != nil {
 				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 			}
-			opt.Value = NewRawIdent(p.currentToken.Literal.Str)
+			opt.Value = opt.Value.Append(NewRawIdent(p.currentToken.Literal.Str))
 		case TOKEN_COMMENT:
 			opt.Name = "COMMENT"
 			p.nextToken() // current = `=`
@@ -242,7 +242,7 @@ LabelTableOptions:
 			if err := p.checkCurrentToken(TOKEN_IDENT); err != nil {
 				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 			}
-			opt.Value = NewRawIdent(p.currentToken.Literal.String())
+			opt.Value = opt.Value.Append(NewRawIdent(p.currentToken.Literal.String()))
 		case TOKEN_SEMICOLON, TOKEN_EOF:
 			break LabelTableOptions
 		default:

@@ -16,20 +16,14 @@ func Test_isAlterTableAction(t *testing.T) {
 	(&RenameColumn{}).isAlterTableAction()
 	(&AddColumn{}).isAlterTableAction()
 	(&DropColumn{}).isAlterTableAction()
-	(&AlterColumn{}).isAlterTableAction()
+	(&AlterColumnSetDataType{}).isAlterTableAction()
+	(&AlterColumnSetDefault{}).isAlterTableAction()
+	(&AlterColumnDropDefault{}).isAlterTableAction()
+	(&AlterColumnSetNotNull{}).isAlterTableAction()
+	(&AlterColumnDropNotNull{}).isAlterTableAction()
 	(&AddConstraint{}).isAlterTableAction()
 	(&DropConstraint{}).isAlterTableAction()
 	(&AlterConstraint{}).isAlterTableAction()
-}
-
-func Test_isAlterColumnAction(t *testing.T) {
-	t.Parallel()
-
-	(&AlterColumnSetDataType{}).isAlterColumnAction()
-	(&AlterColumnSetDefault{}).isAlterColumnAction()
-	(&AlterColumnDropDefault{}).isAlterColumnAction()
-	(&AlterColumnSetNotNull{}).isAlterColumnAction()
-	(&AlterColumnDropNotNull{}).isAlterColumnAction()
 }
 
 func TestAlterTableStmt_String(t *testing.T) {
@@ -133,9 +127,9 @@ ALTER TABLE "users" RENAME TO "accounts";
 
 		stmt := &AlterTableStmt{
 			Name: &ObjectName{Name: &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`}},
-			Action: &AlterColumn{
-				Name:   &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
-				Action: &AlterColumnSetDataType{DataType: &DataType{Name: "INTEGER"}},
+			Action: &AlterColumnSetDataType{
+				Name:     &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
+				DataType: &DataType{Name: "INTEGER"},
 			},
 		}
 
@@ -153,9 +147,9 @@ ALTER TABLE "users" RENAME TO "accounts";
 
 		stmt := &AlterTableStmt{
 			Name: &ObjectName{Name: &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`}},
-			Action: &AlterColumn{
-				Name:   &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
-				Action: &AlterColumnSetDefault{Default: &Default{Value: &Expr{[]*Ident{{Name: "0", Raw: "0"}}}}},
+			Action: &AlterColumnSetDefault{
+				Name:    &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
+				Default: &Default{Value: &Expr{[]*Ident{{Name: "0", Raw: "0"}}}},
 			},
 		}
 
@@ -173,9 +167,8 @@ ALTER TABLE "users" RENAME TO "accounts";
 
 		stmt := &AlterTableStmt{
 			Name: &ObjectName{Name: &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`}},
-			Action: &AlterColumn{
-				Name:   &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
-				Action: &AlterColumnDropDefault{},
+			Action: &AlterColumnDropDefault{
+				Name: &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
 			},
 		}
 
@@ -193,9 +186,8 @@ ALTER TABLE "users" RENAME TO "accounts";
 
 		stmt := &AlterTableStmt{
 			Name: &ObjectName{Name: &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`}},
-			Action: &AlterColumn{
-				Name:   &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
-				Action: &AlterColumnSetNotNull{},
+			Action: &AlterColumnSetNotNull{
+				Name: &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
 			},
 		}
 
@@ -213,9 +205,8 @@ ALTER TABLE "users" RENAME TO "accounts";
 
 		stmt := &AlterTableStmt{
 			Name: &ObjectName{Name: &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`}},
-			Action: &AlterColumn{
-				Name:   &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
-				Action: &AlterColumnDropNotNull{},
+			Action: &AlterColumnDropNotNull{
+				Name: &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
 			},
 		}
 

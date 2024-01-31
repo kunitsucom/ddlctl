@@ -21,9 +21,9 @@ func TestCreateTableStmt_String(t *testing.T) {
 				{Name: &Ident{Name: "name", Raw: "name"}, DataType: &DataType{Name: "VARYING", Expr: &Expr{[]*Ident{{Name: "255", Raw: "255"}}}}},
 			},
 			Options: []*Option{
-				{Name: "ENGINE", Value: &Ident{Name: "InnoDB", Raw: "InnoDB"}},
-				{Name: "DEFAULT CHARSET", Value: &Ident{Name: "utf8mb4", Raw: "utf8mb4"}},
-				{Name: "COLLATE", Value: &Ident{Name: "utf8mb4_0900_ai_ci", Raw: "utf8mb4_0900_ai_ci"}},
+				{Name: "ENGINE", Value: &Expr{[]*Ident{NewRawIdent("InnoDB")}}},
+				{Name: "DEFAULT CHARSET", Value: &Expr{[]*Ident{NewRawIdent("utf8mb4")}}},
+				{Name: "COLLATE", Value: &Expr{[]*Ident{NewRawIdent("utf8mb4_0900_ai_ci")}}},
 			},
 		}
 		expected := `-- test comment content

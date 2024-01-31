@@ -49,33 +49,30 @@ func (s *AlterTableStmt) String() string {
 		str += "ADD COLUMN " + a.Column.String()
 	case *DropColumn:
 		str += "DROP COLUMN " + a.Name.String()
-	case *AlterColumn:
-		switch ca := a.Action.(type) {
-		case *AlterColumnDataType:
-			str += "MODIFY " + a.Name.String() + " " + ca.DataType.String()
-			if ca.CharacterSet != nil {
-				str += " CHARACTER SET " + ca.CharacterSet.String()
-			}
-			if ca.Collate != nil {
-				str += " COLLATE " + ca.Collate.String()
-			}
-			if ca.NotNull {
-				str += " NOT NULL"
-			}
-			if ca.AutoIncrement {
-				str += " AUTO_INCREMENT"
-			}
-			if ca.OnAction != "" {
-				str += " " + ca.OnAction
-			}
-			if ca.Comment != "" {
-				str += " COMMENT " + ca.Comment
-			}
-		case *AlterColumnSetDefault:
-			str += "ALTER " + a.Name.String() + " " + "SET " + ca.Default.String()
-		case *AlterColumnDropDefault:
-			str += "ALTER " + a.Name.String() + " " + "DROP DEFAULT"
+	case *AlterColumnDataType:
+		str += "MODIFY " + a.Name.String() + " " + a.DataType.String()
+		if a.CharacterSet != nil {
+			str += " CHARACTER SET " + a.CharacterSet.String()
 		}
+		if a.Collate != nil {
+			str += " COLLATE " + a.Collate.String()
+		}
+		if a.NotNull {
+			str += " NOT NULL"
+		}
+		if a.AutoIncrement {
+			str += " AUTO_INCREMENT"
+		}
+		if a.OnAction != "" {
+			str += " " + a.OnAction
+		}
+		if a.Comment != "" {
+			str += " COMMENT " + a.Comment
+		}
+	case *AlterColumnSetDefault:
+		str += "ALTER " + a.Name.String() + " " + "SET " + a.Default.String()
+	case *AlterColumnDropDefault:
+		str += "ALTER " + a.Name.String() + " " + "DROP DEFAULT"
 	case *AddConstraint:
 		str += "ADD " + a.Constraint.String()
 		if a.NotValid {
@@ -100,6 +97,8 @@ func (s *AlterTableStmt) String() string {
 		} else {
 			str += " INITIALLY IMMEDIATE"
 		}
+	case *AlterTableOption:
+		str += a.String()
 	}
 
 	return str + ";\n"
@@ -159,24 +158,10 @@ func (*DropColumn) isAlterTableAction() {}
 
 func (s *DropColumn) GoString() string { return internal.GoString(*s) }
 
-// AlterColumn represents ALTER TABLE table_name ALTER COLUMN.
-type AlterColumn struct {
-	Name   *Ident
-	Action AlterColumnAction
-}
-
-func (*AlterColumn) isAlterTableAction() {}
-
-func (s *AlterColumn) GoString() string { return internal.GoString(*s) }
-
-type AlterColumnAction interface {
-	isAlterColumnAction()
-	GoString() string
-}
-
 // AlterColumnDataType represents ALTER TABLE table_name MODIFY column_name data_type NOT NULL.
 // NOTE: https://dev.mysql.com/doc/refman/8.0/ja/alter-table-examples.html
 type AlterColumnDataType struct {
+	Name          *Ident
 	DataType      *DataType
 	CharacterSet  *Ident
 	Collate       *Ident
@@ -186,28 +171,32 @@ type AlterColumnDataType struct {
 	Comment       string
 }
 
-func (*AlterColumnDataType) isAlterColumnAction() {}
+func (*AlterColumnDataType) isAlterTableAction() {}
 
 func (s *AlterColumnDataType) GoString() string { return internal.GoString(*s) }
 
 // AlterColumnSetDefault represents ALTER TABLE table_name ALTER COLUMN column_name SET DEFAULT.
 type AlterColumnSetDefault struct {
+	Name    *Ident
 	Default *Default
 }
 
-func (*AlterColumnSetDefault) isAlterColumnAction() {}
+func (*AlterColumnSetDefault) isAlterTableAction() {}
 
 func (s *AlterColumnSetDefault) GoString() string { return internal.GoString(*s) }
 
 // AlterColumnDropDefault represents ALTER TABLE table_name ALTER COLUMN column_name DROP DEFAULT.
-type AlterColumnDropDefault struct{}
+type AlterColumnDropDefault struct {
+	Name *Ident
+}
 
-func (*AlterColumnDropDefault) isAlterColumnAction() {}
+func (*AlterColumnDropDefault) isAlterTableAction() {}
 
 func (s *AlterColumnDropDefault) GoString() string { return internal.GoString(*s) }
 
 // AddConstraint represents ALTER TABLE table_name ADD CONSTRAINT.
 type AddConstraint struct {
+	Name       *Ident
 	Constraint Constraint
 	NotValid   bool
 }
@@ -235,3 +224,17 @@ type AlterConstraint struct {
 func (*AlterConstraint) isAlterTableAction() {}
 
 func (s *AlterConstraint) GoString() string { return internal.GoString(*s) }
+
+// AlterTableOption represents ALTER TABLE table_name TABLE_OPTION=option_value.
+type AlterTableOption struct {
+	Name  string
+	Value *Expr
+}
+
+func (*AlterTableOption) isAlterTableAction() {}
+
+func (s *AlterTableOption) GoString() string { return internal.GoString(*s) }
+
+func (s *AlterTableOption) String() string {
+	return s.Name + "=" + s.Value.String()
+}

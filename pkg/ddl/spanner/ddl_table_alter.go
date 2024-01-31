@@ -48,23 +48,19 @@ func (s *AlterTableStmt) String() string {
 		str += "ADD COLUMN " + a.Column.String()
 	case *DropColumn:
 		str += "DROP COLUMN " + a.Name.String()
-	case *AlterColumn:
-		str += "ALTER COLUMN " + a.Name.String() + " "
-		switch ca := a.Action.(type) {
-		case *AlterColumnDataType:
-			str += ca.DataType.String()
-			if ca.NotNull {
-				str += " NOT NULL"
-			}
-		case *AlterColumnSetDefault:
-			str += "SET " + ca.Default.String()
-		case *AlterColumnDropDefault:
-			str += "DROP DEFAULT"
-		case *AlterColumnSetOptions:
-			str += "SET OPTIONS " + ca.Options.String()
-		case *AlterColumnDropOptions:
-			str += "DROP OPTIONS"
+	case *AlterColumnDataType:
+		str += "ALTER COLUMN " + a.Name.String() + " " + a.DataType.String()
+		if a.NotNull {
+			str += " NOT NULL"
 		}
+	case *AlterColumnSetDefault:
+		str += "ALTER COLUMN " + a.Name.String() + " SET " + a.Default.String()
+	case *AlterColumnDropDefault:
+		str += "ALTER COLUMN " + a.Name.String() + " DROP DEFAULT"
+	case *AlterColumnSetOptions:
+		str += "ALTER COLUMN " + a.Name.String() + " SET OPTIONS " + a.Options.String()
+	case *AlterColumnDropOptions:
+		str += "ALTER COLUMN " + a.Name.String() + " DROP OPTIONS"
 	case *AddConstraint:
 		str += "ADD " + a.Constraint.String()
 		if a.NotValid {
@@ -143,60 +139,52 @@ func (*DropColumn) isAlterTableAction() {}
 
 func (s *DropColumn) GoString() string { return internal.GoString(*s) }
 
-// AlterColumn represents ALTER TABLE table_name ALTER COLUMN.
-type AlterColumn struct {
-	Name   *Ident
-	Action AlterColumnAction
-}
-
-func (*AlterColumn) isAlterTableAction() {}
-
-func (s *AlterColumn) GoString() string { return internal.GoString(*s) }
-
-type AlterColumnAction interface {
-	isAlterColumnAction()
-	GoString() string
-}
-
 // AlterColumnDataType represents ALTER TABLE table_name ALTER COLUMN column_name data_type NOT NULL.
 type AlterColumnDataType struct {
+	Name     *Ident
 	DataType *DataType
 	NotNull  bool
 }
 
-func (*AlterColumnDataType) isAlterColumnAction() {}
+func (*AlterColumnDataType) isAlterTableAction() {}
 
 func (s *AlterColumnDataType) GoString() string { return internal.GoString(*s) }
 
 // AlterColumnSetDefault represents ALTER TABLE table_name ALTER COLUMN column_name SET DEFAULT.
 type AlterColumnSetDefault struct {
+	Name    *Ident
 	Default *Default
 }
 
-func (*AlterColumnSetDefault) isAlterColumnAction() {}
+func (*AlterColumnSetDefault) isAlterTableAction() {}
 
 func (s *AlterColumnSetDefault) GoString() string { return internal.GoString(*s) }
 
 // AlterColumnDropDefault represents ALTER TABLE table_name ALTER COLUMN column_name DROP DEFAULT.
-type AlterColumnDropDefault struct{}
+type AlterColumnDropDefault struct {
+	Name *Ident
+}
 
-func (*AlterColumnDropDefault) isAlterColumnAction() {}
+func (*AlterColumnDropDefault) isAlterTableAction() {}
 
 func (s *AlterColumnDropDefault) GoString() string { return internal.GoString(*s) }
 
 // AlterColumnSetOptions represents ALTER TABLE table_name ALTER COLUMN column_name SET OPTIONS.
 type AlterColumnSetOptions struct {
+	Name    *Ident
 	Options *Expr
 }
 
-func (*AlterColumnSetOptions) isAlterColumnAction() {}
+func (*AlterColumnSetOptions) isAlterTableAction() {}
 
 func (s *AlterColumnSetOptions) GoString() string { return internal.GoString(*s) }
 
 // AlterColumnDropOptions represents ALTER TABLE table_name ALTER COLUMN column_name DROP OPTIONS.
-type AlterColumnDropOptions struct{}
+type AlterColumnDropOptions struct {
+	Name *Ident
+}
 
-func (*AlterColumnDropOptions) isAlterColumnAction() {}
+func (*AlterColumnDropOptions) isAlterTableAction() {}
 
 func (s *AlterColumnDropOptions) GoString() string { return internal.GoString(*s) }
 

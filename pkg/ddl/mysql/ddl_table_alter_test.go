@@ -16,18 +16,13 @@ func Test_isAlterTableAction(t *testing.T) {
 	(&RenameColumn{}).isAlterTableAction()
 	(&AddColumn{}).isAlterTableAction()
 	(&DropColumn{}).isAlterTableAction()
-	(&AlterColumn{}).isAlterTableAction()
+	(&AlterColumnDataType{}).isAlterTableAction()
+	(&AlterColumnSetDefault{}).isAlterTableAction()
+	(&AlterColumnDropDefault{}).isAlterTableAction()
 	(&AddConstraint{}).isAlterTableAction()
 	(&DropConstraint{}).isAlterTableAction()
 	(&AlterConstraint{}).isAlterTableAction()
-}
-
-func Test_isAlterColumnAction(t *testing.T) {
-	t.Parallel()
-
-	(&AlterColumnDataType{}).isAlterColumnAction()
-	(&AlterColumnSetDefault{}).isAlterColumnAction()
-	(&AlterColumnDropDefault{}).isAlterColumnAction()
+	(&AlterTableOption{}).isAlterTableAction()
 }
 
 func TestAlterTableStmt_String(t *testing.T) {
@@ -130,23 +125,21 @@ func TestAlterTableStmt_String(t *testing.T) {
 
 		stmt := &AlterTableStmt{
 			Name: &ObjectName{Name: &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`}},
-			Action: &AlterColumn{
+			Action: &AlterColumnDataType{
 				Name: &Ident{Name: "description", QuotationMark: `"`, Raw: `"description"`},
-				Action: &AlterColumnDataType{
-					DataType: &DataType{
-						Type: TOKEN_TEXT,
-						Name: "TEXT",
-					},
-					CharacterSet: &Ident{
-						Name: "utf8mb4",
-						Raw:  "utf8mb4",
-					},
-					Collate: &Ident{
-						Name: "utf8mb4_general_ci",
-						Raw:  "utf8mb4_general_ci",
-					},
-					Comment: "'my comment'",
+				DataType: &DataType{
+					Type: TOKEN_TEXT,
+					Name: "TEXT",
 				},
+				CharacterSet: &Ident{
+					Name: "utf8mb4",
+					Raw:  "utf8mb4",
+				},
+				Collate: &Ident{
+					Name: "utf8mb4_general_ci",
+					Raw:  "utf8mb4_general_ci",
+				},
+				Comment: "'my comment'",
 			},
 		}
 
@@ -164,16 +157,14 @@ func TestAlterTableStmt_String(t *testing.T) {
 
 		stmt := &AlterTableStmt{
 			Name: &ObjectName{Name: &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`}},
-			Action: &AlterColumn{
+			Action: &AlterColumnDataType{
 				Name: &Ident{Name: "updated_at", QuotationMark: `"`, Raw: `"updated_at"`},
-				Action: &AlterColumnDataType{
-					DataType: &DataType{
-						Type: TOKEN_DATETIME,
-						Name: "DATETIME",
-					},
-					NotNull:  true,
-					OnAction: "ON UPDATE CURRENT_TIMESTAMP",
+				DataType: &DataType{
+					Type: TOKEN_DATETIME,
+					Name: "DATETIME",
 				},
+				NotNull:  true,
+				OnAction: "ON UPDATE CURRENT_TIMESTAMP",
 			},
 		}
 
@@ -191,9 +182,9 @@ func TestAlterTableStmt_String(t *testing.T) {
 
 		stmt := &AlterTableStmt{
 			Name: &ObjectName{Name: &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`}},
-			Action: &AlterColumn{
-				Name:   &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
-				Action: &AlterColumnSetDefault{Default: &Default{Value: &Expr{[]*Ident{{Name: "0", Raw: "0"}}}}},
+			Action: &AlterColumnSetDefault{
+				Name:    &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
+				Default: &Default{Value: &Expr{[]*Ident{{Name: "0", Raw: "0"}}}},
 			},
 		}
 
@@ -211,9 +202,8 @@ func TestAlterTableStmt_String(t *testing.T) {
 
 		stmt := &AlterTableStmt{
 			Name: &ObjectName{Name: &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`}},
-			Action: &AlterColumn{
-				Name:   &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
-				Action: &AlterColumnDropDefault{},
+			Action: &AlterColumnDropDefault{
+				Name: &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
 			},
 		}
 

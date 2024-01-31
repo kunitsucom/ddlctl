@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"reflect"
+	"strings"
 
 	"github.com/kunitsucom/util.go/exp/diff/simplediff"
 
@@ -32,7 +33,7 @@ func (o *diffCreateTableConfigUseConstraintNotValid) apply(c *DiffCreateTableCon
 	c.UseAlterTableAddConstraintNotValid = o.useAlterTableAddConstraintNotValid
 }
 
-//nolint:funlen,cyclop
+//nolint:funlen,cyclop,gocognit
 func DiffCreateTable(before, after *CreateTableStmt, opts ...DiffCreateTableOption) (*DDL, error) {
 	config := &DiffCreateTableConfig{}
 
@@ -181,6 +182,43 @@ func DiffCreateTable(before, after *CreateTableStmt, opts ...DiffCreateTableOpti
 		}
 	}
 
+	for _, beforeOption := range before.Options {
+		if strings.ToUpper(beforeOption.Name) == "AUTO_INCREMENT" {
+			// skip AUTO_INCREMENT
+			continue
+		}
+		afterOption := findOptionByName(beforeOption.Name, after.Options)
+		if afterOption != nil {
+			if beforeOption.StringForDiff() != afterOption.StringForDiff() {
+				// ALTER TABLE table_name option_name=option_value;
+				result.Stmts = append(result.Stmts, &AlterTableStmt{
+					Comment: simplediff.Diff(beforeOption.String(), afterOption.String()).String(),
+					Name:    after.Name,
+					Action: &AlterTableOption{
+						Name:  afterOption.Name,
+						Value: afterOption.Value,
+					},
+				})
+			}
+		}
+	}
+
+	for _, afterOption := range onlyLeftOption(after.Options, before.Options) {
+		if strings.ToUpper(afterOption.Name) == "AUTO_INCREMENT" {
+			// skip AUTO_INCREMENT
+			continue
+		}
+		// ALTER TABLE table_name option_name=option_value;
+		result.Stmts = append(result.Stmts, &AlterTableStmt{
+			Comment: simplediff.Diff("", afterOption.String()).String(),
+			Name:    after.Name,
+			Action: &AlterTableOption{
+				Name:  afterOption.Name,
+				Value: afterOption.Value,
+			},
+		})
+	}
+
 	if len(result.Stmts) == 0 {
 		return nil, apperr.Errorf("before: %s, after: %s: %w", before.GetNameForDiff(), after.GetNameForDiff(), ddl.ErrNoDifference)
 	}
@@ -215,16 +253,14 @@ func (config *DiffCreateTableConfig) diffCreateTableColumn(ddls *DDL, before, af
 			ddls.Stmts = append(ddls.Stmts, &AlterTableStmt{
 				Comment: simplediff.Diff(beforeColumn.String(), afterColumn.String()).String(),
 				Name:    after.Name,
-				Action: &AlterColumn{
-					Name: afterColumn.Name,
-					Action: &AlterColumnDataType{
-						DataType:      afterColumn.DataType,
-						Collate:       afterColumn.Collate,
-						NotNull:       afterColumn.NotNull,
-						AutoIncrement: afterColumn.AutoIncrement,
-						OnAction:      afterColumn.OnAction,
-						Comment:       afterColumn.Comment,
-					},
+				Action: &AlterColumnDataType{
+					Name:          afterColumn.Name,
+					DataType:      afterColumn.DataType,
+					Collate:       afterColumn.Collate,
+					NotNull:       afterColumn.NotNull,
+					AutoIncrement: afterColumn.AutoIncrement,
+					OnAction:      afterColumn.OnAction,
+					Comment:       afterColumn.Comment,
 				},
 			})
 
@@ -233,11 +269,9 @@ func (config *DiffCreateTableConfig) diffCreateTableColumn(ddls *DDL, before, af
 				ddls.Stmts = append(ddls.Stmts, &AlterTableStmt{
 					Comment: simplediff.Diff(beforeColumn.String(), afterColumn.String()).String(),
 					Name:    after.Name,
-					Action: &AlterColumn{
-						Name: afterColumn.Name,
-						Action: &AlterColumnSetDefault{
-							Default: afterColumn.Default,
-						},
+					Action: &AlterColumnSetDefault{
+						Name:    afterColumn.Name,
+						Default: afterColumn.Default,
 					},
 				})
 			}
@@ -249,9 +283,8 @@ func (config *DiffCreateTableConfig) diffCreateTableColumn(ddls *DDL, before, af
 			ddls.Stmts = append(ddls.Stmts, &AlterTableStmt{
 				Comment: simplediff.Diff(beforeColumn.String(), afterColumn.String()).String(),
 				Name:    after.Name,
-				Action: &AlterColumn{
-					Name:   afterColumn.Name,
-					Action: &AlterColumnDropDefault{},
+				Action: &AlterColumnDropDefault{
+					Name: afterColumn.Name,
 				},
 			})
 		case afterColumn.Default != nil && beforeColumn.Default.StringForDiff() != afterColumn.Default.StringForDiff():
@@ -259,9 +292,9 @@ func (config *DiffCreateTableConfig) diffCreateTableColumn(ddls *DDL, before, af
 			ddls.Stmts = append(ddls.Stmts, &AlterTableStmt{
 				Comment: simplediff.Diff(beforeColumn.String(), afterColumn.String()).String(),
 				Name:    after.Name,
-				Action: &AlterColumn{
-					Name:   afterColumn.Name,
-					Action: &AlterColumnSetDefault{Default: afterColumn.Default},
+				Action: &AlterColumnSetDefault{
+					Name:    afterColumn.Name,
+					Default: afterColumn.Default,
 				},
 			})
 		}
@@ -314,6 +347,26 @@ func findConstraintByName(name string, constraints []Constraint) Constraint { //
 	for _, constraint := range constraints {
 		if constraint.GetName().Name == name {
 			return constraint
+		}
+	}
+	return nil
+}
+
+func onlyLeftOption(left, right []*Option) []*Option {
+	onlyLeftOptions := make([]*Option, 0)
+	for _, leftOption := range left {
+		foundOptionByRight := findOptionByName(leftOption.Name, right)
+		if foundOptionByRight == nil {
+			onlyLeftOptions = append(onlyLeftOptions, leftOption)
+		}
+	}
+	return onlyLeftOptions
+}
+
+func findOptionByName(name string, columns []*Option) *Option {
+	for _, column := range columns {
+		if column.Name == name {
+			return column
 		}
 	}
 	return nil

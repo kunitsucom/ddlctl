@@ -16,21 +16,14 @@ func Test_isAlterTableAction(t *testing.T) {
 	(&RenameColumn{}).isAlterTableAction()
 	(&AddColumn{}).isAlterTableAction()
 	(&DropColumn{}).isAlterTableAction()
-	(&AlterColumn{}).isAlterTableAction()
+	(&AlterColumnDataType{}).isAlterTableAction()
+	(&AlterColumnSetDefault{}).isAlterTableAction()
+	(&AlterColumnDropDefault{}).isAlterTableAction()
+	(&AlterColumnSetOptions{}).isAlterTableAction()
+	(&AlterColumnDropOptions{}).isAlterTableAction()
 	(&AddConstraint{}).isAlterTableAction()
 	(&DropConstraint{}).isAlterTableAction()
 	(&AlterConstraint{}).isAlterTableAction()
-	(&AlterColumnDataType{}).isAlterColumnAction()
-	(&AlterColumnSetOptions{}).isAlterColumnAction()
-	(&AlterColumnDropOptions{}).isAlterColumnAction()
-}
-
-func Test_isAlterColumnAction(t *testing.T) {
-	t.Parallel()
-
-	(&AlterColumnDataType{}).isAlterColumnAction()
-	(&AlterColumnSetDefault{}).isAlterColumnAction()
-	(&AlterColumnDropDefault{}).isAlterColumnAction()
 }
 
 func TestAlterTableStmt_String(t *testing.T) {
@@ -133,9 +126,9 @@ func TestAlterTableStmt_String(t *testing.T) {
 
 		stmt := &AlterTableStmt{
 			Name: &ObjectName{Name: &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`}},
-			Action: &AlterColumn{
-				Name:   &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
-				Action: &AlterColumnDataType{DataType: &DataType{Name: "INT64"}},
+			Action: &AlterColumnDataType{
+				Name:     &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
+				DataType: &DataType{Name: "INT64"},
 			},
 		}
 
@@ -153,9 +146,9 @@ func TestAlterTableStmt_String(t *testing.T) {
 
 		stmt := &AlterTableStmt{
 			Name: &ObjectName{Name: &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`}},
-			Action: &AlterColumn{
-				Name:   &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
-				Action: &AlterColumnSetDefault{Default: &Default{Value: &Expr{[]*Ident{{Name: "0", Raw: "0"}}}}},
+			Action: &AlterColumnSetDefault{
+				Name:    &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
+				Default: &Default{Value: &Expr{[]*Ident{{Name: "0", Raw: "0"}}}},
 			},
 		}
 
@@ -173,9 +166,8 @@ func TestAlterTableStmt_String(t *testing.T) {
 
 		stmt := &AlterTableStmt{
 			Name: &ObjectName{Name: &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`}},
-			Action: &AlterColumn{
-				Name:   &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
-				Action: &AlterColumnDropDefault{},
+			Action: &AlterColumnDropDefault{
+				Name: &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
 			},
 		}
 

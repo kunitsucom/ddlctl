@@ -209,9 +209,9 @@ func (config *DiffCreateTableConfig) diffCreateTableColumn(ddls *DDL, before, af
 			ddls.Stmts = append(ddls.Stmts, &AlterTableStmt{
 				Comment: simplediff.Diff(beforeColumn.String(), afterColumn.String()).String(),
 				Name:    after.Name,
-				Action: &AlterColumn{
-					Name:   afterColumn.Name,
-					Action: &AlterColumnSetDataType{DataType: afterColumn.DataType},
+				Action: &AlterColumnSetDataType{
+					Name:     afterColumn.Name,
+					DataType: afterColumn.DataType,
 				},
 			})
 		}
@@ -222,9 +222,8 @@ func (config *DiffCreateTableConfig) diffCreateTableColumn(ddls *DDL, before, af
 			ddls.Stmts = append(ddls.Stmts, &AlterTableStmt{
 				Comment: simplediff.Diff(beforeColumn.String(), afterColumn.String()).String(),
 				Name:    after.Name,
-				Action: &AlterColumn{
-					Name:   afterColumn.Name,
-					Action: &AlterColumnDropDefault{},
+				Action: &AlterColumnDropDefault{
+					Name: afterColumn.Name,
 				},
 			})
 		case afterColumn.Default != nil && beforeColumn.Default.StringForDiff() != afterColumn.Default.StringForDiff():
@@ -232,9 +231,9 @@ func (config *DiffCreateTableConfig) diffCreateTableColumn(ddls *DDL, before, af
 			ddls.Stmts = append(ddls.Stmts, &AlterTableStmt{
 				Comment: simplediff.Diff(beforeColumn.String(), afterColumn.String()).String(),
 				Name:    after.Name,
-				Action: &AlterColumn{
-					Name:   afterColumn.Name,
-					Action: &AlterColumnSetDefault{Default: afterColumn.Default},
+				Action: &AlterColumnSetDefault{
+					Name:    afterColumn.Name,
+					Default: afterColumn.Default,
 				},
 			})
 		}
@@ -245,9 +244,8 @@ func (config *DiffCreateTableConfig) diffCreateTableColumn(ddls *DDL, before, af
 			ddls.Stmts = append(ddls.Stmts, &AlterTableStmt{
 				Comment: simplediff.Diff(beforeColumn.String(), afterColumn.String()).String(),
 				Name:    after.Name,
-				Action: &AlterColumn{
-					Name:   afterColumn.Name,
-					Action: &AlterColumnDropNotNull{},
+				Action: &AlterColumnDropNotNull{
+					Name: afterColumn.Name,
 				},
 			})
 		case !beforeColumn.NotNull && afterColumn.NotNull:
@@ -255,9 +253,8 @@ func (config *DiffCreateTableConfig) diffCreateTableColumn(ddls *DDL, before, af
 			ddls.Stmts = append(ddls.Stmts, &AlterTableStmt{
 				Comment: simplediff.Diff(beforeColumn.String(), afterColumn.String()).String(),
 				Name:    after.Name,
-				Action: &AlterColumn{
-					Name:   afterColumn.Name,
-					Action: &AlterColumnSetNotNull{},
+				Action: &AlterColumnSetNotNull{
+					Name: afterColumn.Name,
 				},
 			})
 		}

@@ -237,6 +237,16 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 			wantErr: ddl.ErrUnexpectedToken,
 		},
 		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_ON_INVALID",
+			input:   `CREATE TABLE "users" ("id" VARCHAR(36), ts DATETIME ON`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_ON_UPDATE INVALID",
+			input:   `CREATE TABLE "users" ("id" VARCHAR(36), ts DATETIME ON UPDATE`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_INVALID_DEFAULT",
 			input:   `CREATE TABLE "users" ("id" VARCHAR(36) DEFAULT ("id")`,
 			wantErr: ddl.ErrUnexpectedToken,
@@ -257,8 +267,38 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 			wantErr: ddl.ErrUnexpectedToken,
 		},
 		{
-			name:    "failure,CREATE_TABLE_table_name_column_name_INVALID_REFERENCES_IDENTS",
+			name:    "failure,CREATE_TABLE_table_name_column_name_INVALID_REFERENCES_INVALID",
 			input:   `CREATE TABLE "users" ("id" VARCHAR(36) REFERENCES "groups" (NOT`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_INVALID_REFERENCES_ON_INVALID",
+			input:   `CREATE TABLE "users" ("id" VARCHAR(36) REFERENCES "groups" (id) ON`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_INVALID_REFERENCES_ON_UPDATE_NO_INVALID",
+			input:   `CREATE TABLE "users" ("id" VARCHAR(36) REFERENCES "groups" (id) ON UPDATE NO`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_INVALID_REFERENCES_ON_UPDATE_NO_ACTION_ON_INVALID",
+			input:   `CREATE TABLE "users" ("id" VARCHAR(36) REFERENCES "groups" (id) ON UPDATE NO ACTION ON`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_INVALID_REFERENCES_ON_UPDATE_NO_ACTION_ON_DELETE_INVALID",
+			input:   `CREATE TABLE "users" ("id" VARCHAR(36) REFERENCES "groups" (id) ON UPDATE NO ACTION ON DELETE`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_INVALID_REFERENCES_ON_UPDATE_NO_ACTION_ON_DELETE_INVALID",
+			input:   `CREATE TABLE "users" ("id" VARCHAR(36) REFERENCES "groups" (id) ON UPDATE NO ACTION ON DELETE NO ACTION`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_INVALID_REFERENCESIN_IDENTS",
+			input:   `CREATE TABLE "users" ("id" VARCHAR(36) REFERENCES "groups" (id) ON UPDATE NO ACTION ON DELETE NO`,
 			wantErr: ddl.ErrUnexpectedToken,
 		},
 		{
@@ -324,6 +364,26 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_FOREIGN_KEY_IDENTS_REFERENCES_INVALID_CLOSE_PAREN",
 			input:   `CREATE TABLE "users" ("id" VARCHAR(36), FOREIGN KEY ("group_id") REFERENCES "groups" ("id")`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_FOREIGN_KEY_IDENTS_REFERENCES_ON_INVALID",
+			input:   `CREATE TABLE "users" ("id" VARCHAR(36), FOREIGN KEY ("group_id") REFERENCES "groups" ("id") ON`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_FOREIGN_KEY_IDENTS_REFERENCES_ON_DELETE_NO_ACTION_INVALID",
+			input:   `CREATE TABLE "users" ("id" VARCHAR(36), FOREIGN KEY ("group_id") REFERENCES "groups" ("id") ON DELETE NO ACTION`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_FOREIGN_KEY_IDENTS_REFERENCES_ON_DELETE_NO_ACTION_ON_UPDATE_INVALID",
+			input:   `CREATE TABLE "users" ("id" VARCHAR(36), FOREIGN KEY ("group_id") REFERENCES "groups" ("id") ON DELETE NO ACTION ON UPDATE`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_FOREIGN_KEY_IDENTS_REFERENCES_ON_DELETE_NO_ACTION_ON_UPDATE_NO_ACTION_INVALID",
+			input:   `CREATE TABLE "users" ("id" VARCHAR(36), FOREIGN KEY ("group_id") REFERENCES "groups" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
 			wantErr: ddl.ErrUnexpectedToken,
 		},
 		{
@@ -519,6 +579,19 @@ func TestParser_parseColumn(t *testing.T) {
 		p.nextToken()
 		p.nextToken()
 		_, _, err := p.parseColumn(&Ident{Name: "table_name", QuotationMark: `"`, Raw: `"table_name"`})
+		require.ErrorIs(t, err, ddl.ErrUnexpectedToken)
+	})
+}
+
+func TestParser_parseOnAction(t *testing.T) {
+	t.Parallel()
+
+	t.Run("failure,ON", func(t *testing.T) {
+		t.Parallel()
+		p := NewParser(NewLexer("A ON"))
+		p.nextToken()
+		p.nextToken()
+		_, err := p.parseOnAction()
 		require.ErrorIs(t, err, ddl.ErrUnexpectedToken)
 	})
 }
