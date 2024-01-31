@@ -257,6 +257,7 @@ func (t *ObjectName) StringForDiff() string {
 type Column struct {
 	Name          *Ident
 	DataType      *DataType
+	CharacterSet  *Ident
 	Collate       *Ident
 	Default       *Default
 	NotNull       bool

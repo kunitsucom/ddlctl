@@ -24,14 +24,14 @@ func TestParser_Parse(t *testing.T) {
 	t.Run("success,CREATE_TABLE", func(t *testing.T) {
 		// t.Parallel()
 
-		l := NewLexer("CREATE TABLE `groups` (`group_id` VARCHAR(36) NOT NULL PRIMARY KEY, description TEXT) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci; CREATE TABLE `users` (user_id VARCHAR(36) NOT NULL, group_id VARCHAR(36) NOT NULL REFERENCES `groups` (`group_id`), `name` VARCHAR(255) COLLATE utf8mb4_bin NOT NULL UNIQUE, `age` INT DEFAULT 0 CHECK (`age` >= 0), birthdate DATE, country char(3), description LONGTEXT, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY (`user_id`)) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='user 🙆‍';")
+		l := NewLexer("CREATE TABLE `groups` (`group_id` VARCHAR(36) NOT NULL PRIMARY KEY, description TEXT CHARACTER SET utf8mbb4 COMMENT '備考') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci; CREATE TABLE `users` (user_id VARCHAR(36) NOT NULL, group_id VARCHAR(36) NOT NULL REFERENCES `groups` (`group_id`), `name` VARCHAR(255) COLLATE utf8mb4_bin NOT NULL UNIQUE, `age` INT DEFAULT 0 CHECK (`age` >= 0), birthdate DATE, country char(3), description LONGTEXT CHARACTER SET utf8mbb4 COMMENT '備考', created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY (`user_id`)) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='user 🙆‍';")
 		p := NewParser(l)
 		actual, err := p.Parse()
 		require.NoError(t, err)
 
 		expected := `CREATE TABLE ` + "`" + `groups` + "`" + ` (
     ` + "`" + `group_id` + "`" + ` VARCHAR(36) NOT NULL,
-    description TEXT,
+    description TEXT COMMENT '備考',
     PRIMARY KEY (` + "`" + `group_id` + "`" + `)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 CREATE TABLE ` + "`" + `users` + "`" + ` (
@@ -41,7 +41,7 @@ CREATE TABLE ` + "`" + `users` + "`" + ` (
     ` + "`" + `age` + "`" + ` INT DEFAULT 0,
     birthdate DATE,
     country char(3),
-    description LONGTEXT,
+    description LONGTEXT COMMENT '備考',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (` + "`" + `user_id` + "`" + `),
@@ -199,6 +199,16 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_data_type_INVALID",
 			input:   `CREATE TABLE "users" ("id" VARCHAR(36);`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_data_type_CHARACTER_INVALID",
+			input:   `CREATE TABLE "users" ("id" VARCHAR(36) CHARACTER`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_data_type_CHARACTER_SET_INVALID",
+			input:   `CREATE TABLE "users" ("id" VARCHAR(36) CHARACTER SET`,
 			wantErr: ddl.ErrUnexpectedToken,
 		},
 		{

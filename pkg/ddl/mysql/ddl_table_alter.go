@@ -53,6 +53,9 @@ func (s *AlterTableStmt) String() string {
 		switch ca := a.Action.(type) {
 		case *AlterColumnDataType:
 			str += "MODIFY " + a.Name.String() + " " + ca.DataType.String()
+			if ca.CharacterSet != nil {
+				str += " CHARACTER SET " + ca.CharacterSet.String()
+			}
 			if ca.Collate != nil {
 				str += " COLLATE " + ca.Collate.String()
 			}
@@ -175,6 +178,7 @@ type AlterColumnAction interface {
 // NOTE: https://dev.mysql.com/doc/refman/8.0/ja/alter-table-examples.html
 type AlterColumnDataType struct {
 	DataType      *DataType
+	CharacterSet  *Ident
 	Collate       *Ident
 	NotNull       bool
 	AutoIncrement bool
