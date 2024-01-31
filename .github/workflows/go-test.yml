@@ -49,6 +49,7 @@ env:
   DOCKER_BUILD_CACHE_FROM: /tmp/.docker-build-buildx-cache-from
   DOCKER_BUILD_CACHE_TO: /tmp/.docker-build-buildx-cache-to
   WORKDIR: .
+  COVER: ${{ github.event_name == 'schedule' || github.event.inputs.COVER == 'true' || endsWith(github.event.pull_request.title, '[cover]') }}
 
 defaults:
   run:
@@ -142,13 +143,13 @@ jobs:
           if [ -n "${GITHUB_TOKEN-}" ]; then
             direnv exec . bash -Eeux -o pipefail -c 'echo "${GOPRIVATE:-}${GOPRIVATE+,}" | while read -d , -r LINE; do echo "set git config: ${LINE}"; git config --global url."https://${GITHUB_TOKEN}:x-oauth-basic@${LINE}".insteadOf "https://${LINE}"; done'
           fi
-          if [ "${{ github.event_name == 'schedule' || github.event.inputs.COVER == 'true' }}" = "true" ]; then
+          if [ "${{ env.COVER }}" = "true" ]; then
             direnv exec . make test-cover
           else
             direnv exec . make test
           fi
       - uses: codecov/codecov-action@v3 # ref. https://github.com/codecov/codecov-action#example-workflowyml-with-codecov-action
-        if: github.event_name == 'schedule' || github.event.inputs.COVER == 'true'
+        if: env.COVER
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ${{ env.WORKDIR }}/coverage.txt
