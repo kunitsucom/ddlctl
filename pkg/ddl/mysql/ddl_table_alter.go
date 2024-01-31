@@ -235,3 +235,17 @@ type AlterConstraint struct {
 func (*AlterConstraint) isAlterTableAction() {}
 
 func (s *AlterConstraint) GoString() string { return internal.GoString(*s) }
+
+// AlterTableOption represents ALTER TABLE table_name TABLE_OPTION=option_value.
+type AlterTableOption struct {
+	Name  string
+	Value *Expr
+}
+
+func (*AlterTableOption) isAlterTableAction() {}
+
+func (s *AlterTableOption) GoString() string { return internal.GoString(*s) }
+
+func (s *AlterTableOption) String() string {
+	return s.Name + "=" + s.Value.String()
+}
