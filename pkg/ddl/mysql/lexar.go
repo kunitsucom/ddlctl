@@ -147,7 +147,7 @@ const (
 	TOKEN_IDENT TokenType = "IDENT"
 )
 
-//nolint:funlen,cyclop,gocognit,gocyclo
+//nolint:funlen,cyclop,gocognit,gocyclo,maintidx
 func lookupIdent(ident string) TokenType {
 	token := strings.ToUpper(ident)
 	// MEMO: bash lexar-gen.sh lexar.go | pbcopy

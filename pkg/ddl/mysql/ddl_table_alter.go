@@ -24,7 +24,7 @@ func (s *AlterTableStmt) GetNameForDiff() string {
 	return s.Name.StringForDiff()
 }
 
-//nolint:cyclop,funlen
+//nolint:cyclop,funlen,gocognit
 func (s *AlterTableStmt) String() string {
 	var str string
 	if s.Comment != "" {
