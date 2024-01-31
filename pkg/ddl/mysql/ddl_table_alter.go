@@ -97,6 +97,8 @@ func (s *AlterTableStmt) String() string {
 		} else {
 			str += " INITIALLY IMMEDIATE"
 		}
+	case *AlterTableOption:
+		str += a.String()
 	}
 
 	return str + ";\n"

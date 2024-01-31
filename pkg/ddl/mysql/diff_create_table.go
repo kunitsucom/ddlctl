@@ -32,7 +32,7 @@ func (o *diffCreateTableConfigUseConstraintNotValid) apply(c *DiffCreateTableCon
 	c.UseAlterTableAddConstraintNotValid = o.useAlterTableAddConstraintNotValid
 }
 
-//nolint:funlen,cyclop
+//nolint:funlen,cyclop,gocognit
 func DiffCreateTable(before, after *CreateTableStmt, opts ...DiffCreateTableOption) (*DDL, error) {
 	config := &DiffCreateTableConfig{}
 
@@ -181,6 +181,33 @@ func DiffCreateTable(before, after *CreateTableStmt, opts ...DiffCreateTableOpti
 		}
 	}
 
+	for _, beforeOption := range before.Options {
+		afterOption := findOptionByName(beforeOption.Name, after.Options)
+		if beforeOption.StringForDiff() != afterOption.StringForDiff() {
+			// ALTER TABLE table_name option_name=option_value;
+			result.Stmts = append(result.Stmts, &AlterTableStmt{
+				Comment: simplediff.Diff(beforeOption.String(), afterOption.String()).String(),
+				Name:    after.Name,
+				Action: &AlterTableOption{
+					Name:  afterOption.Name,
+					Value: afterOption.Value,
+				},
+			})
+		}
+	}
+
+	for _, afterOption := range onlyLeftOption(after.Options, before.Options) {
+		// ALTER TABLE table_name option_name=option_value;
+		result.Stmts = append(result.Stmts, &AlterTableStmt{
+			Comment: simplediff.Diff("", afterOption.String()).String(),
+			Name:    after.Name,
+			Action: &AlterTableOption{
+				Name:  afterOption.Name,
+				Value: afterOption.Value,
+			},
+		})
+	}
+
 	if len(result.Stmts) == 0 {
 		return nil, apperr.Errorf("before: %s, after: %s: %w", before.GetNameForDiff(), after.GetNameForDiff(), ddl.ErrNoDifference)
 	}
@@ -309,6 +336,26 @@ func findConstraintByName(name string, constraints []Constraint) Constraint { //
 	for _, constraint := range constraints {
 		if constraint.GetName().Name == name {
 			return constraint
+		}
+	}
+	return nil
+}
+
+func onlyLeftOption(left, right []*Option) []*Option {
+	onlyLeftOptions := make([]*Option, 0)
+	for _, leftOption := range left {
+		foundOptionByRight := findOptionByName(leftOption.Name, right)
+		if foundOptionByRight == nil {
+			onlyLeftOptions = append(onlyLeftOptions, leftOption)
+		}
+	}
+	return onlyLeftOptions
+}
+
+func findOptionByName(name string, columns []*Option) *Option {
+	for _, column := range columns {
+		if column.Name == name {
+			return column
 		}
 	}
 	return nil

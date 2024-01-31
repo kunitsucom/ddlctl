@@ -221,7 +221,7 @@ func TestOption(t *testing.T) {
 	t.Run("success,Option", func(t *testing.T) {
 		t.Parallel()
 
-		option := &Option{Name: "ENGINE", Value: &Ident{Name: "InnoDB", QuotationMark: ``, Raw: `InnoDB`}}
+		option := &Option{Name: "ENGINE", Value: &Expr{[]*Ident{NewRawIdent("InnoDB")}}}
 
 		expected := `ENGINE=InnoDB`
 		actual := option.String()

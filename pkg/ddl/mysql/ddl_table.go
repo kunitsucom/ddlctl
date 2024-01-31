@@ -367,7 +367,7 @@ func (c *Column) GoString() string { return internal.GoString(*c) }
 
 type Option struct {
 	Name  string
-	Value *Ident
+	Value *Expr
 }
 
 func (o *Option) String() string {
@@ -377,4 +377,42 @@ func (o *Option) String() string {
 	return o.Name + "=" + o.Value.String()
 }
 
+func (o *Option) StringForDiff() string {
+	if o.Value == nil {
+		return ""
+	}
+	var str string
+	for i, v := range o.Value.Idents {
+		if i != 0 {
+			str += " "
+		}
+		str += v.StringForDiff()
+	}
+	return o.Name + "=" + str
+}
+
 func (o *Option) GoString() string { return internal.GoString(*o) }
+
+type Options []*Option
+
+func (options Options) String() string {
+	var str string
+	for i, v := range options {
+		if i != 0 {
+			str += " "
+		}
+		str += v.String()
+	}
+	return str
+}
+
+func (options Options) StringForDiff() string {
+	var str string
+	for i, v := range options {
+		if i != 0 {
+			str += " "
+		}
+		str += v.StringForDiff()
+	}
+	return str
+}
