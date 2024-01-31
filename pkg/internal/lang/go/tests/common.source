@@ -54,7 +54,7 @@ type (
 		// ID is a book ID.
 		ID string       `spanddl:"STRING(36)  NOT NULL" pkey:"true"`
 		// Title is a book title.
-		Title string    `spanddl:"STRING(255) NOT NULL"`
+		Title string    `spanddl:"STRING(255) NOT NULL" pkey:"false"`
 	}
 
 	// Store
