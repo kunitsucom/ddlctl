@@ -323,8 +323,8 @@ func (d *Default) StringForDiff() string {
 func (c *Column) String() string {
 	str := c.Name.String() + " " +
 		c.DataType.String()
-	if c.Default != nil { //diff:ignore-line-postgres-cockroach
-		str += " " + c.Default.String() //diff:ignore-line-postgres-cockroach
+	if s := c.Default.String(); s != "" { //diff:ignore-line-postgres-cockroach
+		str += " " + s //diff:ignore-line-postgres-cockroach
 	} //diff:ignore-line-postgres-cockroach
 	if c.NotNull { //diff:ignore-line-postgres-cockroach
 		str += " NOT NULL" //diff:ignore-line-postgres-cockroach

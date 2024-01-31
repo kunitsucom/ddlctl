@@ -31,7 +31,7 @@ func TestParser_Parse(t *testing.T) {
 
 		expected := `CREATE TABLE ` + "`" + `groups` + "`" + ` (
     ` + "`" + `group_id` + "`" + ` VARCHAR(36) NOT NULL,
-    description TEXT COMMENT '備考',
+    description TEXT CHARACTER SET utf8mbb4 COMMENT '備考',
     PRIMARY KEY (` + "`" + `group_id` + "`" + `)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 CREATE TABLE ` + "`" + `users` + "`" + ` (
@@ -41,7 +41,7 @@ CREATE TABLE ` + "`" + `users` + "`" + ` (
     ` + "`" + `age` + "`" + ` INT DEFAULT 0,
     birthdate DATE,
     country char(3),
-    description LONGTEXT COMMENT '備考',
+    description LONGTEXT CHARACTER SET utf8mbb4 COMMENT '備考',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (` + "`" + `user_id` + "`" + `),

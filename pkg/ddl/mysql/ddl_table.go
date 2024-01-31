@@ -339,14 +339,17 @@ func (d *Default) StringForDiff() string {
 
 func (c *Column) String() string {
 	str := c.Name.String() + " " + c.DataType.String()
-	if c.Collate != nil {
-		str += " COLLATE " + c.Collate.String()
+	if s := c.CharacterSet.String(); s != "" {
+		str += " CHARACTER SET " + s
+	}
+	if s := c.Collate.String(); s != "" {
+		str += " COLLATE " + s
 	}
 	if c.NotNull {
 		str += " NOT NULL"
 	}
-	if c.Default != nil {
-		str += " " + c.Default.String()
+	if s := c.Default.String(); s != "" {
+		str += " " + s
 	}
 	if c.AutoIncrement {
 		str += " AUTO_INCREMENT"
