@@ -371,14 +371,14 @@ type Option struct {
 }
 
 func (o *Option) String() string {
-	if o.Value == nil {
+	if o == nil || o.Value == nil {
 		return ""
 	}
 	return o.Name + "=" + o.Value.String()
 }
 
 func (o *Option) StringForDiff() string {
-	if o.Value == nil {
+	if o == nil || o.Value == nil {
 		return ""
 	}
 	var str string

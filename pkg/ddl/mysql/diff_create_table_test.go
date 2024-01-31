@@ -11,15 +11,14 @@ import (
 
 //nolint:paralleltest,tparallel
 func TestDiffCreateTable(t *testing.T) {
-	t.Run("failure,ddl.ErrNoDifference", func(t *testing.T) {
+	t.Run("success,ddl.ErrNoDifference", func(t *testing.T) {
 		t.Parallel()
 
-		before := `CREATE TABLE "users" (id VARCHAR(36) NOT NULL, group_id VARCHAR(36) NOT NULL REFERENCES "groups" ("id"), "name" VARCHAR(255) NOT NULL UNIQUE, description TEXT, PRIMARY KEY ("id"));`
+		before := `CREATE TABLE "users" (id VARCHAR(36) NOT NULL, group_id VARCHAR(36) NOT NULL REFERENCES "groups" ("id"), "name" VARCHAR(255) NOT NULL UNIQUE, description TEXT, PRIMARY KEY ("id")) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='user 🙆‍';`
 		beforeDDL, err := NewParser(NewLexer(before)).Parse()
 		require.NoError(t, err)
 
-		after := `CREATE TABLE "users" (id VARCHAR(36) NOT NULL, group_id VARCHAR(36) NOT NULL REFERENCES "groups" ("id"), "name" VARCHAR(255) NOT NULL UNIQUE, description TEXT, PRIMARY KEY ("id"));`
-
+		after := `CREATE TABLE "users" (id VARCHAR(36) NOT NULL, group_id VARCHAR(36) NOT NULL REFERENCES "groups" ("id"), "name" VARCHAR(255) NOT NULL UNIQUE, description TEXT, PRIMARY KEY ("id")) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='user 🙆‍';`
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
@@ -34,6 +33,37 @@ func TestDiffCreateTable(t *testing.T) {
 
 		t.Logf("✅: %s: actual: %%#v: \n%#v", t.Name(), actual)
 		t.Logf("✅: %s: actual: %%s: \n%s", t.Name(), actual)
+	})
+
+	t.Run("success,Options", func(t *testing.T) {
+		t.Parallel()
+
+		before := `CREATE TABLE "users" (id VARCHAR(36) NOT NULL, group_id VARCHAR(36) NOT NULL REFERENCES "groups" ("id"), "name" VARCHAR(255) NOT NULL UNIQUE, description TEXT, PRIMARY KEY ("id")) ENGINE=InnoDB AUTO_INCREMENT=2 COLLATE=utf8mb4_0900_ai_ci COMMENT='user 🙆‍';`
+		beforeDDL, err := NewParser(NewLexer(before)).Parse()
+		require.NoError(t, err)
+
+		after := `CREATE TABLE "users" (id VARCHAR(36) NOT NULL, group_id VARCHAR(36) NOT NULL REFERENCES "groups" ("id"), "name" VARCHAR(255) NOT NULL UNIQUE, description TEXT, PRIMARY KEY ("id")) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COMMENT='user 🙌';`
+		afterDDL, err := NewParser(NewLexer(after)).Parse()
+		require.NoError(t, err)
+
+		actual, err := DiffCreateTable(
+			beforeDDL.Stmts[0].(*CreateTableStmt),
+			afterDDL.Stmts[0].(*CreateTableStmt),
+			DiffCreateTableUseAlterTableAddConstraintNotValid(false),
+		)
+
+		expectedStr := `-- -COMMENT='user 🙆‍'
+-- +COMMENT='user 🙌'
+ALTER TABLE "users" COMMENT='user 🙌';
+-- -
+-- +DEFAULT CHARSET=utf8mb4
+ALTER TABLE "users" DEFAULT CHARSET=utf8mb4;
+`
+
+		assert.NoError(t, err)
+		assert.Equal(t, expectedStr, actual.String())
+
+		t.Logf("✅: %s: actual: %%#v:\n%#v", t.Name(), actual)
 	})
 
 	t.Run("success,ADD_COLUMN", func(t *testing.T) {
