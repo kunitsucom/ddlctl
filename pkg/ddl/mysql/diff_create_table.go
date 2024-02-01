@@ -182,6 +182,8 @@ func DiffCreateTable(before, after *CreateTableStmt, opts ...DiffCreateTableOpti
 		}
 	}
 
+	// TODO: OPTION cannot be deleted?
+
 	for _, beforeOption := range before.Options {
 		if strings.ToUpper(beforeOption.Name) == "AUTO_INCREMENT" {
 			// skip AUTO_INCREMENT
