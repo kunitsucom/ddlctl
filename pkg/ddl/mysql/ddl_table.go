@@ -408,7 +408,15 @@ func (options Options) String() string {
 
 func (options Options) StringForDiff() string {
 	var str string
-	for i, v := range options {
+
+	// NOTE: Maybe unnecessary?
+	opts := make(Options, len(options))
+	copy(opts, options)
+	sort.Slice(options, func(left, right int) bool {
+		return opts[left].Name < opts[right].Name
+	})
+
+	for i, v := range opts {
 		if i != 0 {
 			str += " "
 		}
