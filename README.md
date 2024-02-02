@@ -16,7 +16,7 @@
 
 ## Demo
 
-![ddlctl_demo](https://github.com/kunitsucom/ddlctl/assets/29125616/2ff6bd76-037e-4695-aef1-5ca87a528e07)
+![ddlctl_demo](https://github.com/kunitsucom/ddlctl/assets/29125616/c7a59aaf-4c13-4c8e-998b-cd42a1f956d5)
 
 ## Overview
 
