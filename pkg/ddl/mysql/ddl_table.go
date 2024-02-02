@@ -347,6 +347,8 @@ func (c *Column) String() string {
 	}
 	if c.NotNull {
 		str += " NOT NULL"
+	} else {
+		str += " NULL"
 	}
 	if s := c.Default.String(); s != "" {
 		str += " " + s

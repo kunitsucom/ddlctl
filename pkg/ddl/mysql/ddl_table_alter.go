@@ -59,6 +59,8 @@ func (s *AlterTableStmt) String() string {
 		}
 		if a.NotNull {
 			str += " NOT NULL"
+		} else {
+			str += " NULL"
 		}
 		if a.AutoIncrement {
 			str += " AUTO_INCREMENT"

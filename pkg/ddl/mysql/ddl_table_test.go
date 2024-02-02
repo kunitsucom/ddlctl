@@ -207,7 +207,7 @@ func TestColumn(t *testing.T) {
 			DataType: &DataType{Name: "INTEGER"},
 		}
 
-		expected := `"id" INTEGER`
+		expected := `"id" INTEGER NULL`
 		actual := column.String()
 		require.Equal(t, expected, actual)
 
