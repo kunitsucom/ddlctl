@@ -331,13 +331,15 @@ done
 ### pre-built binary
 
 ```bash
-VERSION=v0.0.8
+LATEST_VERSION=$(curl -ILSs https://github.com/kunitsucom/ddlctl/releases/latest | tr -d '\r' | awk -F'/tag/' '/location/ { print $2 }') && echo "${LATEST_VERSION}"
+OS=$(uname | tr '[:upper:]' '[:lower:]') && echo "${OS}"
+ARCH=$(uname -m) && echo "${ARCH}"
 
 # download
-curl -fLROSs https://github.com/kunitsucom/ddlctl/releases/download/${VERSION}/ddlctl_${VERSION}_darwin_arm64.zip
+curl -fLROSs "https://github.com/kunitsucom/ddlctl/releases/download/${LATEST_VERSION}/ddlctl_${LATEST_VERSION}_${OS}_${ARCH}.zip"
 
 # unzip
-unzip -j ddlctl_${VERSION}_darwin_arm64.zip '*/ddlctl'
+unzip -j ddlctl_${LATEST_VERSION}_darwin_arm64.zip '*/ddlctl'
 ```
 
 ### go install
