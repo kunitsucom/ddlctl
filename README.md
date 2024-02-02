@@ -345,7 +345,7 @@ unzip -j ddlctl_${LATEST_VERSION}_darwin_arm64.zip '*/ddlctl'
 ### go install
 
 ```bash
-go install github.com/kunitsucom/ddlctl/cmd/ddlctl@v0.0.8
+go install github.com/kunitsucom/ddlctl/cmd/ddlctl@latest
 ```
 
 ## Usage
