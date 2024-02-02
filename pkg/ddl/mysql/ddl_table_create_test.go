@@ -28,8 +28,8 @@ func TestCreateTableStmt_String(t *testing.T) {
 		}
 		expected := `-- test comment content
 CREATE TABLE test (
-    id INTEGER,
-    name VARYING(255)
+    id INTEGER NULL,
+    name VARYING(255) NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 `
 

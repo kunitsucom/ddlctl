@@ -31,17 +31,17 @@ func TestParser_Parse(t *testing.T) {
 
 		expected := `CREATE TABLE ` + "`" + `groups` + "`" + ` (
     ` + "`" + `group_id` + "`" + ` VARCHAR(36) NOT NULL,
-    description TEXT CHARACTER SET utf8mbb4 COMMENT '備考',
+    description TEXT CHARACTER SET utf8mbb4 NULL COMMENT '備考',
     PRIMARY KEY (` + "`" + `group_id` + "`" + `)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 CREATE TABLE ` + "`" + `users` + "`" + ` (
     user_id VARCHAR(36) NOT NULL,
     group_id VARCHAR(36) NOT NULL,
     ` + "`" + `name` + "`" + ` VARCHAR(255) COLLATE utf8mb4_bin NOT NULL,
-    ` + "`" + `age` + "`" + ` INT DEFAULT 0,
-    birthdate DATE,
-    country char(3),
-    description LONGTEXT CHARACTER SET utf8mbb4 COMMENT '備考',
+    ` + "`" + `age` + "`" + ` INT NULL DEFAULT 0,
+    birthdate DATE NULL,
+    country char(3) NULL,
+    description LONGTEXT CHARACTER SET utf8mbb4 NULL COMMENT '備考',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (` + "`" + `user_id` + "`" + `),
@@ -84,13 +84,13 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 		expected := `CREATE TABLE IF NOT EXISTS complex_defaults (
     id INT NOT NULL,
     name VARCHAR(255) NOT NULL,
-    age INT DEFAULT 25,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status ENUM('Active', 'Inactive') DEFAULT 'Active',
-    salary DECIMAL(10, 2) DEFAULT (10000 + 1),
-    random_number INTEGER DEFAULT (FLOOR(RAND() * 100)),
-    notes VARCHAR(1024) DEFAULT 'This is a note for ',
-    is_admin TINYINT(1) DEFAULT false,
+    age INT NULL DEFAULT 25,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('Active', 'Inactive') NULL DEFAULT 'Active',
+    salary DECIMAL(10, 2) NULL DEFAULT (10000 + 1),
+    random_number INTEGER NULL DEFAULT (FLOOR(RAND() * 100)),
+    notes VARCHAR(1024) NULL DEFAULT 'This is a note for ',
+    is_admin TINYINT(1) NULL DEFAULT false,
     PRIMARY KEY (id),
     KEY complex_defaults_idx_on_name (name),
     CONSTRAINT users_age_check CHECK ((age >= 0))

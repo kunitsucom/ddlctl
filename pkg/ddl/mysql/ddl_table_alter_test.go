@@ -94,7 +94,7 @@ func TestAlterTableStmt_String(t *testing.T) {
 			},
 		}
 
-		expected := `ALTER TABLE "users" ADD COLUMN "age" INTEGER;` + "\n"
+		expected := `ALTER TABLE "users" ADD COLUMN "age" INTEGER NULL;` + "\n"
 		actual := stmt.String()
 
 		if !assert.Equal(t, expected, actual) {
@@ -143,7 +143,7 @@ func TestAlterTableStmt_String(t *testing.T) {
 			},
 		}
 
-		expected := `ALTER TABLE "users" MODIFY "description" TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT 'my comment';` + "\n"
+		expected := `ALTER TABLE "users" MODIFY "description" TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT 'my comment';` + "\n"
 		actual := stmt.String()
 
 		if !assert.Equal(t, expected, actual) {

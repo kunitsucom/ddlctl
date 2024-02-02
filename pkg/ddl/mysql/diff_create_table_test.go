@@ -154,11 +154,11 @@ ALTER TABLE "users" DROP COLUMN "age";
 		expectedStr := `-- -"name" VARCHAR(255) NOT NULL
 -- +"name" TEXT NOT NULL
 ALTER TABLE "users" MODIFY "name" TEXT NOT NULL;
--- -"age" INT DEFAULT 0
--- +"age" BIGINT DEFAULT 0
-ALTER TABLE "users" MODIFY "age" BIGINT;
--- -"age" INT DEFAULT 0
--- +"age" BIGINT DEFAULT 0
+-- -"age" INT NULL DEFAULT 0
+-- +"age" BIGINT NULL DEFAULT 0
+ALTER TABLE "users" MODIFY "age" BIGINT NULL;
+-- -"age" INT NULL DEFAULT 0
+-- +"age" BIGINT NULL DEFAULT 0
 ALTER TABLE "users" ALTER "age" SET DEFAULT 0;
 -- -
 -- +UNIQUE KEY users_unique_name (name)
@@ -180,8 +180,8 @@ CREATE UNIQUE INDEX users_unique_name ON "users" ("name");
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
-		expectedStr := `-- -"age" INT DEFAULT 0
--- +"age" INT
+		expectedStr := `-- -"age" INT NULL DEFAULT 0
+-- +"age" INT NULL
 ALTER TABLE "users" ALTER "age" DROP DEFAULT;
 `
 
@@ -205,8 +205,8 @@ ALTER TABLE "users" ALTER "age" DROP DEFAULT;
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
-		expectedStr := `-- -"age" INT
--- +"age" INT DEFAULT 0
+		expectedStr := `-- -"age" INT NULL
+-- +"age" INT NULL DEFAULT 0
 ALTER TABLE "users" ALTER "age" SET DEFAULT 0;
 -- -CONSTRAINT users_age_check CHECK ("age" >= 0)
 -- +
@@ -284,10 +284,10 @@ ALTER TABLE "public.app_users" ADD CONSTRAINT app_users_age_check CHECK ("age" >
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
-		expectedStr := `-- -"age" INT DEFAULT 0
+		expectedStr := `-- -"age" INT NULL DEFAULT 0
 -- +"age" INTEGER NOT NULL DEFAULT 0
 ALTER TABLE "users" MODIFY "age" INTEGER NOT NULL;
--- -"age" INT DEFAULT 0
+-- -"age" INT NULL DEFAULT 0
 -- +"age" INTEGER NOT NULL DEFAULT 0
 ALTER TABLE "users" ALTER "age" SET DEFAULT 0;
 `
@@ -315,10 +315,10 @@ ALTER TABLE "users" ALTER "age" SET DEFAULT 0;
 		require.NoError(t, err)
 
 		expectedStr := `-- -"age" INT NOT NULL DEFAULT 0
--- +"age" INT DEFAULT 0
-ALTER TABLE "users" MODIFY "age" INT;
+-- +"age" INT NULL DEFAULT 0
+ALTER TABLE "users" MODIFY "age" INT NULL;
 -- -"age" INT NOT NULL DEFAULT 0
--- +"age" INT DEFAULT 0
+-- +"age" INT NULL DEFAULT 0
 ALTER TABLE "users" ALTER "age" SET DEFAULT 0;
 `
 
@@ -522,15 +522,15 @@ ALTER TABLE "users" ADD CONSTRAINT users_age_check CHECK ("age" >= 0) NOT VALID;
 	t.Run("success,CREATE_TABLE", func(t *testing.T) {
 		t.Parallel()
 
-		afterDDL, err := NewParser(NewLexer(`CREATE TABLE "users" (id VARCHAR(36) NOT NULL, group_id VARCHAR(36) NOT NULL REFERENCES "groups" ("id"), "name" VARCHAR(255) NOT NULL UNIQUE, "age" INT DEFAULT 0 CHECK ("age" >= 0), description TEXT, PRIMARY KEY ("id"));`)).Parse()
+		afterDDL, err := NewParser(NewLexer(`CREATE TABLE "users" (id VARCHAR(36) NOT NULL, group_id VARCHAR(36) NOT NULL REFERENCES "groups" ("id"), "name" VARCHAR(255) NOT NULL UNIQUE, "age" INT NULL DEFAULT 0 CHECK ("age" >= 0), description TEXT NULL, PRIMARY KEY ("id"));`)).Parse()
 		require.NoError(t, err)
 
 		expected := `CREATE TABLE "users" (
     id VARCHAR(36) NOT NULL,
     group_id VARCHAR(36) NOT NULL,
     "name" VARCHAR(255) NOT NULL,
-    "age" INT DEFAULT 0,
-    description TEXT,
+    "age" INT NULL DEFAULT 0,
+    description TEXT NULL,
     PRIMARY KEY ("id"),
     CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id) REFERENCES "groups" ("id"),
     UNIQUE KEY users_unique_name ("name"),
