@@ -23,12 +23,12 @@ const (
 	EnvKeyAutoApprove = "DDLCTL_AUTO_APPROVE"
 
 	// Golang
-	OptionColumnTagGo = "column-tag-go"
-	EnvKeyColumnTagGo = "DDLCTL_COLUMN_TAG_GO"
+	OptionGoColumnTag = "go-column-tag"
+	EnvKeyGoColumnTag = "DDLCTL_GO_COLUMN_TAG"
 
-	OptionDDLTagGo = "ddl-tag-go"
-	EnvKeyDDLTagGo = "DDLCTL_DDL_TAG_GO"
+	OptionGoDDLTag = "go-ddl-tag"
+	EnvKeyGoDDLTag = "DDLCTL_GO_DDL_TAG"
 
-	OptionPKTagGo = "pk-tag-go"
-	EnvKeyPKTagGo = "DDLCTL_PK_TAG_GO"
+	OptionGoPKTag = "go-pk-tag"
+	EnvKeyGoPKTag = "DDLCTL_GO_PK_TAG"
 )

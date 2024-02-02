@@ -9,7 +9,7 @@ import (
 )
 
 func loadDDLTagGo(_ context.Context, cmd *cliz.Command) string {
-	v, _ := cmd.GetOptionString(consts.OptionDDLTagGo)
+	v, _ := cmd.GetOptionString(consts.OptionGoDDLTag)
 	return v
 }
 

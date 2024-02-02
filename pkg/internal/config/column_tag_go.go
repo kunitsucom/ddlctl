@@ -9,7 +9,7 @@ import (
 )
 
 func loadColumnTagGo(_ context.Context, cmd *cliz.Command) string {
-	v, _ := cmd.GetOptionString(consts.OptionColumnTagGo)
+	v, _ := cmd.GetOptionString(consts.OptionGoColumnTag)
 	return v
 }
 
