@@ -19,7 +19,7 @@ type ddlSource struct {
 	Position token.Position
 	// TypeSpec is used to guess the table name if the CREATE TABLE annotation is not found.
 	TypeSpec *goast.TypeSpec
-	// StructType is used to determine the column name. If the tag specified by --column-tag-go is not found, the field name is used.
+	// StructType is used to determine the column name. If the tag specified by --go-column-tag is not found, the field name is used.
 	StructType   *goast.StructType
 	CommentGroup *goast.CommentGroup
 }
@@ -83,7 +83,7 @@ func extractDDLSourceFromDDLTagGo(_ context.Context, fset *token.FileSet, f *goa
 	}
 
 	if len(ddlSrc) == 0 {
-		return nil, apperr.Errorf("ddl-tag-go=%s: %w", config.DDLTagGo(), apperr.ErrDDLTagGoAnnotationNotFoundInSource)
+		return nil, apperr.Errorf("go-ddl-tag=%s: %w", config.DDLTagGo(), apperr.ErrDDLTagGoAnnotationNotFoundInSource)
 	}
 
 	return ddlSrc, nil

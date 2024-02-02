@@ -9,7 +9,7 @@ var (
 	ErrNotSupported                       = errors.New("not supported")
 	ErrCanceled                           = errors.New("canceled")
 	ErrDialectIsEmpty                     = errors.New("dialect is empty")
-	ErrDDLTagGoAnnotationNotFoundInSource = errors.New("ddl-tag-go annotation not found in source")
+	ErrDDLTagGoAnnotationNotFoundInSource = errors.New("go-ddl-tag annotation not found in source")
 	ErrTwoArgumentsRequired               = errors.New("two arguments required")
 	ErrBothArgumentsIsDSN                 = errors.New("both arguments is dsn")
 	ErrBothArgumentsAreNotDSNOrSQLFile    = errors.New("both arguments are not dsn or sql file")

@@ -23,20 +23,20 @@ func Cmd() *cliz.Command {
 			},
 			// Golang
 			&cliz.StringOption{
-				Name:        consts.OptionColumnTagGo,
-				Environment: consts.EnvKeyColumnTagGo,
+				Name:        consts.OptionGoColumnTag,
+				Environment: consts.EnvKeyGoColumnTag,
 				Description: "column annotation key for Go struct tag",
 				Default:     cliz.Default("db"),
 			},
 			&cliz.StringOption{
-				Name:        consts.OptionDDLTagGo,
-				Environment: consts.EnvKeyDDLTagGo,
+				Name:        consts.OptionGoDDLTag,
+				Environment: consts.EnvKeyGoDDLTag,
 				Description: "DDL annotation key for Go struct tag",
 				Default:     cliz.Default("ddlctl"),
 			},
 			&cliz.StringOption{
-				Name:        consts.OptionPKTagGo,
-				Environment: consts.EnvKeyPKTagGo,
+				Name:        consts.OptionGoPKTag,
+				Environment: consts.EnvKeyGoPKTag,
 				Description: "primary key annotation key for Go struct tag",
 				Default:     cliz.Default("pk"),
 			},

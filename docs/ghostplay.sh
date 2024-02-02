@@ -35,7 +35,7 @@ ghostplay_custom_prompt
 
 
 # Generate DDL
-ddlctl generate --dialect postgres --column-tag-go db --ddl-tag-go pgddl --pk-tag-go pk --src /tmp/sample.go --dst /tmp/sample.sql
+ddlctl generate --dialect postgres --go-column-tag db --go-ddl-tag pgddl --go-pk-tag pk --src /tmp/sample.go --dst /tmp/sample.sql
 
 #ghostplay silent
 sleep 2

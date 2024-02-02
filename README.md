@@ -125,7 +125,7 @@ EOF
 Please execute the ddlctl command as follows:  
 
 ```console
-$ ddlctl generate --dialect postgres --column-tag-go db --ddl-tag-go pgddl --pk-tag-go pk --src /tmp/sample.go --dst /tmp/sample.sql
+$ ddlctl generate --dialect postgres --go-column-tag db --go-ddl-tag pgddl --go-pk-tag pk --src /tmp/sample.go --dst /tmp/sample.sql
 INFO: 2023/11/16 16:10:39 ddlctl.go:44: source: /tmp/sample.go
 INFO: 2023/11/16 16:10:39 ddlctl.go:73: destination: /tmp/sample.sql
 ```
@@ -391,11 +391,11 @@ options:
         programming language to generate DDL
     --dialect (env: DDLCTL_DIALECT, default: )
         SQL dialect to generate DDL
-    --column-tag-go (env: DDLCTL_COLUMN_TAG_GO, default: db)
+    --go-column-tag (env: DDLCTL_COLUMN_TAG_GO, default: db)
         column annotation key for Go struct tag
-    --ddl-tag-go (env: DDLCTL_DDL_TAG_GO, default: ddlctl)
+    --go-ddl-tag (env: DDLCTL_DDL_TAG_GO, default: ddlctl)
         DDL annotation key for Go struct tag
-    --pk-tag-go (env: DDLCTL_PK_TAG_GO, default: pk)
+    --go-pk-tag (env: DDLCTL_PK_TAG_GO, default: pk)
         primary key annotation key for Go struct tag
     --src (env: DDLCTL_SOURCE, default: /dev/stdin)
         source file or directory
@@ -437,11 +437,11 @@ options:
         programming language to generate DDL
     --dialect (env: DDLCTL_DIALECT, default: )
         SQL dialect to generate DDL
-    --column-tag-go (env: DDLCTL_COLUMN_TAG_GO, default: db)
+    --go-column-tag (env: DDLCTL_COLUMN_TAG_GO, default: db)
         column annotation key for Go struct tag
-    --ddl-tag-go (env: DDLCTL_DDL_TAG_GO, default: ddlctl)
+    --go-ddl-tag (env: DDLCTL_DDL_TAG_GO, default: ddlctl)
         DDL annotation key for Go struct tag
-    --pk-tag-go (env: DDLCTL_PK_TAG_GO, default: pk)
+    --go-pk-tag (env: DDLCTL_PK_TAG_GO, default: pk)
         primary key annotation key for Go struct tag
     --help (default: false)
         show usage
@@ -462,11 +462,11 @@ options:
         programming language to generate DDL
     --dialect (env: DDLCTL_DIALECT, default: )
         SQL dialect to generate DDL
-    --column-tag-go (env: DDLCTL_COLUMN_TAG_GO, default: db)
+    --go-column-tag (env: DDLCTL_COLUMN_TAG_GO, default: db)
         column annotation key for Go struct tag
-    --ddl-tag-go (env: DDLCTL_DDL_TAG_GO, default: ddlctl)
+    --go-ddl-tag (env: DDLCTL_DDL_TAG_GO, default: ddlctl)
         DDL annotation key for Go struct tag
-    --pk-tag-go (env: DDLCTL_PK_TAG_GO, default: pk)
+    --go-pk-tag (env: DDLCTL_PK_TAG_GO, default: pk)
         primary key annotation key for Go struct tag
     --auto-approve (env: DDLCTL_AUTO_APPROVE, default: false)
         auto approve
