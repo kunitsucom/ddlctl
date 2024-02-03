@@ -7,8 +7,11 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	sqlz "github.com/kunitsucom/util.go/database/sql"
+	errorz "github.com/kunitsucom/util.go/errors"
+	"github.com/kunitsucom/util.go/retry"
 	stringz "github.com/kunitsucom/util.go/strings"
 
 	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
@@ -18,9 +21,10 @@ import (
 	spanddl "github.com/kunitsucom/ddlctl/pkg/ddl/spanner"
 	"github.com/kunitsucom/ddlctl/pkg/internal/config"
 	"github.com/kunitsucom/ddlctl/pkg/internal/consts"
+	"github.com/kunitsucom/ddlctl/pkg/internal/logs"
 )
 
-//nolint:cyclop,funlen,gocognit
+//nolint:cyclop,funlen,gocognit,gocyclo
 func Apply(ctx context.Context, args []string) (err error) {
 	if _, err := config.Load(ctx); err != nil {
 		return apperr.Errorf("config.Load: %w", err)
@@ -105,15 +109,37 @@ Enter a value: `
 
 	switch driverName {
 	case myddl.DriverName:
-		for _, q := range strings.Split(q, ";\n") {
-			if len(q) == 0 {
-				// skip empty query
-				continue
+		ddls := strings.Split(q, ";\n")
+		retryer := retry.New(retry.NewConfig(time.Second, time.Second, retry.WithMaxRetries(len(ddls))))
+		if err := retryer.Do(ctx, func(ctx context.Context) error {
+			var outerErr error
+			for _, q := range ddls {
+				if len(q) == 0 {
+					// skip empty query
+					continue
+				}
+				if _, err := db.ExecContext(ctx, q); err != nil {
+					// not error, not log, go next ddl
+					if errorz.Contains(err, "already exists") || errorz.Contains(err, "Duplicate column name") {
+						continue
+					}
+					outerErr = err
+					// error, but not log, go next ddl
+					if errorz.Contains(err, "Cannot add foreign key constraint") {
+						continue
+					}
+					// error and log, go next ddl
+					logs.Warn.Printf("db.ExecContext: %v", err)
+				}
 			}
-			if _, err := db.ExecContext(ctx, q); err != nil {
-				return apperr.Errorf("conn.ExecContext: %w", err)
+			if outerErr != nil {
+				return apperr.Errorf("db.ExecContext: %w", err)
 			}
+			return nil
+		}); err != nil {
+			return apperr.Errorf("retry.Do: %w", err)
 		}
+
 	case spanddl.DriverName:
 		conn, err := db.Conn(ctx)
 		if err != nil {
