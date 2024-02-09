@@ -102,7 +102,7 @@ Enter a value: `
 		return apperr.Errorf("sqlz.OpenContext: %w", err)
 	}
 	defer func() {
-		if cerr := db.Close(); err == nil && cerr != nil {
+		if cerr := db.Close(); cerr != nil && err == nil {
 			err = apperr.Errorf("db.Close: %w", cerr)
 		}
 	}()
