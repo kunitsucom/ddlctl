@@ -34,6 +34,7 @@ defaults:
 jobs:
   go-mod-tidy: # NOTE: for Branch protection rule `Status checks that are required.`
     name: Run go mod tidy
+    if: github.actor != 'dependabot[bot]'
     permissions:
       id-token: write
       contents: write

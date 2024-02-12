@@ -77,7 +77,7 @@ func fprintCreateTable(buf *string, indent string, stmt *ddlast.CreateTableStmt)
 
 func fprintCreateTableColumn(buf *string, indent string, columns []*ddlast.CreateTableColumn, tailComma bool) {
 	columnNameMaxLength := 0
-	slicez.Each(columns, func(index int, elem *ddlast.CreateTableColumn) {
+	slicez.Each(columns, func(_ int, elem *ddlast.CreateTableColumn) {
 		if columnLength := len(elem.ColumnName); columnLength > columnNameMaxLength {
 			columnNameMaxLength = columnLength
 		}

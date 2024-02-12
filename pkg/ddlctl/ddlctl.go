@@ -63,7 +63,7 @@ func DDLCtl(ctx context.Context) error {
 				Name:        "version",
 				Usage:       "ddlctl version",
 				Description: "show version",
-				RunFunc: func(ctx context.Context, args []string) error {
+				RunFunc: func(_ context.Context, _ []string) error {
 					fmt.Printf("version: %s\n", version.Version())           //nolint:forbidigo
 					fmt.Printf("revision: %s\n", version.Revision())         //nolint:forbidigo
 					fmt.Printf("build branch: %s\n", version.Branch())       //nolint:forbidigo
@@ -135,7 +135,7 @@ func DDLCtl(ctx context.Context) error {
 				Default:     cliz.Default(false),
 			},
 		},
-		RunFunc: func(ctx context.Context, args []string) error {
+		RunFunc: func(ctx context.Context, _ []string) error {
 			cmd, err := cliz.FromContext(ctx)
 			if err != nil {
 				return apperr.Errorf("cliz.FromContext: %w", err)

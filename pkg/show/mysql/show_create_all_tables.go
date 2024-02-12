@@ -52,7 +52,7 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 	}
 
 	tableNames := new([]*TableName)
-	tableNamesQuery := fmt.Sprintf("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = %s", databaseQuoted)
+	tableNamesQuery := "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = " + databaseQuoted
 	if err := dbz.QueryContext(ctx, tableNames, tableNamesQuery); err != nil {
 		return "", apperr.Errorf("dbz.QueryContext: q=%s: %w", tableNamesQuery, err)
 	}

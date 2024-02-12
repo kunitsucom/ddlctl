@@ -28,7 +28,7 @@ func (constraints Constraints) Append(constraint Constraint) Constraints {
 	}
 	constraints = append(constraints, constraint)
 
-	sort.Slice(constraints, func(left, right int) bool {
+	sort.Slice(constraints, func(left, _ int) bool {
 		_, leftIsPrimaryKeyConstraint := constraints[left].(*PrimaryKeyConstraint)
 		switch {
 		case leftIsPrimaryKeyConstraint:
