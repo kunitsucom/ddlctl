@@ -49,7 +49,7 @@ func (s *AlterTableStmt) String() string {
 		str += "ADD COLUMN " + a.Column.String()
 	case *DropColumn:
 		str += "DROP COLUMN " + a.Name.String()
-	case *AlterColumnDataType:
+	case *ModifyColumn:
 		str += "MODIFY " + a.Name.String() + " " + a.DataType.String()
 		if a.CharacterSet != nil {
 			str += " CHARACTER SET " + a.CharacterSet.String()
@@ -65,14 +65,15 @@ func (s *AlterTableStmt) String() string {
 		if a.AutoIncrement {
 			str += " AUTO_INCREMENT"
 		}
+		if a.Default != nil {
+			str += " " + a.Default.String()
+		}
 		if a.OnAction != "" {
 			str += " " + a.OnAction
 		}
 		if a.Comment != "" {
 			str += " COMMENT " + a.Comment
 		}
-	case *AlterColumnSetDefault:
-		str += "ALTER " + a.Name.String() + " " + "SET " + a.Default.String()
 	case *AlterColumnDropDefault:
 		str += "ALTER " + a.Name.String() + " " + "DROP DEFAULT"
 	case *AddConstraint:
@@ -160,32 +161,23 @@ func (*DropColumn) isAlterTableAction() {}
 
 func (s *DropColumn) GoString() string { return internal.GoString(*s) }
 
-// AlterColumnDataType represents ALTER TABLE table_name MODIFY column_name data_type NOT NULL.
+// ModifyColumn represents ALTER TABLE table_name MODIFY column_name data_type NOT NULL.
 // NOTE: https://dev.mysql.com/doc/refman/8.0/ja/alter-table-examples.html
-type AlterColumnDataType struct {
+type ModifyColumn struct {
 	Name          *Ident
 	DataType      *DataType
 	CharacterSet  *Ident
 	Collate       *Ident
 	NotNull       bool
 	AutoIncrement bool
+	Default       *Default
 	OnAction      string
 	Comment       string
 }
 
-func (*AlterColumnDataType) isAlterTableAction() {}
+func (*ModifyColumn) isAlterTableAction() {}
 
-func (s *AlterColumnDataType) GoString() string { return internal.GoString(*s) }
-
-// AlterColumnSetDefault represents ALTER TABLE table_name ALTER COLUMN column_name SET DEFAULT.
-type AlterColumnSetDefault struct {
-	Name    *Ident
-	Default *Default
-}
-
-func (*AlterColumnSetDefault) isAlterTableAction() {}
-
-func (s *AlterColumnSetDefault) GoString() string { return internal.GoString(*s) }
+func (s *ModifyColumn) GoString() string { return internal.GoString(*s) }
 
 // AlterColumnDropDefault represents ALTER TABLE table_name ALTER COLUMN column_name DROP DEFAULT.
 type AlterColumnDropDefault struct {

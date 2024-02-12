@@ -156,10 +156,7 @@ ALTER TABLE "users" DROP COLUMN "age";
 ALTER TABLE "users" MODIFY "name" TEXT NOT NULL;
 -- -"age" INT NULL DEFAULT 0
 -- +"age" BIGINT NULL DEFAULT 0
-ALTER TABLE "users" MODIFY "age" BIGINT NULL;
--- -"age" INT NULL DEFAULT 0
--- +"age" BIGINT NULL DEFAULT 0
-ALTER TABLE "users" ALTER "age" SET DEFAULT 0;
+ALTER TABLE "users" MODIFY "age" BIGINT NULL DEFAULT 0;
 -- -
 -- +UNIQUE KEY users_unique_name (name)
 CREATE UNIQUE INDEX users_unique_name ON "users" ("name");
@@ -207,7 +204,7 @@ ALTER TABLE "users" ALTER "age" DROP DEFAULT;
 
 		expectedStr := `-- -"age" INT NULL
 -- +"age" INT NULL DEFAULT 0
-ALTER TABLE "users" ALTER "age" SET DEFAULT 0;
+ALTER TABLE "users" MODIFY "age" INT NULL DEFAULT 0;
 -- -CONSTRAINT users_age_check CHECK ("age" >= 0)
 -- +
 ALTER TABLE "users" DROP CONSTRAINT users_age_check;
@@ -286,10 +283,7 @@ ALTER TABLE "public.app_users" ADD CONSTRAINT app_users_age_check CHECK ("age" >
 
 		expectedStr := `-- -"age" INT NULL DEFAULT 0
 -- +"age" INTEGER NOT NULL DEFAULT 0
-ALTER TABLE "users" MODIFY "age" INTEGER NOT NULL;
--- -"age" INT NULL DEFAULT 0
--- +"age" INTEGER NOT NULL DEFAULT 0
-ALTER TABLE "users" ALTER "age" SET DEFAULT 0;
+ALTER TABLE "users" MODIFY "age" INTEGER NOT NULL DEFAULT 0;
 `
 
 		actual, err := DiffCreateTable(
@@ -316,10 +310,7 @@ ALTER TABLE "users" ALTER "age" SET DEFAULT 0;
 
 		expectedStr := `-- -"age" INT NOT NULL DEFAULT 0
 -- +"age" INT NULL DEFAULT 0
-ALTER TABLE "users" MODIFY "age" INT NULL;
--- -"age" INT NOT NULL DEFAULT 0
--- +"age" INT NULL DEFAULT 0
-ALTER TABLE "users" ALTER "age" SET DEFAULT 0;
+ALTER TABLE "users" MODIFY "age" INT NULL DEFAULT 0;
 `
 
 		actual, err := DiffCreateTable(
@@ -432,7 +423,7 @@ CREATE UNIQUE INDEX users_unique_name ON "users" ("id", name);
 
 		expectedStr := `-- -"age" INT NOT NULL DEFAULT 0
 -- +"age" INT NOT NULL DEFAULT ((0 + 3) - 1 * 4 / 2)
-ALTER TABLE "users" ALTER "age" SET DEFAULT ((0 + 3) - 1 * 4 / 2);
+ALTER TABLE "users" MODIFY "age" INT NOT NULL DEFAULT ((0 + 3) - 1 * 4 / 2);
 `
 
 		actual, err := DiffCreateTable(
