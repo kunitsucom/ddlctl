@@ -528,7 +528,7 @@ func (p *Parser) parseTableConstraint(tableName *Ident) (Constraint, error) { //
 			return nil, apperr.Errorf("parseColumnIdents: %w", err)
 		}
 		if constraintName == nil {
-			constraintName = NewRawIdent(tableName.StringForDiff() + "%s_pkey")
+			constraintName = NewRawIdent(tableName.StringForDiff() + "_pkey")
 		}
 		return &PrimaryKeyConstraint{
 			Name:    constraintName,
@@ -583,7 +583,7 @@ func (p *Parser) parseTableConstraint(tableName *Ident) (Constraint, error) { //
 		if constraintName == nil {
 			name := tableName.StringForDiff()
 			for _, ident := range idents {
-				name += fmt.Sprintf("_%s", ident.StringForDiff())
+				name += "_" + ident.StringForDiff()
 			}
 			name += "_fkey"
 			constraintName = NewRawIdent(name)

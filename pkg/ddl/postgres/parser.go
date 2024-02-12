@@ -426,7 +426,7 @@ LabelConstraints:
 			}
 			p.nextToken() // current = KEY
 			constraints = constraints.Append(&PrimaryKeyConstraint{
-				Name:    NewRawIdent(fmt.Sprintf("%s_pkey", tableName.StringForDiff())),
+				Name:    NewRawIdent(tableName.StringForDiff() + "_pkey"),
 				Columns: []*ColumnIdent{{Ident: column.Name}},
 			})
 		case TOKEN_REFERENCES:
@@ -527,7 +527,7 @@ func (p *Parser) parseTableConstraint(tableName *Ident) (Constraint, error) { //
 			return nil, apperr.Errorf("parseColumnIdents: %w", err)
 		}
 		if constraintName == nil {
-			constraintName = NewRawIdent(fmt.Sprintf("%s_pkey", tableName.StringForDiff()))
+			constraintName = NewRawIdent(tableName.StringForDiff() + "_pkey")
 		}
 		return &PrimaryKeyConstraint{
 			Name:    constraintName,
@@ -582,7 +582,7 @@ func (p *Parser) parseTableConstraint(tableName *Ident) (Constraint, error) { //
 		if constraintName == nil {
 			name := tableName.StringForDiff()
 			for _, ident := range idents {
-				name += fmt.Sprintf("_%s", ident.StringForDiff())
+				name += "_" + ident.StringForDiff()
 			}
 			name += "_fkey"
 			constraintName = NewRawIdent(name)
@@ -606,9 +606,9 @@ func (p *Parser) parseTableConstraint(tableName *Ident) (Constraint, error) { //
 			return nil, apperr.Errorf("parseColumnIdents: %w", err)
 		}
 		if constraintName == nil { //diff:ignore-line-postgres-cockroach
-			name := fmt.Sprintf("%s_unique", tableName.StringForDiff()) //diff:ignore-line-postgres-cockroach
-			for _, ident := range idents {                              //diff:ignore-line-postgres-cockroach
-				name += fmt.Sprintf("_%s", ident.StringForDiff()) //diff:ignore-line-postgres-cockroach
+			name := tableName.StringForDiff() + "_unique" //diff:ignore-line-postgres-cockroach
+			for _, ident := range idents {                //diff:ignore-line-postgres-cockroach
+				name += "_" + ident.StringForDiff() //diff:ignore-line-postgres-cockroach
 			} //diff:ignore-line-postgres-cockroach
 			constraintName = NewRawIdent(name) //diff:ignore-line-postgres-cockroach
 		} //diff:ignore-line-postgres-cockroach
