@@ -28,7 +28,7 @@ func (constraints Constraints) Append(constraint Constraint) Constraints {
 	}
 	constraints = append(constraints, constraint)
 
-	sort.Slice(constraints, func(left, right int) bool { //diff:ignore-line-postgres-cockroach
+	sort.Slice(constraints, func(left, _ int) bool { //diff:ignore-line-postgres-cockroach
 		_, leftIsPrimaryKeyConstraint := constraints[left].(*PrimaryKeyConstraint) //diff:ignore-line-postgres-cockroach
 		switch {                                                                   //diff:ignore-line-postgres-cockroach
 		case leftIsPrimaryKeyConstraint: //diff:ignore-line-postgres-cockroach
