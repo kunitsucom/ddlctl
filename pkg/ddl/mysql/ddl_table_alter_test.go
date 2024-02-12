@@ -16,8 +16,7 @@ func Test_isAlterTableAction(t *testing.T) {
 	(&RenameColumn{}).isAlterTableAction()
 	(&AddColumn{}).isAlterTableAction()
 	(&DropColumn{}).isAlterTableAction()
-	(&AlterColumnDataType{}).isAlterTableAction()
-	(&AlterColumnSetDefault{}).isAlterTableAction()
+	(&ModifyColumn{}).isAlterTableAction()
 	(&AlterColumnDropDefault{}).isAlterTableAction()
 	(&AddConstraint{}).isAlterTableAction()
 	(&DropConstraint{}).isAlterTableAction()
@@ -120,16 +119,23 @@ func TestAlterTableStmt_String(t *testing.T) {
 		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
 	})
 
-	t.Run("success,AlterColumnSetDataType", func(t *testing.T) {
+	t.Run("success,ModifyColumn", func(t *testing.T) {
 		t.Parallel()
 
 		stmt := &AlterTableStmt{
 			Name: &ObjectName{Name: &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`}},
-			Action: &AlterColumnDataType{
+			Action: &ModifyColumn{
 				Name: &Ident{Name: "description", QuotationMark: `"`, Raw: `"description"`},
 				DataType: &DataType{
 					Type: TOKEN_TEXT,
 					Name: "TEXT",
+				},
+				Default: &Default{
+					Value: &Expr{
+						Idents: []*Ident{
+							NewRawIdent("''"),
+						},
+					},
 				},
 				CharacterSet: &Ident{
 					Name: "utf8mb4",
@@ -143,7 +149,7 @@ func TestAlterTableStmt_String(t *testing.T) {
 			},
 		}
 
-		expected := `ALTER TABLE "users" MODIFY "description" TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT 'my comment';` + "\n"
+		expected := `ALTER TABLE "users" MODIFY "description" TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '' COMMENT 'my comment';` + "\n"
 		actual := stmt.String()
 
 		if !assert.Equal(t, expected, actual) {
@@ -152,12 +158,12 @@ func TestAlterTableStmt_String(t *testing.T) {
 		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
 	})
 
-	t.Run("success,AlterColumnSetDataType,OnActions", func(t *testing.T) {
+	t.Run("success,ModifyColumn,OnActions", func(t *testing.T) {
 		t.Parallel()
 
 		stmt := &AlterTableStmt{
 			Name: &ObjectName{Name: &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`}},
-			Action: &AlterColumnDataType{
+			Action: &ModifyColumn{
 				Name: &Ident{Name: "updated_at", QuotationMark: `"`, Raw: `"updated_at"`},
 				DataType: &DataType{
 					Type: TOKEN_DATETIME,
@@ -169,26 +175,6 @@ func TestAlterTableStmt_String(t *testing.T) {
 		}
 
 		expected := `ALTER TABLE "users" MODIFY "updated_at" DATETIME NOT NULL ON UPDATE CURRENT_TIMESTAMP;` + "\n"
-		actual := stmt.String()
-
-		if !assert.Equal(t, expected, actual) {
-			assert.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
-		}
-		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
-	})
-
-	t.Run("success,AlterColumnSetDefault", func(t *testing.T) {
-		t.Parallel()
-
-		stmt := &AlterTableStmt{
-			Name: &ObjectName{Name: &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`}},
-			Action: &AlterColumnSetDefault{
-				Name:    &Ident{Name: "age", QuotationMark: `"`, Raw: `"age"`},
-				Default: &Default{Value: &Expr{[]*Ident{{Name: "0", Raw: "0"}}}},
-			},
-		}
-
-		expected := `ALTER TABLE "users" ALTER "age" SET DEFAULT 0;` + "\n"
 		actual := stmt.String()
 
 		if !assert.Equal(t, expected, actual) {
