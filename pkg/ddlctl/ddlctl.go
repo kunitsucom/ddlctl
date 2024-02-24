@@ -10,6 +10,10 @@ import (
 	"github.com/kunitsucom/util.go/version"
 
 	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
+	"github.com/kunitsucom/ddlctl/pkg/ddlctl/apply"
+	"github.com/kunitsucom/ddlctl/pkg/ddlctl/diff"
+	"github.com/kunitsucom/ddlctl/pkg/ddlctl/generate"
+	"github.com/kunitsucom/ddlctl/pkg/ddlctl/show"
 	"github.com/kunitsucom/ddlctl/pkg/internal/consts"
 )
 
@@ -90,21 +94,21 @@ func DDLCtl(ctx context.Context) error {
 						Default:     cliz.Default("/dev/stdout"),
 					},
 				),
-				RunFunc: Generate,
+				RunFunc: generate.Command,
 			},
 			{
 				Name:        "show",
 				Usage:       "ddlctl show --dialect <DDL dialect> <DSN>",
 				Description: "show DDL from DSN like `SHOW CREATE TABLE`.",
 				Options:     []cliz.Option{optDialect},
-				RunFunc:     Show,
+				RunFunc:     show.Command,
 			},
 			{
 				Name:        "diff",
 				Usage:       "ddlctl diff [options] --dialect <DDL dialect> <before DDL source> <after DDL source>",
 				Description: "diff DDL from <before DDL source> to <after DDL source>.",
 				Options:     opts,
-				RunFunc:     Diff,
+				RunFunc:     diff.Command,
 			},
 			{
 				Name:        "apply",
@@ -118,7 +122,7 @@ func DDLCtl(ctx context.Context) error {
 						Default:     cliz.Default(false),
 					},
 				),
-				RunFunc: Apply,
+				RunFunc: apply.Command,
 			},
 		},
 		Options: []cliz.Option{

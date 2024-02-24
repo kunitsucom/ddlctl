@@ -9,7 +9,7 @@ import (
 	cliz "github.com/kunitsucom/util.go/exp/cli"
 
 	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
-	"github.com/kunitsucom/ddlctl/pkg/internal/logs"
+	"github.com/kunitsucom/ddlctl/pkg/logs"
 )
 
 // Use a structure so that settings can be backed up.
@@ -21,8 +21,6 @@ type config struct {
 	Debug       bool   `json:"debug"`
 	Language    string `json:"language"`
 	Dialect     string `json:"dialect"`
-	Source      string `json:"source"`
-	Destination string `json:"destination"`
 	AutoApprove bool   `json:"auto_approve"`
 	// Golang
 	ColumnTagGo string `json:"column_tag_go"`
@@ -80,8 +78,6 @@ func load(ctx context.Context) (cfg *config, err error) { //nolint:unparam
 		Debug:       loadDebug(ctx, cmd),
 		Language:    loadLanguage(ctx, cmd),
 		Dialect:     loadDialect(ctx, cmd),
-		Source:      loadSource(ctx, cmd),
-		Destination: loadDestination(ctx, cmd),
 		AutoApprove: loadAutoApprove(ctx, cmd),
 		ColumnTagGo: loadColumnTagGo(ctx, cmd),
 		DDLTagGo:    loadDDLTagGo(ctx, cmd),

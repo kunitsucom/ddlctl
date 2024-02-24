@@ -12,7 +12,7 @@ import (
 
 	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 	"github.com/kunitsucom/ddlctl/pkg/internal/config"
-	"github.com/kunitsucom/ddlctl/pkg/internal/logs"
+	"github.com/kunitsucom/ddlctl/pkg/logs"
 )
 
 type ddlSource struct {

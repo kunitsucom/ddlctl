@@ -1,4 +1,4 @@
-package ddlctl
+package diff
 
 import (
 	"context"
@@ -15,11 +15,13 @@ import (
 	myddl "github.com/kunitsucom/ddlctl/pkg/ddl/mysql"
 	pgddl "github.com/kunitsucom/ddlctl/pkg/ddl/postgres"
 	spanddl "github.com/kunitsucom/ddlctl/pkg/ddl/spanner"
+	"github.com/kunitsucom/ddlctl/pkg/ddlctl/generate"
+	"github.com/kunitsucom/ddlctl/pkg/ddlctl/show"
 	"github.com/kunitsucom/ddlctl/pkg/internal/config"
-	"github.com/kunitsucom/ddlctl/pkg/internal/logs"
+	"github.com/kunitsucom/ddlctl/pkg/logs"
 )
 
-func Diff(ctx context.Context, args []string) error {
+func Command(ctx context.Context, args []string) error {
 	if _, err := config.Load(ctx); err != nil {
 		return apperr.Errorf("config.Load: %w", err)
 	}
@@ -28,17 +30,11 @@ func Diff(ctx context.Context, args []string) error {
 		return apperr.Errorf("args=%v: %w", args, apperr.ErrTwoArgumentsRequired)
 	}
 
-	left, err := resolve(ctx, config.Dialect(), args[0])
-	if err != nil {
-		return apperr.Errorf("resolve: %w", err)
-	}
+	dialect := config.Dialect()
+	language := config.Language()
+	leftArg, rightArg := args[0], args[1]
 
-	right, err := resolve(ctx, config.Dialect(), args[1])
-	if err != nil {
-		return apperr.Errorf("resolve: %w", err)
-	}
-
-	if err := DiffDDL(os.Stdout, config.Dialect(), left, right); err != nil {
+	if err := Diff(ctx, os.Stdout, dialect, language, leftArg, rightArg); err != nil {
 		if errors.Is(err, ddl.ErrNoDifference) {
 			logs.Debug.Print(ddl.ErrNoDifference.Error())
 			return nil
@@ -50,7 +46,7 @@ func Diff(ctx context.Context, args []string) error {
 }
 
 //nolint:cyclop
-func resolve(ctx context.Context, dialect, arg string) (ddl string, err error) {
+func resolve(ctx context.Context, language, dialect, arg string) (ddl string, err error) {
 	switch {
 	case osz.IsFile(arg): // NOTE: expect SQL file
 		ddlBytes, err := os.ReadFile(arg)
@@ -59,15 +55,15 @@ func resolve(ctx context.Context, dialect, arg string) (ddl string, err error) {
 		}
 		ddl = string(ddlBytes)
 	case osz.Exists(arg): // NOTE: expect ddlctl generate format
-		genDDL, err := generateDDLForDiff(ctx, arg)
-		if err != nil {
-			return "", apperr.Errorf("generateDDL: %w", err) // TODO: ddlgen 形式じゃないから無理というエラーに修正する
+		b := new(strings.Builder)
+		if err := generate.Generate(ctx, b, arg, dialect, language); err != nil {
+			return "", apperr.Errorf("Generate: %w", err)
 		}
-		ddl = genDDL
+		ddl = b.String()
 	default: // NOTE: expect DSN
-		genDDL, err := ShowDDL(ctx, dialect, arg)
+		genDDL, err := show.Show(ctx, dialect, arg)
 		if err != nil {
-			return "", apperr.Errorf("ShowDDL: %w", err)
+			return "", apperr.Errorf("Show: %w", err)
 		}
 		ddl = genDDL
 	}
@@ -75,24 +71,20 @@ func resolve(ctx context.Context, dialect, arg string) (ddl string, err error) {
 	return ddl, nil
 }
 
-func generateDDLForDiff(ctx context.Context, src string) (string, error) {
-	ddl, err := Parse(ctx, config.Language(), src)
-	if err != nil {
-		return "", apperr.Errorf("parse: %w", err)
-	}
-
-	b := new(strings.Builder)
-	if err := Fprint(b, config.Dialect(), ddl); err != nil {
-		return "", apperr.Errorf("fprint: %w", err)
-	}
-
-	return b.String(), nil
-}
-
 //nolint:cyclop,funlen,gocognit
-func DiffDDL(out io.Writer, dialect string, srcDDL string, dstDDL string) error {
-	logs.Trace.Printf("src: %q", srcDDL)
-	logs.Trace.Printf("dst: %q", dstDDL)
+func Diff(ctx context.Context, out io.Writer, dialect, language, src string, dst string) error {
+	srcDDL, err := resolve(ctx, language, dialect, src)
+	if err != nil {
+		return apperr.Errorf("resolve: %w", err)
+	}
+
+	dstDDL, err := resolve(ctx, language, dialect, dst)
+	if err != nil {
+		return apperr.Errorf("resolve: %w", err)
+	}
+
+	logs.Trace.Printf("srcDDL: %q", srcDDL)
+	logs.Trace.Printf("dstDDL: %q", dstDDL)
 
 	switch dialect {
 	case myddl.Dialect:

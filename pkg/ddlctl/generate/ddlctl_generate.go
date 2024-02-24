@@ -1,4 +1,4 @@
-package ddlctl
+package generate
 
 import (
 	"context"
@@ -14,59 +14,46 @@ import (
 	"github.com/kunitsucom/ddlctl/pkg/internal/generator/dialect/postgres"
 	"github.com/kunitsucom/ddlctl/pkg/internal/generator/dialect/spanner"
 	ddlctlgo "github.com/kunitsucom/ddlctl/pkg/internal/lang/go"
-	"github.com/kunitsucom/ddlctl/pkg/internal/logs"
+	"github.com/kunitsucom/ddlctl/pkg/logs"
 )
 
-func Generate(ctx context.Context, _ []string) error {
+func Command(ctx context.Context, args []string) error {
 	if _, err := config.Load(ctx); err != nil {
 		return apperr.Errorf("config.Load: %w", err)
 	}
 
-	src := config.Source()
-	logs.Info.Printf("source: %s", src)
-
+	dialect := config.Dialect()
 	language := config.Language()
-	logs.Info.Printf("language: %s", language)
+	src := args[0]
+	dst := args[1]
 
+	logs.Info.Printf("dialect: %s", dialect)
+	logs.Info.Printf("language: %s", language)
+	logs.Info.Printf("source: %s", src)
+	logs.Info.Printf("destination: %s", dst)
+
+	if info, err := os.Stat(dst); err == nil && info.IsDir() {
+		dst = filepath.Join(dst, "ddlctl.gen.sql")
+	}
+
+	dstFile, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
+	if err != nil {
+		return apperr.Errorf("os.OpenFile: %w", err)
+	}
+
+	if err := Generate(ctx, dstFile, src, dialect, language); err != nil {
+		return apperr.Errorf("fprint: %w", err)
+	}
+	return nil
+}
+
+func Generate(ctx context.Context, dst io.Writer, src, dialect, language string) error {
 	ddl, err := Parse(ctx, language, src)
 	if err != nil {
 		return apperr.Errorf("parse: %w", err)
 	}
 
-	if info, err := os.Stat(config.Destination()); err == nil && info.IsDir() {
-		for _, stmt := range ddl.Stmts {
-			dst := filepath.Join(config.Destination(), filepath.Base(stmt.GetSourceFile())) + ".gen.sql"
-			logs.Info.Printf("destination: %s", dst)
-
-			f, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
-			if err != nil {
-				return apperr.Errorf("os.OpenFile: %w", err)
-			}
-
-			if err := Fprint(
-				f,
-				config.Dialect(),
-				&generator.DDL{
-					Header: ddl.Header,
-					Indent: ddl.Indent,
-					Stmts:  []generator.Stmt{stmt},
-				},
-			); err != nil {
-				return apperr.Errorf("fprint: %w", err)
-			}
-		}
-		return nil
-	}
-
-	dst := config.Destination()
-	logs.Info.Printf("destination: %s", dst)
-
-	f, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
-	if err != nil {
-		return apperr.Errorf("os.OpenFile: %w", err)
-	}
-
-	if err := Fprint(f, config.Dialect(), ddl); err != nil {
+	if err := Fprint(dst, dialect, ddl); err != nil {
 		return apperr.Errorf("fprint: %w", err)
 	}
 	return nil
@@ -77,7 +64,7 @@ func Parse(ctx context.Context, language string, src string) (*generator.DDL, er
 	case ddlctlgo.Language:
 		ddl, err := ddlctlgo.Parse(ctx, src)
 		if err != nil {
-			return nil, apperr.Errorf("ddlgengo.Parse: %w", err)
+			return nil, apperr.Errorf("ddlctlgo.Parse: %w", err)
 		}
 		return ddl, nil
 	default:
