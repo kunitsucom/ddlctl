@@ -14,7 +14,7 @@ import (
 	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 
 	"github.com/kunitsucom/ddlctl/pkg/ddl"
-	"github.com/kunitsucom/ddlctl/pkg/ddl/logs"
+	"github.com/kunitsucom/ddlctl/pkg/logs"
 )
 
 //nolint:gochecknoglobals
@@ -68,7 +68,7 @@ func (p *Parser) nextToken() {
 	p.peekToken = p.l.NextToken()
 
 	_, file, line, _ := runtime.Caller(1)
-	logs.TraceLog.Printf("🪲: nextToken: caller=%s:%d currentToken: %#v, peekToken: %#v", filepathz.Short(file), line, p.currentToken, p.peekToken)
+	logs.Trace.Printf("🪲: nextToken: caller=%s:%d currentToken: %#v, peekToken: %#v", filepathz.Short(file), line, p.currentToken, p.peekToken)
 }
 
 // Parse はSQL文を解析します。

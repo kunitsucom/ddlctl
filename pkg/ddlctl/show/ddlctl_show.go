@@ -1,4 +1,4 @@
-package ddlctl
+package show
 
 import (
 	"context"
@@ -19,12 +19,12 @@ import (
 	spanshow "github.com/kunitsucom/ddlctl/pkg/show/spanner"
 )
 
-func Show(ctx context.Context, args []string) error {
+func Command(ctx context.Context, args []string) error {
 	if _, err := config.Load(ctx); err != nil {
 		return apperr.Errorf("config.Load: %w", err)
 	}
 
-	ddl, err := ShowDDL(ctx, config.Dialect(), args[0])
+	ddl, err := Show(ctx, config.Dialect(), args[0])
 	if err != nil {
 		return apperr.Errorf("diff: %w", err)
 	}
@@ -37,7 +37,7 @@ func Show(ctx context.Context, args []string) error {
 }
 
 //nolint:cyclop,funlen,gocognit
-func ShowDDL(ctx context.Context, dialect string, dsn string) (ddl string, err error) {
+func Show(ctx context.Context, dialect string, dsn string) (ddl string, err error) {
 	driverName := func() string {
 		switch dialect {
 		case crdbddl.Dialect:

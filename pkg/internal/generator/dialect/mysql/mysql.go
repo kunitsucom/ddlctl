@@ -5,7 +5,7 @@ import (
 
 	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 	ddlast "github.com/kunitsucom/ddlctl/pkg/internal/generator"
-	"github.com/kunitsucom/ddlctl/pkg/internal/logs"
+	"github.com/kunitsucom/ddlctl/pkg/logs"
 )
 
 const (

@@ -24,26 +24,26 @@ func Test_integrationtest_go_spanner(t *testing.T) {
 		t.Parallel()
 
 		cmd := fixture.Cmd()
-		{
-			_, err := cmd.Parse([]string{
-				"ddlctl",
-				"--lang=go",
-				"--dialect=spanner",
-				"--go-column-tag=dbtest",
-				"--go-ddl-tag=spanddl",
-				"--go-pk-tag=pkey",
-				"--src=integrationtest_go_001.source",
-				"--dst=dummy",
-			})
-			require.NoError(t, err)
-		}
+		args, err := cmd.Parse([]string{
+			"ddlctl",
+			"--lang=go",
+			"--dialect=spanner",
+			"--go-column-tag=dbtest",
+			"--go-ddl-tag=spanddl",
+			"--go-pk-tag=pkey",
+			"integrationtest_go_001.source",
+			"dummy",
+		})
+		require.NoError(t, err)
 
 		ctx := cliz.WithContext(context.Background(), cmd)
 
-		_, err := config.Load(ctx)
-		require.NoError(t, err)
+		{
+			_, err := config.Load(ctx)
+			require.NoError(t, err)
+		}
 
-		ddl, err := ddlctlgo.Parse(ctx, config.Source())
+		ddl, err := ddlctlgo.Parse(ctx, args[1])
 		require.NoError(t, err)
 
 		buf := bytes.NewBuffer(nil)

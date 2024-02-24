@@ -22,25 +22,25 @@ import (
 func TestParse(t *testing.T) {
 	t.Run("success,common.source", func(t *testing.T) {
 		cmd := fixture.Cmd()
-		{
-			_, err := cmd.Parse([]string{
-				"ddlctl",
-				"--lang=go",
-				"--dialect=spanner",
-				"--go-column-tag=dbtest",
-				"--go-ddl-tag=spanddl",
-				"--go-pk-tag=pkey",
-				"--src=tests/common.source",
-				"--dst=dummy",
-			})
-			require.NoError(t, err)
-		}
+		args, err := cmd.Parse([]string{
+			"ddlctl",
+			"--lang=go",
+			"--dialect=spanner",
+			"--go-column-tag=dbtest",
+			"--go-ddl-tag=spanddl",
+			"--go-pk-tag=pkey",
+			"tests/common.source",
+			"dummy",
+		})
+		require.NoError(t, err)
 		ctx := cliz.WithContext(context.Background(), cmd)
 
-		_, err := config.Load(ctx)
-		require.NoError(t, err)
+		{
+			_, err := config.Load(ctx)
+			require.NoError(t, err)
+		}
 
-		ddl, err := Parse(ctx, config.Source())
+		ddl, err := Parse(ctx, args[1])
 		require.NoError(t, err)
 		if !assert.Equal(t, 6, len(ddl.Stmts)) { // TODO: 確認
 			for _, stmt := range ddl.Stmts {
@@ -51,30 +51,30 @@ func TestParse(t *testing.T) {
 
 	t.Run("success,info.IsDir", func(t *testing.T) {
 		cmd := fixture.Cmd()
-		{
-			_, err := cmd.Parse([]string{
-				"ddlctl",
-				"--lang=go",
-				"--dialect=spanner",
-				"--go-column-tag=dbtest",
-				"--go-ddl-tag=spanddl",
-				"--go-pk-tag=pkey",
-				"--src=tests",
-				"--dst=dummy",
-			})
-			require.NoError(t, err)
-		}
+		args, err := cmd.Parse([]string{
+			"ddlctl",
+			"--lang=go",
+			"--dialect=spanner",
+			"--go-column-tag=dbtest",
+			"--go-ddl-tag=spanddl",
+			"--go-pk-tag=pkey",
+			"tests",
+			"dummy",
+		})
+		require.NoError(t, err)
 		ctx := cliz.WithContext(context.Background(), cmd)
 
-		_, err := config.Load(ctx)
-		require.NoError(t, err)
+		{
+			_, err := config.Load(ctx)
+			require.NoError(t, err)
+		}
 
 		backup := fileSuffix
 		t.Cleanup(func() { fileSuffix = backup })
 		fileSuffix = ".source"
 
 		{
-			ddl, err := Parse(ctx, config.Source())
+			ddl, err := Parse(ctx, args[1])
 			require.NoError(t, err)
 			if !assert.Equal(t, 6, len(ddl.Stmts)) { // TODO: 確認
 				for _, stmt := range ddl.Stmts {
@@ -93,53 +93,54 @@ func TestParse(t *testing.T) {
 		}
 
 		cmd := fixture.Cmd()
-		{
-			_, err := cmd.Parse([]string{
-				"ddlctl",
-				"--lang=go",
-				"--dialect=spanner",
-				"--go-column-tag=dbtest",
-				"--go-ddl-tag=spanddl",
-				"--go-pk-tag=pkey",
-				"--src=" + tempDir,
-				"--dst=dummy",
-			})
-			require.NoError(t, err)
-		}
-		ctx := cliz.WithContext(context.Background(), cmd)
-
-		_, err := config.Load(ctx)
+		args, err := cmd.Parse([]string{
+			"ddlctl",
+			"--lang=go",
+			"--dialect=spanner",
+			"--go-column-tag=dbtest",
+			"--go-ddl-tag=spanddl",
+			"--go-pk-tag=pkey",
+			tempDir,
+			"dummy",
+		})
 		require.NoError(t, err)
 
+		ctx := cliz.WithContext(context.Background(), cmd)
+
 		{
-			_, err := Parse(ctx, config.Source())
+			_, err := config.Load(ctx)
+			require.NoError(t, err)
+		}
+
+		{
+			_, err := Parse(ctx, args[1])
 			require.ErrorContains(t, err, "expected 'package', found 'EOF'")
 		}
 	})
 
 	t.Run("failure,os.ErrNotExist", func(t *testing.T) {
 		cmd := fixture.Cmd()
-		{
-			_, err := cmd.Parse([]string{
-				"ddlctl",
-				"--lang=go",
-				"--dialect=spanner",
-				"--go-column-tag=dbtest",
-				"--go-ddl-tag=spanddl",
-				"--go-pk-tag=pkey",
-				"--src=tests/no-such-file.source",
-				"--dst=dummy",
-			})
-			require.NoError(t, err)
-		}
+		args, err := cmd.Parse([]string{
+			"ddlctl",
+			"--lang=go",
+			"--dialect=spanner",
+			"--go-column-tag=dbtest",
+			"--go-ddl-tag=spanddl",
+			"--go-pk-tag=pkey",
+			"tests/no-such-file.source",
+			"dummy",
+		})
+		require.NoError(t, err)
 		ctx := cliz.WithContext(context.Background(), cmd)
 
-		_, err := config.Load(ctx)
-		require.NoError(t, err)
+		{
+			_, err := config.Load(ctx)
+			require.NoError(t, err)
+		}
 
 		{
 			t.Setenv("PWD", "\\")
-			_, err := Parse(ctx, config.Source())
+			_, err := Parse(ctx, args[1])
 			require.Error(t, err)
 			assert.ErrorIs(t, err, os.ErrNotExist)
 		}
@@ -147,26 +148,26 @@ func TestParse(t *testing.T) {
 
 	t.Run("failure,parser.ParseFile", func(t *testing.T) {
 		cmd := fixture.Cmd()
-		{
-			_, err := cmd.Parse([]string{
-				"ddlctl",
-				"--lang=go",
-				"--dialect=spanner",
-				"--go-column-tag=dbtest",
-				"--go-ddl-tag=spanddl",
-				"--go-pk-tag=pkey",
-				"--src=tests/no.errsource",
-				"--dst=dummy",
-			})
-			require.NoError(t, err)
-		}
+		args, err := cmd.Parse([]string{
+			"ddlctl",
+			"--lang=go",
+			"--dialect=spanner",
+			"--go-column-tag=dbtest",
+			"--go-ddl-tag=spanddl",
+			"--go-pk-tag=pkey",
+			"tests/no.errsource",
+			"dummy",
+		})
+		require.NoError(t, err)
 		ctx := cliz.WithContext(context.Background(), cmd)
 
-		_, err := config.Load(ctx)
-		require.NoError(t, err)
+		{
+			_, err := config.Load(ctx)
+			require.NoError(t, err)
+		}
 
 		{
-			_, err := Parse(ctx, config.Source())
+			_, err := Parse(ctx, args[1])
 			require.Error(t, err)
 			assert.ErrorContains(t, err, "expected 'package', found 'EOF'")
 		}
@@ -174,26 +175,26 @@ func TestParse(t *testing.T) {
 
 	t.Run("failure,extractDDLSource", func(t *testing.T) {
 		cmd := fixture.Cmd()
-		{
-			_, err := cmd.Parse([]string{
-				"ddlctl",
-				"--lang=go",
-				"--dialect=spanner",
-				"--go-column-tag=dbtest",
-				"--go-ddl-tag=spanddl",
-				"--go-pk-tag=pkey",
-				"--src=tests/no-go-ddl-tag.source",
-				"--dst=dummy",
-			})
-			require.NoError(t, err)
-		}
+		args, err := cmd.Parse([]string{
+			"ddlctl",
+			"--lang=go",
+			"--dialect=spanner",
+			"--go-column-tag=dbtest",
+			"--go-ddl-tag=spanddl",
+			"--go-pk-tag=pkey",
+			"tests/no-go-ddl-tag.source",
+			"dummy",
+		})
+		require.NoError(t, err)
 		ctx := cliz.WithContext(context.Background(), cmd)
 
-		_, err := config.Load(ctx)
-		require.NoError(t, err)
+		{
+			_, err := config.Load(ctx)
+			require.NoError(t, err)
+		}
 
 		{
-			_, err := Parse(ctx, config.Source())
+			_, err := Parse(ctx, args[1])
 			require.Error(t, err)
 			assert.ErrorIs(t, err, apperr.ErrDDLTagGoAnnotationNotFoundInSource)
 		}
@@ -207,23 +208,23 @@ func Test_walkDirFn(t *testing.T) {
 		t.Parallel()
 
 		cmd := fixture.Cmd()
-		{
-			_, err := cmd.Parse([]string{
-				"ddlctl",
-				"--lang=go",
-				"--dialect=spanner",
-				"--go-column-tag=dbtest",
-				"--go-ddl-tag=spanddl",
-				"--go-pk-tag=pkey",
-				"--src=tests",
-				"--dst=dummy",
-			})
-			require.NoError(t, err)
-		}
+		_, err := cmd.Parse([]string{
+			"ddlctl",
+			"--lang=go",
+			"--dialect=spanner",
+			"--go-column-tag=dbtest",
+			"--go-ddl-tag=spanddl",
+			"--go-pk-tag=pkey",
+			"tests",
+			"dummy",
+		})
+		require.NoError(t, err)
 		ctx := cliz.WithContext(context.Background(), cmd)
 
-		_, err := config.Load(ctx)
-		require.NoError(t, err)
+		{
+			_, err := config.Load(ctx)
+			require.NoError(t, err)
+		}
 
 		ddl := ddlast.NewDDL(ctx)
 		fn := walkDirFn(ctx, ddl)

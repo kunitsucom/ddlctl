@@ -2,24 +2,22 @@
 package postgres
 
 import (
-	"log"
-	"os"
 	"testing"
 
 	"github.com/kunitsucom/util.go/testing/assert"
 	"github.com/kunitsucom/util.go/testing/require"
 
 	"github.com/kunitsucom/ddlctl/pkg/ddl"
-	"github.com/kunitsucom/ddlctl/pkg/ddl/logs"
+	"github.com/kunitsucom/ddlctl/pkg/logs"
 )
 
 //nolint:paralleltest,tparallel
 func TestParser_Parse(t *testing.T) {
-	backup := logs.TraceLog
+	backup := logs.Trace
 	t.Cleanup(func() {
-		logs.TraceLog = backup
+		logs.Trace = backup
 	})
-	logs.TraceLog = log.New(os.Stderr, "TRACE: ", log.LstdFlags|log.Lshortfile)
+	logs.Trace = logs.NewTrace()
 
 	t.Run("success,CREATE_TABLE", func(t *testing.T) {
 		t.Parallel()

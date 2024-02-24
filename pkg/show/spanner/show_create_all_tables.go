@@ -8,7 +8,7 @@ import (
 	sqlz "github.com/kunitsucom/util.go/database/sql"
 
 	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
-	"github.com/kunitsucom/ddlctl/pkg/internal/logs"
+	"github.com/kunitsucom/ddlctl/pkg/logs"
 )
 
 // NOTE: https://cloud.google.com/spanner/docs/information-schema?hl=ja

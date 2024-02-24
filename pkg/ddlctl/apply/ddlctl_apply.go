@@ -1,4 +1,4 @@
-package ddlctl
+package apply
 
 import (
 	"bufio"
@@ -19,13 +19,14 @@ import (
 	crdbddl "github.com/kunitsucom/ddlctl/pkg/ddl/cockroachdb"
 	myddl "github.com/kunitsucom/ddlctl/pkg/ddl/mysql"
 	spanddl "github.com/kunitsucom/ddlctl/pkg/ddl/spanner"
+	"github.com/kunitsucom/ddlctl/pkg/ddlctl/diff"
 	"github.com/kunitsucom/ddlctl/pkg/internal/config"
 	"github.com/kunitsucom/ddlctl/pkg/internal/consts"
-	"github.com/kunitsucom/ddlctl/pkg/internal/logs"
+	"github.com/kunitsucom/ddlctl/pkg/logs"
 )
 
 //nolint:cyclop,funlen,gocognit,gocyclo
-func Apply(ctx context.Context, args []string) (err error) {
+func Command(ctx context.Context, args []string) (err error) {
 	if _, err := config.Load(ctx); err != nil {
 		return apperr.Errorf("config.Load: %w", err)
 	}
@@ -34,21 +35,12 @@ func Apply(ctx context.Context, args []string) (err error) {
 		return apperr.Errorf("args=%v: %w", args, apperr.ErrTwoArgumentsRequired)
 	}
 
-	dsn, ddlSrc := args[0], args[1]
+	language := config.Language()
 	dialect := config.Dialect()
-
-	left, err := resolve(ctx, dialect, dsn)
-	if err != nil {
-		return apperr.Errorf("resolve: %w", err)
-	}
-
-	right, err := resolve(ctx, dialect, ddlSrc)
-	if err != nil {
-		return apperr.Errorf("resolve: %w", err)
-	}
+	dsn, ddlSrc := args[0], args[1]
 
 	buf := new(strings.Builder)
-	if err := DiffDDL(buf, dialect, left, right); err != nil {
+	if err := diff.Diff(ctx, buf, dialect, language, dsn, ddlSrc); err != nil {
 		if errors.Is(err, ddl.ErrNoDifference) {
 			_, _ = fmt.Fprintln(os.Stdout, ddl.ErrNoDifference.Error())
 			return nil

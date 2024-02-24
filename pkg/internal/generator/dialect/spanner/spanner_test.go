@@ -12,7 +12,7 @@ import (
 	"github.com/kunitsucom/util.go/testing/require"
 
 	ddlast "github.com/kunitsucom/ddlctl/pkg/internal/generator"
-	"github.com/kunitsucom/ddlctl/pkg/internal/logs"
+	"github.com/kunitsucom/ddlctl/pkg/logs"
 )
 
 //nolint:paralleltest

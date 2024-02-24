@@ -21,8 +21,8 @@ import (
 	"github.com/kunitsucom/ddlctl/pkg/internal/config"
 	ddlast "github.com/kunitsucom/ddlctl/pkg/internal/generator"
 	langutil "github.com/kunitsucom/ddlctl/pkg/internal/lang/util"
-	"github.com/kunitsucom/ddlctl/pkg/internal/logs"
 	"github.com/kunitsucom/ddlctl/pkg/internal/util"
+	"github.com/kunitsucom/ddlctl/pkg/logs"
 )
 
 const (

@@ -10,7 +10,7 @@ import (
 	"github.com/kunitsucom/util.go/testing/assert"
 	"github.com/kunitsucom/util.go/testing/require"
 
-	"github.com/kunitsucom/ddlctl/pkg/ddlctl"
+	"github.com/kunitsucom/ddlctl/pkg/ddlctl/diff"
 	"github.com/kunitsucom/ddlctl/pkg/internal/fixture"
 )
 
@@ -35,7 +35,7 @@ func Test_ddlctl_diff(t *testing.T) {
 
 		os.Stdout = w
 		{
-			err := ddlctl.Diff(ctx, args)
+			err := diff.Command(ctx, args)
 			require.NoError(t, err)
 		}
 		result := closeFunc()
