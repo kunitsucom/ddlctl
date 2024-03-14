@@ -16,9 +16,9 @@ import (
 
 	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 	"github.com/kunitsucom/ddlctl/pkg/ddl"
-	crdbddl "github.com/kunitsucom/ddlctl/pkg/ddl/cockroachdb"
-	myddl "github.com/kunitsucom/ddlctl/pkg/ddl/mysql"
-	spanddl "github.com/kunitsucom/ddlctl/pkg/ddl/spanner"
+	ddlcrdb "github.com/kunitsucom/ddlctl/pkg/ddl/cockroachdb"
+	ddlmysql "github.com/kunitsucom/ddlctl/pkg/ddl/mysql"
+	ddlspanner "github.com/kunitsucom/ddlctl/pkg/ddl/spanner"
 	"github.com/kunitsucom/ddlctl/pkg/ddlctl/diff"
 	"github.com/kunitsucom/ddlctl/pkg/internal/config"
 	"github.com/kunitsucom/ddlctl/pkg/internal/consts"
@@ -47,14 +47,14 @@ func Command(ctx context.Context, args []string) (err error) {
 		}
 		return apperr.Errorf("diff: %w", err)
 	}
-	q := buf.String()
+	ddlStr := buf.String()
 
 	msg := `
 ddlctl will exec the following DDL queries:
 
 -- 8< --
 
-` + q + `
+` + ddlStr + `
 
 -- >8 --
 
@@ -80,10 +80,21 @@ Enter a value: `
 
 	os.Stdout.WriteString("\nexecuting...\n")
 
+	if err := Apply(ctx, dialect, dsn, ddlStr); err != nil {
+		return apperr.Errorf("Apply: %w", err)
+	}
+
+	os.Stdout.WriteString("done\n")
+
+	return nil
+}
+
+//nolint:cyclop,funlen,gocognit,gocyclo
+func Apply(ctx context.Context, dialect, dsn, ddlStr string) error {
 	driverName := func() string {
 		switch dialect {
-		case crdbddl.Dialect:
-			return crdbddl.DriverName
+		case ddlcrdb.Dialect:
+			return ddlcrdb.DriverName
 		default:
 			return dialect
 		}
@@ -94,14 +105,14 @@ Enter a value: `
 		return apperr.Errorf("sqlz.OpenContext: %w", err)
 	}
 	defer func() {
-		if cerr := db.Close(); cerr != nil && err == nil {
-			err = apperr.Errorf("db.Close: %w", cerr)
+		if err2 := db.Close(); err2 != nil && err == nil {
+			err = apperr.Errorf("db.Close: %w", err2)
 		}
 	}()
 
 	switch driverName {
-	case myddl.DriverName:
-		ddls := strings.Split(q, ";\n")
+	case ddlmysql.DriverName:
+		ddls := strings.Split(ddlStr, ";\n")
 		retryer := retry.New(retry.NewConfig(time.Second, time.Second, retry.WithMaxRetries(len(ddls))))
 		if err := retryer.Do(ctx, func(ctx context.Context) error {
 			var outerErr error
@@ -132,7 +143,7 @@ Enter a value: `
 			return apperr.Errorf("retry.Do: %w", err)
 		}
 
-	case spanddl.DriverName:
+	case ddlspanner.DriverName:
 		conn, err := db.Conn(ctx)
 		if err != nil {
 			return apperr.Errorf("db.Conn: %w", err)
@@ -146,7 +157,7 @@ Enter a value: `
 			return apperr.Errorf("conn.ExecContext: %w", err)
 		}
 
-		commentTrimmedDDL := stringz.ReadLine(q, "\n", stringz.ReadLineFuncRemoveCommentLine("--"))
+		commentTrimmedDDL := stringz.ReadLine(ddlStr, "\n", stringz.ReadLineFuncRemoveCommentLine("--"))
 		for _, q := range strings.Split(commentTrimmedDDL, ";\n") {
 			if len(q) == 0 {
 				// skip empty query
@@ -161,12 +172,10 @@ Enter a value: `
 			return apperr.Errorf("conn.ExecContext: %w", err)
 		}
 	default:
-		if _, err := db.ExecContext(ctx, q); err != nil {
+		if _, err := db.ExecContext(ctx, ddlStr); err != nil {
 			return apperr.Errorf("db.ExecContext: %w", err)
 		}
 	}
-
-	os.Stdout.WriteString("done\n")
 
 	return nil
 }
@@ -174,12 +183,11 @@ Enter a value: `
 func prompt() error {
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Scan()
-	input := scanner.Text()
 
-	switch input {
+	switch input := scanner.Text(); input {
 	case "yes":
 		return nil
 	default:
-		return apperr.Errorf("input=%s: %w", input, apperr.ErrCanceled)
+		return apperr.Errorf("input=%q: %w", input, apperr.ErrCanceled)
 	}
 }
