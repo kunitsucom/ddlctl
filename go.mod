@@ -3,7 +3,7 @@ module github.com/kunitsucom/ddlctl
 go 1.22.1
 
 require (
-	github.com/go-sql-driver/mysql v1.7.1
+	github.com/go-sql-driver/mysql v1.8.0
 	github.com/googleapis/go-sql-spanner v1.2.1
 	github.com/kunitsucom/util.go v0.0.62
 	github.com/lib/pq v1.10.9
@@ -16,6 +16,7 @@ require (
 	cloud.google.com/go/iam v1.1.5 // indirect
 	cloud.google.com/go/longrunning v0.5.5 // indirect
 	cloud.google.com/go/spanner v1.56.0 // indirect
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/census-instrumentation/opencensus-proto v0.4.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cncf/udpa/go v0.0.0-20220112060539-c52dc94e7fbe // indirect
