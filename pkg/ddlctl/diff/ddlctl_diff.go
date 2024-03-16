@@ -11,10 +11,10 @@ import (
 
 	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 	"github.com/kunitsucom/ddlctl/pkg/ddl"
-	crdbddl "github.com/kunitsucom/ddlctl/pkg/ddl/cockroachdb"
-	myddl "github.com/kunitsucom/ddlctl/pkg/ddl/mysql"
-	pgddl "github.com/kunitsucom/ddlctl/pkg/ddl/postgres"
-	spanddl "github.com/kunitsucom/ddlctl/pkg/ddl/spanner"
+	ddlcrdb "github.com/kunitsucom/ddlctl/pkg/ddl/cockroachdb"
+	ddlmysql "github.com/kunitsucom/ddlctl/pkg/ddl/mysql"
+	ddlpg "github.com/kunitsucom/ddlctl/pkg/ddl/postgres"
+	ddlspanner "github.com/kunitsucom/ddlctl/pkg/ddl/spanner"
 	"github.com/kunitsucom/ddlctl/pkg/ddlctl/generate"
 	"github.com/kunitsucom/ddlctl/pkg/ddlctl/show"
 	"github.com/kunitsucom/ddlctl/pkg/internal/config"
@@ -87,17 +87,17 @@ func Diff(ctx context.Context, out io.Writer, dialect, language, src string, dst
 	logs.Trace.Printf("dstDDL: %q", dstDDL)
 
 	switch dialect {
-	case myddl.Dialect:
-		leftDDL, err := myddl.NewParser(myddl.NewLexer(srcDDL)).Parse()
+	case ddlmysql.Dialect:
+		leftDDL, err := ddlmysql.NewParser(ddlmysql.NewLexer(srcDDL)).Parse()
 		if err != nil {
 			return apperr.Errorf("myddl.NewParser: %w", err)
 		}
-		rightDDL, err := myddl.NewParser(myddl.NewLexer(dstDDL)).Parse()
+		rightDDL, err := ddlmysql.NewParser(ddlmysql.NewLexer(dstDDL)).Parse()
 		if err != nil {
 			return apperr.Errorf("myddl.NewParser: %w", err)
 		}
 
-		result, err := myddl.Diff(leftDDL, rightDDL)
+		result, err := ddlmysql.Diff(leftDDL, rightDDL)
 		if err != nil {
 			return apperr.Errorf("myddl.Diff: %w", err)
 		}
@@ -107,17 +107,17 @@ func Diff(ctx context.Context, out io.Writer, dialect, language, src string, dst
 		}
 
 		return nil
-	case pgddl.Dialect:
-		leftDDL, err := pgddl.NewParser(pgddl.NewLexer(srcDDL)).Parse()
+	case ddlpg.Dialect:
+		leftDDL, err := ddlpg.NewParser(ddlpg.NewLexer(srcDDL)).Parse()
 		if err != nil {
 			return apperr.Errorf("pgddl.NewParser: %w", err)
 		}
-		rightDDL, err := pgddl.NewParser(pgddl.NewLexer(dstDDL)).Parse()
+		rightDDL, err := ddlpg.NewParser(ddlpg.NewLexer(dstDDL)).Parse()
 		if err != nil {
 			return apperr.Errorf("pgddl.NewParser: %w", err)
 		}
 
-		result, err := pgddl.Diff(leftDDL, rightDDL)
+		result, err := ddlpg.Diff(leftDDL, rightDDL)
 		if err != nil {
 			return apperr.Errorf("pgddl.Diff: %w", err)
 		}
@@ -127,17 +127,17 @@ func Diff(ctx context.Context, out io.Writer, dialect, language, src string, dst
 		}
 
 		return nil
-	case crdbddl.Dialect:
-		leftDDL, err := crdbddl.NewParser(crdbddl.NewLexer(srcDDL)).Parse()
+	case ddlcrdb.Dialect:
+		leftDDL, err := ddlcrdb.NewParser(ddlcrdb.NewLexer(srcDDL)).Parse()
 		if err != nil {
 			return apperr.Errorf("pgddl.NewParser: %w", err)
 		}
-		rightDDL, err := crdbddl.NewParser(crdbddl.NewLexer(dstDDL)).Parse()
+		rightDDL, err := ddlcrdb.NewParser(ddlcrdb.NewLexer(dstDDL)).Parse()
 		if err != nil {
 			return apperr.Errorf("pgddl.NewParser: %w", err)
 		}
 
-		result, err := crdbddl.Diff(leftDDL, rightDDL)
+		result, err := ddlcrdb.Diff(leftDDL, rightDDL)
 		if err != nil {
 			return apperr.Errorf("pgddl.Diff: %w", err)
 		}
@@ -147,17 +147,17 @@ func Diff(ctx context.Context, out io.Writer, dialect, language, src string, dst
 		}
 
 		return nil
-	case spanddl.Dialect:
-		leftDDL, err := spanddl.NewParser(spanddl.NewLexer(srcDDL)).Parse()
+	case ddlspanner.Dialect:
+		leftDDL, err := ddlspanner.NewParser(ddlspanner.NewLexer(srcDDL)).Parse()
 		if err != nil {
 			return apperr.Errorf("spanddl.NewParser: %w", err)
 		}
-		rightDDL, err := spanddl.NewParser(spanddl.NewLexer(dstDDL)).Parse()
+		rightDDL, err := ddlspanner.NewParser(ddlspanner.NewLexer(dstDDL)).Parse()
 		if err != nil {
 			return apperr.Errorf("spanddl.NewParser: %w", err)
 		}
 
-		result, err := spanddl.Diff(leftDDL, rightDDL)
+		result, err := ddlspanner.Diff(leftDDL, rightDDL)
 		if err != nil {
 			return apperr.Errorf("spanddl.Diff: %w", err)
 		}
