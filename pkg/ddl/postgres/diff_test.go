@@ -330,17 +330,17 @@ ALTER TABLE public.users ADD COLUMN description TEXT NOT NULL;
 	t.Run("success,before,after,Index", func(t *testing.T) {
 		t.Parallel()
 
-		before, err := NewParser(NewLexer(`CREATE UNIQUE INDEX IF NOT EXISTS public.users_idx_by_username ON public.users (username);`)).Parse()
+		before, err := NewParser(NewLexer(`CREATE UNIQUE INDEX IF NOT EXISTS public.users_idx_by_username ON users (username);`)).Parse()
 		require.NoError(t, err)
 
-		after, err := NewParser(NewLexer(`CREATE UNIQUE INDEX IF NOT EXISTS public.users_idx_by_username ON public.users (username, age);`)).Parse()
+		after, err := NewParser(NewLexer(`CREATE UNIQUE INDEX IF NOT EXISTS public.users_idx_by_username ON users (username, age);`)).Parse()
 		require.NoError(t, err)
 
-		expected := `-- -CREATE UNIQUE INDEX public.users_idx_by_username ON public.users (username);
--- +CREATE UNIQUE INDEX public.users_idx_by_username ON public.users (username, age);
+		expected := `-- -CREATE UNIQUE INDEX public.users_idx_by_username ON users (username);
+-- +CREATE UNIQUE INDEX public.users_idx_by_username ON users (username, age);
 --  
 DROP INDEX public.users_idx_by_username;
-CREATE UNIQUE INDEX IF NOT EXISTS public.users_idx_by_username ON public.users (username, age);
+CREATE UNIQUE INDEX IF NOT EXISTS public.users_idx_by_username ON users (username, age);
 `
 		actual, err := Diff(before, after)
 		require.NoError(t, err)

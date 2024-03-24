@@ -123,8 +123,8 @@ func DiffCreateTable(before, after *CreateTableStmt, opts ...DiffCreateTableOpti
 								Schema: after.Name.Schema, //diff:ignore-line-postgres-cockroach
 								Name:   ac.GetName(),      //diff:ignore-line-postgres-cockroach
 							}, //diff:ignore-line-postgres-cockroach
-							TableName: after.Name, //diff:ignore-line-postgres-cockroach
-							Columns:   ac.Columns, //diff:ignore-line-postgres-cockroach
+							TableName: after.Name.Name, //diff:ignore-line-postgres-cockroach
+							Columns:   ac.Columns,      //diff:ignore-line-postgres-cockroach
 						}, //diff:ignore-line-postgres-cockroach
 					) //diff:ignore-line-postgres-cockroach
 				default: //diff:ignore-line-postgres-cockroach
@@ -165,8 +165,8 @@ func DiffCreateTable(before, after *CreateTableStmt, opts ...DiffCreateTableOpti
 					Schema: after.Name.Schema, //diff:ignore-line-postgres-cockroach
 					Name:   ac.GetName(),      //diff:ignore-line-postgres-cockroach
 				}, //diff:ignore-line-postgres-cockroach
-				TableName: after.Name, //diff:ignore-line-postgres-cockroach
-				Columns:   ac.Columns, //diff:ignore-line-postgres-cockroach
+				TableName: after.Name.Name, //diff:ignore-line-postgres-cockroach
+				Columns:   ac.Columns,      //diff:ignore-line-postgres-cockroach
 			}) //diff:ignore-line-postgres-cockroach
 		default: //diff:ignore-line-postgres-cockroach
 			// ALTER TABLE table_name ADD CONSTRAINT constraint_name constraint;

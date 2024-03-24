@@ -230,7 +230,7 @@ func (p *Parser) parseCreateIndexStmt() (*CreateIndexStmt, error) {
 		return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 	}
 
-	createIndexStmt.TableName = NewObjectName(p.currentToken.Literal.Str)
+	createIndexStmt.TableName = NewObjectName(p.currentToken.Literal.Str).Name
 
 	p.nextToken() // current = USING or (
 
