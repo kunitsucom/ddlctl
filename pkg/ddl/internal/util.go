@@ -14,7 +14,7 @@ func GoString(v interface{}) string {
 
 	val := reflect.ValueOf(v)
 	elems := make([]string, typ.NumField())
-	for i := 0; typ.NumField() > i; i++ {
+	for i := range typ.NumField() {
 		elems[i] = fmt.Sprintf("%s:%#v", typ.Field(i).Name, val.Field(i))
 	}
 	return fmt.Sprintf("&%s{%s}", typ, strings.Join(elems, ", "))
