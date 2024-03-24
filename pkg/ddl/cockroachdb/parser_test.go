@@ -135,8 +135,6 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 	}{}
 
 	for _, tt := range successTests {
-		tt := tt
-
 		t.Run(tt.name, func(t *testing.T) {
 			// t.Parallel()
 
@@ -437,8 +435,6 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 	}
 
 	for _, tt := range failureTests {
-		tt := tt
-
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 

@@ -33,7 +33,7 @@ versenv:
 
 .PHONY: githooks
 githooks:
-	@[[ -f "${PRE_PUSH}" ]] || cp -ai "${REPO_ROOT}/.githooks/pre-push" "${PRE_PUSH}"
+	@diff -q "${REPO_ROOT}/.githooks/pre-push" "${PRE_PUSH}" || cp -ai "${REPO_ROOT}/.githooks/pre-push" "${PRE_PUSH}"
 
 clean:  ## Clean up chace, etc
 	go clean -x -cache -testcache -modcache -fuzzcache
