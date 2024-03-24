@@ -30,7 +30,7 @@ func TestCreateIndexStmt_String(t *testing.T) {
 			Comment:     "test comment content",
 			IfNotExists: true,
 			Name:        &ObjectName{Name: &Ident{Name: "test", QuotationMark: `"`, Raw: `"test"`}},
-			TableName:   &ObjectName{Name: &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`}},
+			TableName:   &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`},
 			Using:       []*Ident{{Name: "btree", QuotationMark: ``, Raw: `btree`}},
 			Columns: []*ColumnIdent{
 				{

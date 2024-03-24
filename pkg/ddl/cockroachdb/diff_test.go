@@ -258,7 +258,7 @@ func TestDiff(t *testing.T) {
 			Stmts: []Stmt{
 				&CreateIndexStmt{
 					Name:      &ObjectName{Name: &Ident{Name: "table_name_idx_column_name", Raw: "table_name_idx_column_name"}},
-					TableName: &ObjectName{Name: &Ident{Name: "table_name", Raw: "table_name"}},
+					TableName: &Ident{Name: "table_name", Raw: "table_name"},
 					Columns: []*ColumnIdent{
 						{
 							Ident: &Ident{Name: "column_name", Raw: "column_name"},
@@ -343,7 +343,7 @@ ALTER TABLE public.users ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE NOT NULL
 		require.NoError(t, err)
 
 		expected := `DROP INDEX public.users_idx_by_username;
-CREATE INDEX public.users_idx_by_username ON public.users (username ASC);
+CREATE INDEX public.users_idx_by_username ON users (username ASC);
 `
 		actual, err := Diff(before, after)
 		require.NoError(t, err)
@@ -356,17 +356,17 @@ CREATE INDEX public.users_idx_by_username ON public.users (username ASC);
 	t.Run("success,before,after,Index", func(t *testing.T) {
 		t.Parallel()
 
-		before, err := NewParser(NewLexer(`CREATE UNIQUE INDEX IF NOT EXISTS public.users_idx_by_username ON public.users (username DESC);`)).Parse()
+		before, err := NewParser(NewLexer(`CREATE UNIQUE INDEX IF NOT EXISTS public.users_idx_by_username ON users (username DESC);`)).Parse()
 		require.NoError(t, err)
 
-		after, err := NewParser(NewLexer(`CREATE UNIQUE INDEX IF NOT EXISTS public.users_idx_by_username ON public.users (username ASC, age ASC);`)).Parse()
+		after, err := NewParser(NewLexer(`CREATE UNIQUE INDEX IF NOT EXISTS public.users_idx_by_username ON users (username ASC, age ASC);`)).Parse()
 		require.NoError(t, err)
 
-		expected := `-- -CREATE UNIQUE INDEX public.users_idx_by_username ON public.users (username DESC);
--- +CREATE UNIQUE INDEX public.users_idx_by_username ON public.users (username ASC, age ASC);
+		expected := `-- -CREATE UNIQUE INDEX public.users_idx_by_username ON users (username DESC);
+-- +CREATE UNIQUE INDEX public.users_idx_by_username ON users (username ASC, age ASC);
 --  
 DROP INDEX public.users_idx_by_username;
-CREATE UNIQUE INDEX IF NOT EXISTS public.users_idx_by_username ON public.users (username ASC, age ASC);
+CREATE UNIQUE INDEX IF NOT EXISTS public.users_idx_by_username ON users (username ASC, age ASC);
 `
 		actual, err := Diff(before, after)
 		require.NoError(t, err)
