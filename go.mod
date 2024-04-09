@@ -3,7 +3,7 @@ module github.com/kunitsucom/ddlctl
 go 1.22.1
 
 require (
-	github.com/go-sql-driver/mysql v1.8.0
+	github.com/go-sql-driver/mysql v1.8.1
 	github.com/googleapis/go-sql-spanner v1.3.0
 	github.com/kunitsucom/util.go v0.0.62
 	github.com/lib/pq v1.10.9
