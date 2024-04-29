@@ -22,7 +22,7 @@ ghostplay_custom_prompt
 
 
 # Prepare your annotated model source code
-bat /tmp/sample.go
+bat sample.go
 
 #ghostplay silent
 sleep 2
@@ -35,7 +35,7 @@ ghostplay_custom_prompt
 
 
 # Generate DDL
-ddlctl generate --dialect postgres --go-column-tag db --go-ddl-tag pgddl --go-pk-tag pk --src /tmp/sample.go --dst /tmp/sample.sql
+ddlctl generate --dialect postgres --go-column-tag db --go-ddl-tag pgddl --go-pk-tag pk sample.go sample.sql
 
 #ghostplay silent
 sleep 2
@@ -48,7 +48,7 @@ ghostplay_custom_prompt
 
 
 # Check generated DDL file
-bat /tmp/sample.sql
+bat sample.sql
 
 #ghostplay silent
 sleep 2
@@ -71,7 +71,7 @@ ghostplay_custom_prompt
 
 
 # Apply DDL
-ddlctl apply --dialect postgres "${DATABASE_DSN}" /tmp/sample.sql --auto-approve
+ddlctl apply --dialect postgres "${DATABASE_DSN}" sample.sql --auto-approve
 
 #ghostplay silent
 sleep 2
@@ -84,7 +84,7 @@ ghostplay_custom_prompt
 
 
 # Edit DDL and check diff
-diff -uw /tmp/sample.sql /tmp/diff.sql | bat --language diff
+diff -uw sample.sql diff.sql | bat --language diff
 
 #ghostplay silent
 sleep 2
@@ -97,7 +97,7 @@ ghostplay_custom_prompt
 
 
 # Diff current database schema and DDL file
-ddlctl diff --dialect postgres "${DATABASE_DSN}" /tmp/diff.sql | bat --language sql
+ddlctl diff --dialect postgres "${DATABASE_DSN}" diff.sql | bat --language sql
 
 #ghostplay silent
 sleep 2
@@ -110,7 +110,7 @@ ghostplay_custom_prompt
 
 
 # Apply DDL
-ddlctl apply --dialect postgres "${DATABASE_DSN}" /tmp/diff.sql --auto-approve
+ddlctl apply --dialect postgres "${DATABASE_DSN}" diff.sql --auto-approve
 
 #ghostplay silent
 sleep 4
