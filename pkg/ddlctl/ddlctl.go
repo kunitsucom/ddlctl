@@ -78,23 +78,9 @@ func DDLCtl(ctx context.Context) error {
 			{
 				Name:        "generate",
 				Short:       "gen",
-				Usage:       "ddlctl generate [options] --dialect <DDL dialect> --src <source> --dst <destination>",
+				Usage:       "ddlctl generate [options] --dialect <DDL dialect> <source> <destination>",
 				Description: "generate DDL from source (file or directory) to destination (file or directory).",
-				Options: append(opts,
-					&cliz.StringOption{
-						Name:        consts.OptionSource,
-						Environment: consts.EnvKeySource,
-						Description: "source file or directory",
-						Default:     cliz.Default("/dev/stdin"),
-					},
-					&cliz.StringOption{
-						Name:        consts.OptionDestination,
-						Environment: consts.EnvKeyDestination,
-						Description: "destination file or directory",
-						Default:     cliz.Default("/dev/stdout"),
-					},
-				),
-				RunFunc: generate.Command,
+				RunFunc:     generate.Command,
 			},
 			{
 				Name:        "show",
