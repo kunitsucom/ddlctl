@@ -302,14 +302,18 @@ done
 ### pre-built binary
 
 ```bash
-LATEST_VERSION=$(curl -ILSs https://github.com/kunitsucom/ddlctl/releases/latest | tr -d '\r' | awk -F'/tag/' '/location/ { print $2 }') && echo "${LATEST_VERSION}"
-OS=$(uname | tr '[:upper:]' '[:lower:]') && echo "${OS}"
-ARCH=$(uname -m) && echo "${ARCH}"
+LATEST_VERSION=$(curl -ISs https://github.com/kunitsucom/ddlctl/releases/latest | tr -d '\r' | awk -F/ '/location:/{print $NF}')
+OS=$(uname | tr '[:upper:]' '[:lower:]')
+ARCH=$(uname -m)
+URL="https://github.com/kunitsucom/ddlctl/releases/download/${LATEST_VERSION}/ddlctl_${LATEST_VERSION}_${OS}_${ARCH}.zip"
 
-# download
-curl -fLROSs "https://github.com/kunitsucom/ddlctl/releases/download/${LATEST_VERSION}/ddlctl_${LATEST_VERSION}_${OS}_${ARCH}.zip"
+# Check URL
+echo "${URL}"
 
-# unzip
+# Download
+curl -fLROSs "${URL}"
+
+# Unzip
 unzip -j ddlctl_${LATEST_VERSION}_darwin_arm64.zip '*/ddlctl'
 ```
 
