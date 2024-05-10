@@ -85,8 +85,8 @@ github.com/googleapis/go-sql-spanner v1.3.1 h1:SNq7uPla66H6UB2e0YR8KvFG7kPKq33qG
 github.com/googleapis/go-sql-spanner v1.3.1/go.mod h1:JK3o13Nt9Ov8KkNKMiMKHlQhAa05lzilABlUhKKx2Z8=
 github.com/json-iterator/go v1.1.12 h1:PV8peI4a0ysnczrg+LtxykD8LfKY9ML6u2jnxaEnrnM=
 github.com/json-iterator/go v1.1.12/go.mod h1:e30LSqwooZae/UwlEbR2852Gd8hjQvJoHmT4TnhNGBo=
-github.com/kunitsucom/util.go v0.0.62 h1:2Ry6i4IXtDXPUu5eDMw92sNtB74pXiYTNm9xSLNI/M4=
-github.com/kunitsucom/util.go v0.0.62/go.mod h1:bYFf2JvRqVF1brBtpdt3xkkTGJBxmYBxZlItrc/lf7Y=
+github.com/kunitsucom/util.go v0.0.63 h1:OlmChVeHp5VxgmFs4r3MU7GLUSDz2caMPpQLTlfYEJ0=
+github.com/kunitsucom/util.go v0.0.63/go.mod h1:bYFf2JvRqVF1brBtpdt3xkkTGJBxmYBxZlItrc/lf7Y=
 github.com/lib/pq v1.10.9 h1:YXG7RB+JIjhP29X+OtkiDnYaXQwpS4JEWq7dtCCRUEw=
 github.com/lib/pq v1.10.9/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
 github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
