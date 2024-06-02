@@ -35,7 +35,7 @@ versenv:
 githooks:
 	@diff -q "${REPO_ROOT}/.githooks/pre-push" "${PRE_PUSH}" || cp -ai "${REPO_ROOT}/.githooks/pre-push" "${PRE_PUSH}"
 
-clean:  ## Clean up chace, etc
+clean:  ## Clean up cache, etc
 	go clean -x -cache -testcache -modcache -fuzzcache
 	golangci-lint cache clean
 
