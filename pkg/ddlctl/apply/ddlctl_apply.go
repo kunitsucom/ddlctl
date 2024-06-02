@@ -114,8 +114,8 @@ func Apply(ctx context.Context, dialect, dsn, ddlStr string) error {
 	switch driverName {
 	case ddlmysql.DriverName:
 		ddls := strings.Split(ddlStr, ";\n")
-		retryer := retry.New(retry.NewConfig(time.Second, time.Second, retry.WithMaxRetries(len(ddls))))
-		if err := retryer.Do(ctx, func(ctx context.Context) error {
+		retryer := retry.New(ctx, retry.NewConfig(time.Second, time.Second, retry.WithMaxRetries(len(ddls))))
+		if err := retryer.Do(func(ctx context.Context) error {
 			var outerErr error
 			for _, q := range ddls {
 				if len(q) == 0 {
