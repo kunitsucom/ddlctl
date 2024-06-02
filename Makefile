@@ -40,9 +40,13 @@ clean:  ## Clean up chace, etc
 	golangci-lint cache clean
 
 .PHONY: lint
-lint:  ## Run secretlint, go mod tidy, golangci-lint
-	# ref. https://github.com/secretlint/secretlint
-	docker run -v `pwd`:`pwd` -w `pwd` --rm secretlint/secretlint secretlint "**/*"
+lint:  ## Run gitleaks, go mod tidy, golangci-lint
+	# gitleaks ref. https://github.com/gitleaks/gitleaks
+	@if ! command -v gitleaks >/dev/null 2>&1; then \
+		printf "\033[31;1m%s\033[0m\n" "gitleaks is not installed: brew install gitleaks" 1>&2; \
+		exit 1; \
+	fi
+	gitleaks detect --source . -v
 	# tidy
 	go mod tidy
 	git diff --exit-code go.mod go.sum
