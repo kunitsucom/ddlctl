@@ -314,7 +314,7 @@ echo "${URL}"
 curl -fLROSs "${URL}"
 
 # Unzip
-unzip -j ddlctl_${LATEST_VERSION}_darwin_arm64.zip '*/ddlctl'
+unzip -j ddlctl_${LATEST_VERSION}_${OS}_${ARCH}.zip '*/ddlctl'
 ```
 
 ### go install
