@@ -1,12 +1,15 @@
-# https://docs.github.com/ja/code-security/supply-chain-security/keeping-your-dependencies-updated-automatically/configuration-options-for-dependency-updates
 version: 2
 updates:
-  - package-ecosystem: "github-actions" # See documentation for possible values
-    directory: "/" # Location of package manifests
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "monday"
       time: "11:00"
       timezone: "Asia/Tokyo"
+    commit-message:
+      prefix: "ci(github-actions): "
     labels:
       - "build"
       - "dependencies"
@@ -15,13 +18,20 @@ updates:
       - "ginokent"
     reviewers:
       - "ginokent"
+    groups:
+      dependencies:
+        patterns:
+          - "*"
 
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "monday"
       time: "11:00"
       timezone: "Asia/Tokyo"
+    commit-message:
+      prefix: "build(go): "
     labels:
       - "build"
       - "dependencies"
@@ -30,11 +40,16 @@ updates:
       - "ginokent"
     reviewers:
       - "ginokent"
+    groups:
+      dependencies:
+        patterns:
+          - "*"
 
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "monday"
       time: "11:00"
       timezone: "Asia/Tokyo"
     labels:
@@ -45,3 +60,7 @@ updates:
       - "ginokent"
     reviewers:
       - "ginokent"
+    groups:
+      dependencies:
+        patterns:
+          - "*"
