@@ -80,6 +80,7 @@ func DDLCtl(ctx context.Context) error {
 				Short:       "gen",
 				Usage:       "ddlctl generate [options] --dialect <DDL dialect> <source> <destination>",
 				Description: "generate DDL from source (file or directory) to destination (file or directory).",
+				Options:     opts,
 				RunFunc:     generate.Command,
 			},
 			{
