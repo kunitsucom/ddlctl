@@ -2,6 +2,8 @@ package show
 
 import (
 	"context"
+	"database/sql/driver"
+	"errors"
 	"io"
 	"os"
 
@@ -49,6 +51,9 @@ func Show(ctx context.Context, dialect string, dsn string) (ddl string, err erro
 
 	db, err := sqlz.OpenContext(ctx, driverName, dsn)
 	if err != nil {
+		if dialect == spanddl.Dialect && errors.Is(err, driver.ErrBadConn) {
+			err = apperr.Errorf("error such as 'Instance not found' or 'Database not found' might have occurred: %w", err)
+		}
 		return "", apperr.Errorf("sqlz.OpenContext: %w", err)
 	}
 	defer func() {
