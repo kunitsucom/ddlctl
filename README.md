@@ -366,11 +366,11 @@ options:
         programming language to generate DDL
     --dialect (env: DDLCTL_DIALECT, default: )
         SQL dialect to generate DDL
-    --go-column-tag (env: DDLCTL_COLUMN_TAG_GO, default: db)
+    --go-column-tag (env: DDLCTL_GO_COLUMN_TAG, default: db)
         column annotation key for Go struct tag
-    --go-ddl-tag (env: DDLCTL_DDL_TAG_GO, default: ddlctl)
+    --go-ddl-tag (env: DDLCTL_GO_DDL_TAG, default: ddlctl)
         DDL annotation key for Go struct tag
-    --go-pk-tag (env: DDLCTL_PK_TAG_GO, default: pk)
+    --go-pk-tag (env: DDLCTL_GO_PK_TAG, default: pk)
         primary key annotation key for Go struct tag
     --help (default: false)
         show usage
@@ -408,11 +408,11 @@ options:
         programming language to generate DDL
     --dialect (env: DDLCTL_DIALECT, default: )
         SQL dialect to generate DDL
-    --go-column-tag (env: DDLCTL_COLUMN_TAG_GO, default: db)
+    --go-column-tag (env: DDLCTL_GO_COLUMN_TAG, default: db)
         column annotation key for Go struct tag
-    --go-ddl-tag (env: DDLCTL_DDL_TAG_GO, default: ddlctl)
+    --go-ddl-tag (env: DDLCTL_GO_DDL_TAG, default: ddlctl)
         DDL annotation key for Go struct tag
-    --go-pk-tag (env: DDLCTL_PK_TAG_GO, default: pk)
+    --go-pk-tag (env: DDLCTL_GO_PK_TAG, default: pk)
         primary key annotation key for Go struct tag
     --help (default: false)
         show usage
@@ -433,11 +433,11 @@ options:
         programming language to generate DDL
     --dialect (env: DDLCTL_DIALECT, default: )
         SQL dialect to generate DDL
-    --go-column-tag (env: DDLCTL_COLUMN_TAG_GO, default: db)
+    --go-column-tag (env: DDLCTL_GO_COLUMN_TAG, default: db)
         column annotation key for Go struct tag
-    --go-ddl-tag (env: DDLCTL_DDL_TAG_GO, default: ddlctl)
+    --go-ddl-tag (env: DDLCTL_GO_DDL_TAG, default: ddlctl)
         DDL annotation key for Go struct tag
-    --go-pk-tag (env: DDLCTL_PK_TAG_GO, default: pk)
+    --go-pk-tag (env: DDLCTL_GO_PK_TAG, default: pk)
         primary key annotation key for Go struct tag
     --auto-approve (env: DDLCTL_AUTO_APPROVE, default: false)
         auto approve
