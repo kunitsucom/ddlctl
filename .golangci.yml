@@ -1,7 +1,4 @@
 run:
-  skip-files:
-    - cmd/sandbox/main.go
-    - internal/integrationtest/samples/.*\.go
   modules-download-mode: readonly
   allow-parallel-runners: true
 
@@ -12,22 +9,16 @@ linters:
     - depguard # unnecessary
     - dupl # disable to avoid encouraging excessive DRY
     - exhaustruct # https://github.com/GaijinEntertainment/go-exhaustruct
-    - exhaustivestruct # https://github.com/mbilski/exhaustivestruct
     - gci # unnecessary
     - goconst # unnecessary
     - godox # unnecessary
-    - golint # deprecated https://github.com/golang/lint
     - gomnd # https://github.com/tommy-muehle/go-mnd
     - gosmopolitan # unnecessary
-    - ifshort # for readability
     - interfacebloat # unnecessary
-    - interfacer # deprecated https://github.com/mvdan/interfacer
     - lll # unnecessary
-    - maligned # deprecated https://github.com/mdempsky/maligned
     - nlreturn # ignore "return with no blank line before"
     - nolintlint # unnecessary
     - nonamedreturns # unnecessary
-    - nosnakecase # for environment variable key
     - varnamelen # unnecessary
     - wsl # ignore "declarations should never be cuddled"
 
