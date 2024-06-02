@@ -26,7 +26,8 @@ func Command(ctx context.Context, args []string) error {
 		return apperr.Errorf("config.Load: %w", err)
 	}
 
-	if len(args) != 2 {
+	const beforeAndAfterForDiff = 2
+	if len(args) != beforeAndAfterForDiff {
 		return apperr.Errorf("args=%v: %w", args, apperr.ErrTwoArgumentsRequired)
 	}
 

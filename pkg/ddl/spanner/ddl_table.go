@@ -129,8 +129,9 @@ func NewObjectName(name string) *ObjectName {
 	objName := &ObjectName{}
 
 	tableName := NewRawIdent(name)
+	const hasSchema = 2
 	switch name := strings.Split(tableName.Name, "."); len(name) { //nolint:exhaustive
-	case 2:
+	case hasSchema:
 		// CREATE TABLE "schema.table"
 		objName.Schema = NewRawIdent(tableName.QuotationMark + name[0] + tableName.QuotationMark)
 		objName.Name = NewRawIdent(tableName.QuotationMark + name[1] + tableName.QuotationMark)

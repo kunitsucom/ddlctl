@@ -28,7 +28,7 @@ func (*CreateIndexStmt) private() {}
 //nolint:gochecknoglobals
 var stmtRegexCreateIndex = &util.StmtRegex{
 	Regex: regexp.MustCompile(`(?i)\s*CREATE\s+(.*)?INDEX\s+(.*)?(\S+)`),
-	Index: 3,
+	Index: 3, //nolint:mnd // Index 3 is INDEX name
 }
 
 func (stmt *CreateIndexStmt) SetCreateIndex(createIndex string) {

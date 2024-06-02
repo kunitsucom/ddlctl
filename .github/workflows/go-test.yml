@@ -7,23 +7,9 @@ on:
   push:
     branches:
       - main
-    paths-ignore:
-      - '.github/dependabot.yml'
-      - '.github/pull_request_template.md'
-      - '.github/release.yml'
-      - '.github/workflows/label-checker.yml'
-      - '.github/workflows/task-list-checker.yml'
-      - '**.md'
-      - 'CREDITS'
+    # NO paths-ignore
   pull_request:
-    paths-ignore:
-      - '.github/dependabot.yml'
-      - '.github/pull_request_template.md'
-      - '.github/release.yml'
-      - '.github/workflows/label-checker.yml'
-      - '.github/workflows/task-list-checker.yml'
-      - '**.md'
-      - 'CREDITS'
+    # NO paths-ignore
   workflow_dispatch:
     inputs:
       COVER:
@@ -57,9 +43,32 @@ defaults:
     shell: bash
 
 jobs:
-  go-test: # NOTE: for Branch protection rule `Status checks that are required.`
-    name: Run go test
-    runs-on: ubuntu-latest # ref. https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
+  paths-ignore:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.paths-ignore.outputs.skip }}
+    steps:
+      - uses: kunitsucom/github-actions-paths-ignore-alternative@main
+        id: paths-ignore
+        with:
+          paths-ignore: |-
+            # substrings of file paths to ignore written in regular expressions
+            ^.github/
+            ^.*\.md$
+            ^.*\.log$
+            ^.github/dependabot.yml$
+            ^.github/pull_request_template.md$
+            ^.github/release.yml$
+            ^.github/workflows/label-checker.yml$
+            ^.github/workflows/task-list-checker.yml$
+            ^CREDITS$
+  # > Note: A job that is skipped will report its status as "Success".
+  # > It will not prevent a pull request from merging, even if it is a required check.
+  # ref. https://docs.github.com/en/actions/using-jobs/using-conditions-to-control-job-execution#overview
+  go-test:
+    runs-on: ubuntu-latest
+    needs: paths-ignore
+    if: ${{ needs.paths-ignore.outputs.skip != 'true' }}
     steps:
       - uses: actions/checkout@v4
       - name: DEBUG
@@ -84,6 +93,7 @@ jobs:
           restore-keys: |
             versenv-${{ runner.os }}-
       - name: Add GITHUB_PATH, GITHUB_ENV
+        shell: bash
         run: |
           # Update GITHUB_PATH
           cat <<GITHUB_PATH >> $GITHUB_PATH
@@ -94,6 +104,7 @@ jobs:
           # Update GITHUB_ENV
           grep -Ev '^\s*$|^\s*#' .versenv.env >> $GITHUB_ENV
       - name: Setup versenv
+        shell: bash
         run: |
           # Setup versenv
           direnv allow ${{ env.WORKDIR }}
@@ -138,6 +149,7 @@ jobs:
           GHA_CACHE_OPTS: --cache-from type=local,src=${{ env.DOCKER_BUILD_CACHE_FROM }} --cache-to type=local,dest=${{ env.DOCKER_BUILD_CACHE_TO }},mode=max
           # GITHUB_TOKEN: ${{ secrets.GH_BOT_TOKEN }}
         working-directory: ${{ env.WORKDIR }}
+        shell: bash
         run: |
           set -Eeux -o pipefail
           direnv allow .

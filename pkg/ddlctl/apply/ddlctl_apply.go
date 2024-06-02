@@ -31,16 +31,17 @@ func Command(ctx context.Context, args []string) (err error) {
 		return apperr.Errorf("config.Load: %w", err)
 	}
 
-	if len(args) != 2 {
+	const beforeAndAfterForDiff = 2
+	if len(args) != beforeAndAfterForDiff {
 		return apperr.Errorf("args=%v: %w", args, apperr.ErrTwoArgumentsRequired)
 	}
 
-	language := config.Language()
 	dialect := config.Dialect()
-	dsn, ddlSrc := args[0], args[1]
+	language := config.Language()
+	leftArg, rightArg := args[0], args[1]
 
 	buf := new(strings.Builder)
-	if err := diff.Diff(ctx, buf, dialect, language, dsn, ddlSrc); err != nil {
+	if err := diff.Diff(ctx, buf, dialect, language, leftArg, rightArg); err != nil {
 		if errors.Is(err, ddl.ErrNoDifference) {
 			_, _ = fmt.Fprintln(os.Stdout, ddl.ErrNoDifference.Error())
 			return nil
@@ -80,7 +81,7 @@ Enter a value: `
 
 	os.Stdout.WriteString("\nexecuting...\n")
 
-	if err := Apply(ctx, dialect, dsn, ddlStr); err != nil {
+	if err := Apply(ctx, dialect, leftArg, ddlStr); err != nil {
 		return apperr.Errorf("Apply: %w", err)
 	}
 
