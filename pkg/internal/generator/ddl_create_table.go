@@ -32,7 +32,7 @@ func (*CreateTableStmt) private() {}
 //nolint:gochecknoglobals
 var stmtRegexCreateTable = &util.StmtRegex{
 	Regex: regexp.MustCompile(`(?i)\s*CREATE\s+(.*)?TABLE\s+(.*)?(\S+)`),
-	Index: 3,
+	Index: 3, //nolint:mnd // Index 3 is TABLE name
 }
 
 func (stmt *CreateTableStmt) SetCreateTable(createTable string) {

@@ -36,7 +36,8 @@ func Command(ctx context.Context, args []string) error {
 		dst = filepath.Join(dst, "ddlctl.gen.sql")
 	}
 
-	dstFile, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
+	const rw_r__r__ = 0o644 //nolint:revive,stylecheck
+	dstFile, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, rw_r__r__)
 	if err != nil {
 		return apperr.Errorf("os.OpenFile: %w", err)
 	}
