@@ -40,18 +40,6 @@ func Cmd() *cliz.Command {
 				Description: "primary key annotation key for Go struct tag",
 				Default:     cliz.Default("pk"),
 			},
-			&cliz.StringOption{
-				Name:        consts.OptionSource,
-				Environment: consts.EnvKeySource,
-				Description: "source file or directory",
-				Default:     cliz.Default("/dev/stdin"),
-			},
-			&cliz.StringOption{
-				Name:        consts.OptionDestination,
-				Environment: consts.EnvKeyDestination,
-				Description: "destination file or directory",
-				Default:     cliz.Default("/dev/stdout"),
-			},
 		},
 	}
 }

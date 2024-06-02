@@ -13,12 +13,6 @@ const (
 	OptionDialect = "dialect"
 	EnvKeyDialect = "DDLCTL_DIALECT"
 
-	OptionSource = "src"
-	EnvKeySource = "DDLCTL_SOURCE"
-
-	OptionDestination = "dst"
-	EnvKeyDestination = "DDLCTL_DESTINATION"
-
 	OptionAutoApprove = "auto-approve"
 	EnvKeyAutoApprove = "DDLCTL_AUTO_APPROVE"
 
