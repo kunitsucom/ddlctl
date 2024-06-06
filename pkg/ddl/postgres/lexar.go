@@ -125,9 +125,6 @@ const (
 	TOKEN_TRUE  TokenType = "TRUE"
 	TOKEN_FALSE TokenType = "FALSE"
 
-	// LITERAL.
-	TOKEN_LITERAL TokenType = "LITERAL"
-
 	// IDENTIFIER.
 	TOKEN_IDENT TokenType = "IDENT"
 )
