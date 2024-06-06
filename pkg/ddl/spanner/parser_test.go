@@ -22,7 +22,7 @@ func TestParser_Parse(t *testing.T) {
 	t.Run("success,CREATE_TABLE", func(t *testing.T) {
 		// t.Parallel()
 
-		l := NewLexer(`CREATE TABLE "groups" ("id" STRING(36) NOT NULL, description STRING) PRIMARY KEY ("id"); CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL, "name" STRING(255) NOT NULL, "age" INT64 DEFAULT 0, description STRING, CONSTRAINT users_age_check CHECK ("age" >= 0), CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id) REFERENCES "groups" ("id")) PRIMARY KEY ("id"), INTERLEAVE IN PARENT names ON DELETE NO ACTION;`)
+		l := NewLexer(`CREATE TABLE "groups" ("id" STRING(36) NOT NULL, description STRING) PRIMARY KEY ("id"); CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL, "name" STRING(255) NOT NULL, "age" INT64 DEFAULT 0, ExpiredDate TIMESTAMP, description STRING, CONSTRAINT users_age_check CHECK ("age" >= 0), CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id) REFERENCES "groups" ("id")) PRIMARY KEY ("id"), INTERLEAVE IN PARENT names ON DELETE NO ACTION, ROW DELETION POLICY (OLDER_THAN(ExpiredDate, INTERVAL 0 DAY));`)
 		p := NewParser(l)
 		actual, err := p.Parse()
 		require.NoError(t, err)
@@ -36,11 +36,13 @@ CREATE TABLE "users" (
     group_id STRING(36) NOT NULL,
     "name" STRING(255) NOT NULL,
     "age" INT64 DEFAULT 0,
+    ExpiredDate TIMESTAMP,
     description STRING,
     CONSTRAINT users_age_check CHECK ("age" >= 0),
     CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id) REFERENCES "groups" ("id")
 ) PRIMARY KEY ("id"),
-INTERLEAVE IN PARENT names ON DELETE NO ACTION;
+INTERLEAVE IN PARENT names ON DELETE NO ACTION,
+ROW DELETION POLICY (OLDER_THAN(ExpiredDate, INTERVAL 0 DAY));
 `
 
 		if !assert.Equal(t, expected, actual.String()) {
@@ -279,6 +281,72 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_INTERLEAVE_IN_PARENT_ON_DELETE_NO_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), INTERLEAVE IN PARENT table_name ON DELETE NO;`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		// ROW DELETION POLICY (OLDER_THAN(ExpiredDate, INTERVAL 0 DAY));
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW;`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_DELETION_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW DELETION;`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_DELETION_POLICY_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW DELETION POLICY;`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_DELETION_POLICY_(_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW DELETION POLICY (;`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_DELETION_POLICY_(_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW DELETION POLICY (;`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_DELETION_POLICY_OLDER_THAN_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW DELETION POLICY (OLDER_THAN;`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_DELETION_POLICY_OLDER_THAN_OPEN_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW DELETION POLICY (OLDER_THAN(;`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_DELETION_POLICY_OLDER_THAN_OPEN_column_name_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW DELETION POLICY (OLDER_THAN(ExpiredDate;`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_DELETION_POLICY_OLDER_THAN_OPEN_column_name_COMMA_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW DELETION POLICY (OLDER_THAN(ExpiredDate,;`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_DELETION_POLICY_OLDER_THAN_OPEN_column_name_COMMA_INTERVAL_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW DELETION POLICY (OLDER_THAN(ExpiredDate, INTERVAL;`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_DELETION_POLICY_OLDER_THAN_OPEN_column_name_COMMA_INTERVAL_NUMBER_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW DELETION POLICY (OLDER_THAN(ExpiredDate, INTERVAL 0;`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_DELETION_POLICY_OLDER_THAN_OPEN_column_name_COMMA_INTERVAL_NUMBER_DAY_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW DELETION POLICY (OLDER_THAN(ExpiredDate, INTERVAL 0 DAY;`,
+			wantErr: ddl.ErrUnexpectedToken,
+		},
+		{
+			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_DELETION_POLICY_OLDER_THAN_OPEN_column_name_COMMA_INTERVAL_NUMBER_DAY_CLOSE_INVALID",
+			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW DELETION POLICY (OLDER_THAN(ExpiredDate, INTERVAL 0 DAY);`,
 			wantErr: ddl.ErrUnexpectedToken,
 		},
 		{

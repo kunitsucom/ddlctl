@@ -114,7 +114,7 @@ func (p *Parser) parseCreateStatement() (Stmt, error) { //nolint:ireturn
 	}
 }
 
-//nolint:cyclop,funlen,gocognit,gocyclo
+//nolint:cyclop,funlen,gocognit,gocyclo,maintidx
 func (p *Parser) parseCreateTableStmt() (*CreateTableStmt, error) {
 	createTableStmt := &CreateTableStmt{
 		Indent: Indent,
@@ -236,6 +236,83 @@ LabelTableOptions:
 				}
 				opt.Value = opt.Value.Append(NewRawIdent(onAction))
 			}
+			createTableStmt.Options = append(createTableStmt.Options, opt)
+		case TOKEN_ROW:
+			// ROW DELETION POLICY (OLDER_THAN(ExpiredDate, INTERVAL 0 DAY))
+			opt := &Option{}
+			p.nextToken() // current = DELETION
+			if err := p.checkCurrentToken(TOKEN_DELETION); err != nil {
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			p.nextToken() // current = POLICY
+			if err := p.checkCurrentToken(TOKEN_POLICY); err != nil {
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			opt.Name = "ROW DELETION POLICY"
+			rowDeletionPolicyContent := make([]*Ident, 0)
+			//
+			p.nextToken() // current = `(`
+			if err := p.checkCurrentToken(TOKEN_OPEN_PAREN); err != nil {
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			rowDeletionPolicyContent = append(rowDeletionPolicyContent, NewRawIdent(p.currentToken.Literal.String()))
+			//
+			p.nextToken() // current = OLDER_THAN
+			if err := p.checkCurrentToken(TOKEN_OLDER_THAN); err != nil {
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			rowDeletionPolicyContent = append(rowDeletionPolicyContent, NewRawIdent(p.currentToken.Literal.String()))
+			//
+			p.nextToken() // current = `(`
+			if err := p.checkCurrentToken(TOKEN_OPEN_PAREN); err != nil {
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			rowDeletionPolicyContent = append(rowDeletionPolicyContent, NewRawIdent(p.currentToken.Literal.String()))
+			//
+			p.nextToken() // current = column_name
+			if err := p.checkCurrentToken(TOKEN_IDENT); err != nil {
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			rowDeletionPolicyContent = append(rowDeletionPolicyContent, NewRawIdent(p.currentToken.Literal.String()))
+			//
+			p.nextToken() // current = COMMA
+			if err := p.checkCurrentToken(TOKEN_COMMA); err != nil {
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			rowDeletionPolicyContent = append(rowDeletionPolicyContent, NewRawIdent(p.currentToken.Literal.String()))
+			//
+			p.nextToken() // current = INTERVAL
+			if err := p.checkCurrentToken(TOKEN_INTERVAL); err != nil {
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			rowDeletionPolicyContent = append(rowDeletionPolicyContent, NewRawIdent(p.currentToken.Literal.String()))
+			//
+			p.nextToken() // current = 0
+			if err := p.checkCurrentToken(TOKEN_IDENT); err != nil {
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			rowDeletionPolicyContent = append(rowDeletionPolicyContent, NewRawIdent(p.currentToken.Literal.String()))
+			//
+			p.nextToken() // current = DAY
+			if err := p.checkCurrentToken(TOKEN_DAY); err != nil {
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			rowDeletionPolicyContent = append(rowDeletionPolicyContent, NewRawIdent(p.currentToken.Literal.String()))
+			//
+			p.nextToken() // current = `)`
+			if err := p.checkCurrentToken(TOKEN_CLOSE_PAREN); err != nil {
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			rowDeletionPolicyContent = append(rowDeletionPolicyContent, NewRawIdent(p.currentToken.Literal.String()))
+			//
+			p.nextToken() // current = `)`
+			if err := p.checkCurrentToken(TOKEN_CLOSE_PAREN); err != nil {
+				return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
+			}
+			rowDeletionPolicyContent = append(rowDeletionPolicyContent, NewRawIdent(p.currentToken.Literal.String()))
+			//
+			opt.Value = opt.Value.Append(rowDeletionPolicyContent...)
+
 			createTableStmt.Options = append(createTableStmt.Options, opt)
 		case TOKEN_COMMA:
 			// do nothing

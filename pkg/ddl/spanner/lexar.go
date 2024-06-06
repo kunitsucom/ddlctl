@@ -117,8 +117,13 @@ const (
 	TOKEN_TRUE  TokenType = "TRUE"
 	TOKEN_FALSE TokenType = "FALSE"
 
-	// LITERAL.
-	TOKEN_LITERAL TokenType = "LITERAL"
+	// OPTION
+	TOKEN_ROW        TokenType = "ROW"
+	TOKEN_DELETION   TokenType = "DELETION"
+	TOKEN_POLICY     TokenType = "POLICY"
+	TOKEN_OLDER_THAN TokenType = "OLDER_THAN"
+	TOKEN_INTERVAL   TokenType = "INTERVAL"
+	TOKEN_DAY        TokenType = "DAY"
 
 	// IDENTIFIER.
 	TOKEN_IDENT TokenType = "IDENT"
@@ -234,6 +239,18 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_TRUE
 	case "FALSE":
 		return TOKEN_FALSE
+	case "ROW":
+		return TOKEN_ROW
+	case "DELETION":
+		return TOKEN_DELETION
+	case "POLICY":
+		return TOKEN_POLICY
+	case "OLDER_THAN":
+		return TOKEN_OLDER_THAN
+	case "INTERVAL":
+		return TOKEN_INTERVAL
+	case "DAY":
+		return TOKEN_DAY
 	default:
 		return TOKEN_IDENT
 	}
