@@ -299,7 +299,7 @@ func (o *Option) String() string {
 }
 
 func (o *Option) StringForDiff() string {
-	if o.Value == nil {
+	if o == nil || o.Value == nil {
 		return ""
 	}
 	return o.Name + " " + o.Value.StringForDiff()
