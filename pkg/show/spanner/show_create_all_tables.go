@@ -26,6 +26,15 @@ type informationSchemaTable struct {
 }
 
 const (
+	querySelectTableOptionRowDeletionPolicy = `SELECT TABLE_NAME, ROW_DELETION_POLICY_EXPRESSION FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '' AND TABLE_NAME = ? AND ROW_DELETION_POLICY_EXPRESSION != '';`
+)
+
+type informationSchemaTableOptionRowDeletionPolicy struct {
+	TableName                   string `db:"TABLE_NAME"`
+	RowDeletionPolicyExpression string `db:"ROW_DELETION_POLICY_EXPRESSION"`
+}
+
+const (
 	queryShowCreateAllTables = `SELECT TABLE_NAME, COLUMN_NAME, COLUMN_DEFAULT, IS_NULLABLE, SPANNER_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ? ORDER BY TABLE_NAME, ORDINAL_POSITION;`
 )
 
@@ -231,6 +240,19 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 				if i != primaryKeyColumnsLastIndex {
 					d += ", "
 				}
+			}
+			d += ")"
+		}
+
+		tableOptionRowDeletionPolicy := make([]*informationSchemaTableOptionRowDeletionPolicy, 0)
+		if err := dbz.QueryContext(ctx, &tableOptionRowDeletionPolicy, querySelectTableOptionRowDeletionPolicy, tbl.TableName); err != nil {
+			return "", apperr.Errorf("dbz.QueryContext: %w", err)
+		}
+
+		if len(tableOptionRowDeletionPolicy) > 0 {
+			d += ",\nROW DELETION POLICY ("
+			for _, opt := range tableOptionRowDeletionPolicy {
+				d += opt.RowDeletionPolicyExpression
 			}
 			d += ")"
 		}
