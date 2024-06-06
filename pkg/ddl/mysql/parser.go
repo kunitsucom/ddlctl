@@ -246,7 +246,7 @@ LabelTableOptions:
 		case TOKEN_SEMICOLON, TOKEN_EOF:
 			break LabelTableOptions
 		default:
-			return nil, apperr.Errorf(errFmtPrefix+"peekToken=%#v: %w", p.peekToken, ddl.ErrUnexpectedToken)
+			return nil, apperr.Errorf(errFmtPrefix+"currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
 		}
 		createTableStmt.Options = append(createTableStmt.Options, opt)
 		p.nextToken()
