@@ -48,19 +48,18 @@ jobs:
     outputs:
       skip: ${{ steps.paths-ignore.outputs.skip }}
     steps:
-      - uses: kunitsucom/github-actions-paths-ignore-alternative@main
+      - uses: kunitsucom/github-actions-paths-ignore-alternative@v0.0.2
         id: paths-ignore
         with:
           paths-ignore: |-
             # substrings of file paths to ignore written in regular expressions
-            ^.github/
-            ^.*\.md$
-            ^.*\.log$
             ^.github/dependabot.yml$
             ^.github/pull_request_template.md$
             ^.github/release.yml$
             ^.github/workflows/label-checker.yml$
             ^.github/workflows/task-list-checker.yml$
+            ^.*\.md$
+            ^.*\.log$
             ^CREDITS$
   # > Note: A job that is skipped will report its status as "Success".
   # > It will not prevent a pull request from merging, even if it is a required check.
@@ -151,7 +150,7 @@ jobs:
         working-directory: ${{ env.WORKDIR }}
         shell: bash
         run: |
-          set -Eeux -o pipefail
+          set -Eeu -o pipefail -x
           direnv allow .
           if [ -n "${GITHUB_TOKEN-}" ]; then
             direnv exec . bash -Eeux -o pipefail -c 'echo "${GOPRIVATE:-}${GOPRIVATE+,}" | while read -d , -r LINE; do echo "set git config: ${LINE}"; git config --global url."https://${GITHUB_TOKEN}:x-oauth-basic@${LINE}".insteadOf "https://${LINE}"; done'
