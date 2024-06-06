@@ -24,6 +24,9 @@ func Test_isAlterTableAction(t *testing.T) {
 	(&AddConstraint{}).isAlterTableAction()
 	(&DropConstraint{}).isAlterTableAction()
 	(&AlterConstraint{}).isAlterTableAction()
+	(&AddRowDeletionPolicy{}).isAlterTableAction()
+	(&ReplaceRowDeletionPolicy{}).isAlterTableAction()
+	(&DropRowDeletionPolicy{}).isAlterTableAction()
 }
 
 func TestAlterTableStmt_String(t *testing.T) {
@@ -259,6 +262,79 @@ func TestAlterTableStmt_String(t *testing.T) {
 		}
 
 		expected := `ALTER TABLE "groups" ALTER CONSTRAINT "groups_pkey" NOT DEFERRABLE INITIALLY IMMEDIATE;` + "\n"
+		actual := stmt.String()
+
+		if !assert.Equal(t, expected, actual) {
+			assert.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
+		}
+		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
+	})
+
+	t.Run("success,AddRowDeletionPolicy", func(t *testing.T) {
+		t.Parallel()
+
+		stmt := &AlterTableStmt{
+			Name: &ObjectName{Name: &Ident{Name: "groups", QuotationMark: `"`, Raw: `"groups"`}},
+			Action: &AddRowDeletionPolicy{RowDeletionPolicy: &Option{Name: "ROW DELETION POLICY", Value: &Expr{Idents: []*Ident{
+				NewRawIdent("("),
+				NewRawIdent("OLDER_THAN"),
+				NewRawIdent("("),
+				NewRawIdent("CreatedAt"),
+				NewRawIdent(","),
+				NewRawIdent("INTERVAL"),
+				NewRawIdent("30"),
+				NewRawIdent("DAY"),
+				NewRawIdent(")"),
+				NewRawIdent(")"),
+			}}}},
+		}
+
+		expected := `ALTER TABLE "groups" ADD ROW DELETION POLICY (OLDER_THAN(CreatedAt, INTERVAL 30 DAY));` + "\n"
+		actual := stmt.String()
+
+		if !assert.Equal(t, expected, actual) {
+			assert.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
+		}
+		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
+	})
+
+	t.Run("success,ReplaceRowDeletionPolicy", func(t *testing.T) {
+		t.Parallel()
+
+		stmt := &AlterTableStmt{
+			Name: &ObjectName{Name: &Ident{Name: "groups", QuotationMark: `"`, Raw: `"groups"`}},
+			Action: &ReplaceRowDeletionPolicy{RowDeletionPolicy: &Option{Name: "ROW DELETION POLICY", Value: &Expr{Idents: []*Ident{
+				NewRawIdent("("),
+				NewRawIdent("OLDER_THAN"),
+				NewRawIdent("("),
+				NewRawIdent("CreatedAt"),
+				NewRawIdent(","),
+				NewRawIdent("INTERVAL"),
+				NewRawIdent("30"),
+				NewRawIdent("DAY"),
+				NewRawIdent(")"),
+				NewRawIdent(")"),
+			}}}},
+		}
+
+		expected := `ALTER TABLE "groups" REPLACE ROW DELETION POLICY (OLDER_THAN(CreatedAt, INTERVAL 30 DAY));` + "\n"
+		actual := stmt.String()
+
+		if !assert.Equal(t, expected, actual) {
+			assert.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
+		}
+		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
+	})
+
+	t.Run("success,DropRowDeletionPolicy", func(t *testing.T) {
+		t.Parallel()
+
+		stmt := &AlterTableStmt{
+			Name:   &ObjectName{Name: &Ident{Name: "groups", QuotationMark: `"`, Raw: `"groups"`}},
+			Action: &DropRowDeletionPolicy{},
+		}
+
+		expected := `ALTER TABLE "groups" DROP ROW DELETION POLICY;` + "\n"
 		actual := stmt.String()
 
 		if !assert.Equal(t, expected, actual) {

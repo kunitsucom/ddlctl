@@ -80,6 +80,12 @@ func (s *AlterTableStmt) String() string {
 		} else {
 			str += " INITIALLY IMMEDIATE"
 		}
+	case *AddRowDeletionPolicy:
+		str += "ADD " + a.RowDeletionPolicy.String()
+	case *ReplaceRowDeletionPolicy:
+		str += "REPLACE " + a.RowDeletionPolicy.String()
+	case *DropRowDeletionPolicy:
+		str += "DROP ROW DELETION POLICY"
 	}
 
 	return str + ";\n"
@@ -217,3 +223,28 @@ type AlterConstraint struct {
 func (*AlterConstraint) isAlterTableAction() {}
 
 func (s *AlterConstraint) GoString() string { return internal.GoString(*s) }
+
+// AddRowDeletionPolicy represents ALTER TABLE table_name ADD ROW DELETION POLICY.
+type AddRowDeletionPolicy struct {
+	RowDeletionPolicy *Option
+}
+
+func (*AddRowDeletionPolicy) isAlterTableAction() {}
+
+func (s *AddRowDeletionPolicy) GoString() string { return internal.GoString(*s) }
+
+// ReplaceRowDeletionPolicy represents ALTER TABLE table_name REPLACE ROW DELETION POLICY.
+type ReplaceRowDeletionPolicy struct {
+	RowDeletionPolicy *Option
+}
+
+func (*ReplaceRowDeletionPolicy) isAlterTableAction() {}
+
+func (s *ReplaceRowDeletionPolicy) GoString() string { return internal.GoString(*s) }
+
+// DropRowDeletionPolicy represents ALTER TABLE table_name DROP ROW DELETION POLICY.
+type DropRowDeletionPolicy struct{}
+
+func (*DropRowDeletionPolicy) isAlterTableAction() {}
+
+func (s *DropRowDeletionPolicy) GoString() string { return internal.GoString(*s) }

@@ -338,6 +338,81 @@ CREATE TABLE "users" (
 		assert.Equal(t, expected, actual.String())
 	})
 
+	t.Run("success,ALTER_ADD_ROW_DELETION_POLICY", func(t *testing.T) {
+		t.Parallel()
+
+		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING, CreatedAt TIMESTAMP) PRIMARY KEY ("id");`
+		beforeDDL, err := NewParser(NewLexer(before)).Parse()
+		require.NoError(t, err)
+
+		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING, CreatedAt TIMESTAMP) PRIMARY KEY ("id"), ROW DELETION POLICY (OLDER_THAN(CreatedAt, INTERVAL 7 DAY));`
+		afterDDL, err := NewParser(NewLexer(after)).Parse()
+		require.NoError(t, err)
+
+		actual, err := DiffCreateTable(
+			beforeDDL.Stmts[0].(*CreateTableStmt),
+			afterDDL.Stmts[0].(*CreateTableStmt),
+			DiffCreateTableUseAlterTableAddConstraintNotValid(false),
+		)
+		assert.NoError(t, err)
+		expected := `-- -
+-- +ROW DELETION POLICY (OLDER_THAN(CreatedAt, INTERVAL 7 DAY))
+ALTER TABLE "users" ADD ROW DELETION POLICY (OLDER_THAN(CreatedAt, INTERVAL 7 DAY));
+`
+
+		assert.Equal(t, expected, actual.String())
+	})
+
+	t.Run("success,ALTER_REPLACE_ROW_DELETION_POLICY", func(t *testing.T) {
+		t.Parallel()
+
+		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING, CreatedAt TIMESTAMP) PRIMARY KEY ("id"), ROW DELETION POLICY (OLDER_THAN(CreatedAt, INTERVAL 30 DAY));`
+		beforeDDL, err := NewParser(NewLexer(before)).Parse()
+		require.NoError(t, err)
+
+		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING, CreatedAt TIMESTAMP) PRIMARY KEY ("id"), ROW DELETION POLICY (OLDER_THAN(CreatedAt, INTERVAL 7 DAY));`
+		afterDDL, err := NewParser(NewLexer(after)).Parse()
+		require.NoError(t, err)
+
+		actual, err := DiffCreateTable(
+			beforeDDL.Stmts[0].(*CreateTableStmt),
+			afterDDL.Stmts[0].(*CreateTableStmt),
+			DiffCreateTableUseAlterTableAddConstraintNotValid(false),
+		)
+		assert.NoError(t, err)
+		expected := `-- -ROW DELETION POLICY (OLDER_THAN(CreatedAt, INTERVAL 30 DAY))
+-- +ROW DELETION POLICY (OLDER_THAN(CreatedAt, INTERVAL 7 DAY))
+ALTER TABLE "users" REPLACE ROW DELETION POLICY (OLDER_THAN(CreatedAt, INTERVAL 7 DAY));
+`
+
+		assert.Equal(t, expected, actual.String())
+	})
+
+	t.Run("success,ALTER_REPLACE_DROP_DELETION_POLICY", func(t *testing.T) {
+		t.Parallel()
+
+		before := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING, CreatedAt TIMESTAMP) PRIMARY KEY ("id"), ROW DELETION POLICY (OLDER_THAN(CreatedAt, INTERVAL 30 DAY));`
+		beforeDDL, err := NewParser(NewLexer(before)).Parse()
+		require.NoError(t, err)
+
+		after := `CREATE TABLE "users" (id STRING(36) NOT NULL, group_id STRING(36) NOT NULL REFERENCES "groups" ("id"), "name" STRING(255) NOT NULL, "age" INT64 DEFAULT 0 NOT NULL CHECK ("age" >= 0), description STRING, CreatedAt TIMESTAMP) PRIMARY KEY ("id");`
+		afterDDL, err := NewParser(NewLexer(after)).Parse()
+		require.NoError(t, err)
+
+		actual, err := DiffCreateTable(
+			beforeDDL.Stmts[0].(*CreateTableStmt),
+			afterDDL.Stmts[0].(*CreateTableStmt),
+			DiffCreateTableUseAlterTableAddConstraintNotValid(false),
+		)
+		assert.NoError(t, err)
+		expected := `-- -ROW DELETION POLICY (OLDER_THAN(CreatedAt, INTERVAL 30 DAY))
+-- +
+ALTER TABLE "users" DROP ROW DELETION POLICY;
+`
+
+		assert.Equal(t, expected, actual.String())
+	})
+
 	t.Run("success,DROP_ADD_FOREIGN_KEY", func(t *testing.T) {
 		t.Parallel()
 

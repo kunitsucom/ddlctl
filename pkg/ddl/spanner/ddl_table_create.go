@@ -11,13 +11,14 @@ import (
 var _ Stmt = (*CreateTableStmt)(nil)
 
 type CreateTableStmt struct {
-	Comment     string
-	Indent      string
-	IfNotExists bool
-	Name        *ObjectName
-	Columns     []*Column
-	Constraints Constraints
-	Options     Options
+	Comment           string
+	Indent            string
+	IfNotExists       bool
+	Name              *ObjectName
+	Columns           []*Column
+	Constraints       Constraints
+	Options           Options
+	RowDeletionPolicy *Option
 }
 
 func (s *CreateTableStmt) GetNameForDiff() string {
@@ -73,6 +74,9 @@ func (s *CreateTableStmt) String() string {
 				str += ",\n"
 			}
 		}
+	}
+	if s.RowDeletionPolicy != nil {
+		str += ",\n" + s.RowDeletionPolicy.String()
 	}
 
 	str += ";\n"

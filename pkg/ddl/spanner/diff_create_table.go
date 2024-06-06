@@ -138,6 +138,36 @@ func DiffCreateTable(before, after *CreateTableStmt, opts ...DiffCreateTableOpti
 		})
 	}
 
+	if before.RowDeletionPolicy.StringForDiff() != after.RowDeletionPolicy.StringForDiff() {
+		switch {
+		case before.RowDeletionPolicy == nil:
+			// ALTER TABLE table_name ADD ROW DELETION POLICY
+			result.Stmts = append(result.Stmts, &AlterTableStmt{
+				Comment: simplediff.Diff("", after.RowDeletionPolicy.String()).String(),
+				Name:    after.Name,
+				Action: &AddRowDeletionPolicy{
+					RowDeletionPolicy: after.RowDeletionPolicy,
+				},
+			})
+		case after.RowDeletionPolicy == nil:
+			// ALTER TABLE table_name DROP ROW DELETION POLICY
+			result.Stmts = append(result.Stmts, &AlterTableStmt{
+				Comment: simplediff.Diff(before.RowDeletionPolicy.String(), "").String(),
+				Name:    after.Name,
+				Action:  &DropRowDeletionPolicy{},
+			})
+		default:
+			// ALTER TABLE table_name REPLACE ROW DELETION POLICY
+			result.Stmts = append(result.Stmts, &AlterTableStmt{
+				Comment: simplediff.Diff(before.RowDeletionPolicy.String(), after.RowDeletionPolicy.String()).String(),
+				Name:    after.Name,
+				Action: &ReplaceRowDeletionPolicy{
+					RowDeletionPolicy: after.RowDeletionPolicy,
+				},
+			})
+		}
+	}
+
 	if len(result.Stmts) == 0 {
 		return nil, apperr.Errorf("before: %s, after: %s: %w", before.GetNameForDiff(), after.GetNameForDiff(), ddl.ErrNoDifference)
 	}

@@ -313,7 +313,7 @@ LabelTableOptions:
 			//
 			opt.Value = opt.Value.Append(rowDeletionPolicyContent...)
 
-			createTableStmt.Options = append(createTableStmt.Options, opt)
+			createTableStmt.RowDeletionPolicy = opt
 		case TOKEN_COMMA:
 			// do nothing
 		case TOKEN_SEMICOLON, TOKEN_EOF:
