@@ -16,8 +16,8 @@ type CreateIndexStmt struct {
 	Comment     string
 	Unique      bool
 	IfNotExists bool
-	Name        *ObjectName
-	TableName   *Ident
+	Name        *Ident
+	TableName   *ObjectName
 	Using       []*Ident
 	Columns     []*ColumnIdent
 }

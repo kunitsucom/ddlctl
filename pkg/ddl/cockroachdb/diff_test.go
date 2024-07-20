@@ -160,7 +160,7 @@ func TestDiff(t *testing.T) {
 		before := &DDL{
 			Stmts: []Stmt{
 				&CreateIndexStmt{
-					Name: &ObjectName{Name: &Ident{Name: "table_name_idx_column_name", Raw: "table_name_idx_column_name"}},
+					Name: &Ident{Name: "table_name_idx_column_name", Raw: "table_name_idx_column_name"},
 					Columns: []*ColumnIdent{
 						{
 							Ident: &Ident{Name: "column_name", Raw: "column_name"},
@@ -172,9 +172,18 @@ func TestDiff(t *testing.T) {
 		after := (*DDL)(nil)
 		actual, err := Diff(before, after)
 		require.NoError(t, err)
-		expected := `DROP INDEX table_name_idx_column_name;
-`
-		assert.Equal(t, expected, actual.String())
+		expected := &DDL{
+			Stmts: []Stmt{
+				&DropIndexStmt{
+					Name: &Ident{Name: "table_name_idx_column_name", Raw: "table_name_idx_column_name"},
+				},
+			},
+		}
+		if !assert.Equal(t, expected, actual) {
+			assert.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
+		}
+		assert.Equal(t, `DROP INDEX table_name_idx_column_name;
+`, actual.String())
 
 		t.Logf("✅: %s: actual: %%#v: \n%#v", t.Name(), actual)
 		t.Logf("✅: %s: actual: %%s: \n%s", t.Name(), actual)
@@ -186,7 +195,7 @@ func TestDiff(t *testing.T) {
 		before := &DDL{
 			Stmts: []Stmt{
 				&CreateIndexStmt{
-					Name: &ObjectName{Name: &Ident{Name: "table_name_idx_column_name", Raw: "table_name_idx_column_name"}},
+					Name: &Ident{Name: "table_name_idx_column_name", Raw: "table_name_idx_column_name"},
 					Columns: []*ColumnIdent{
 						{
 							Ident: &Ident{Name: "column_name", Raw: "column_name"},
@@ -198,9 +207,18 @@ func TestDiff(t *testing.T) {
 		after := &DDL{}
 		actual, err := Diff(before, after)
 		require.NoError(t, err)
-		expected := `DROP INDEX table_name_idx_column_name;
-`
-		assert.Equal(t, expected, actual.String())
+		expected := &DDL{
+			Stmts: []Stmt{
+				&DropIndexStmt{
+					Name: &Ident{Name: "table_name_idx_column_name", Raw: "table_name_idx_column_name"},
+				},
+			},
+		}
+		if !assert.Equal(t, expected, actual) {
+			assert.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
+		}
+		assert.Equal(t, `DROP INDEX table_name_idx_column_name;
+`, actual.String())
 
 		t.Logf("✅: %s: actual: %%#v: \n%#v", t.Name(), actual)
 		t.Logf("✅: %s: actual: %%s: \n%s", t.Name(), actual)
@@ -257,8 +275,8 @@ func TestDiff(t *testing.T) {
 		after := &DDL{
 			Stmts: []Stmt{
 				&CreateIndexStmt{
-					Name:      &ObjectName{Name: &Ident{Name: "table_name_idx_column_name", Raw: "table_name_idx_column_name"}},
-					TableName: &Ident{Name: "table_name", Raw: "table_name"},
+					Name:      &Ident{Name: "table_name_idx_column_name", Raw: "table_name_idx_column_name"},
+					TableName: &ObjectName{Name: &Ident{Name: "table_name", Raw: "table_name"}, Schema: &Ident{Name: "public", Raw: "public"}},
 					Columns: []*ColumnIdent{
 						{
 							Ident: &Ident{Name: "column_name", Raw: "column_name"},
@@ -272,7 +290,7 @@ func TestDiff(t *testing.T) {
 		if !assert.Equal(t, after, actual) {
 			assert.Equal(t, fmt.Sprintf("%#v", after), fmt.Sprintf("%#v", actual))
 		}
-		assert.Equal(t, `CREATE INDEX table_name_idx_column_name ON table_name (column_name);
+		assert.Equal(t, `CREATE INDEX table_name_idx_column_name ON public.table_name (column_name);
 `, actual.String())
 	})
 
@@ -342,8 +360,8 @@ ALTER TABLE public.users ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE NOT NULL
 `)).Parse()
 		require.NoError(t, err)
 
-		expected := `DROP INDEX public.users_idx_by_username;
-CREATE INDEX public.users_idx_by_username ON users (username ASC);
+		expected := `DROP INDEX users_idx_by_username;
+CREATE INDEX users_idx_by_username ON public.users (username ASC);
 `
 		actual, err := Diff(before, after)
 		require.NoError(t, err)

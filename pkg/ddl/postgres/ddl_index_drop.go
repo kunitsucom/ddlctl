@@ -13,7 +13,7 @@ var _ Stmt = (*DropIndexStmt)(nil)
 type DropIndexStmt struct {
 	Comment  string
 	IfExists bool
-	Name     *ObjectName
+	Name     *Ident
 }
 
 func (s *DropIndexStmt) GetNameForDiff() string {

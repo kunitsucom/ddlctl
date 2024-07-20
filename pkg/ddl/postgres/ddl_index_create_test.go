@@ -12,7 +12,7 @@ func TestCreateIndexStmt_GetNameForDiff(t *testing.T) {
 	t.Run("success,", func(t *testing.T) {
 		t.Parallel()
 
-		stmt := &CreateIndexStmt{Name: &ObjectName{Name: &Ident{Name: "test", QuotationMark: `"`, Raw: `"test"`}}}
+		stmt := &CreateIndexStmt{Name: &Ident{Name: "test", QuotationMark: `"`, Raw: `"test"`}}
 		expected := "test"
 		actual := stmt.GetNameForDiff()
 
@@ -29,8 +29,8 @@ func TestCreateIndexStmt_String(t *testing.T) {
 		stmt := &CreateIndexStmt{
 			Comment:     "test comment content",
 			IfNotExists: true,
-			Name:        &ObjectName{Name: &Ident{Name: "test", QuotationMark: `"`, Raw: `"test"`}},
-			TableName:   &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`},
+			Name:        &Ident{Name: "test", QuotationMark: `"`, Raw: `"test"`},
+			TableName:   &ObjectName{Name: &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`}},
 			Using:       []*Ident{{Name: "btree", QuotationMark: ``, Raw: `btree`}},
 			Columns: []*ColumnIdent{
 				{
