@@ -46,6 +46,8 @@ func Test_lookupIdent(t *testing.T) {
 		{name: "success,REAL", input: "REAL", want: TOKEN_REAL},
 		{name: "success,DOUBLE", input: "DOUBLE", want: TOKEN_DOUBLE},
 		{name: "success,PRECISION", input: "PRECISION", want: TOKEN_PRECISION},
+		{name: "success,FLOAT4", input: "FLOAT4", want: TOKEN_FLOAT4},
+		{name: "success,FLOAT8", input: "FLOAT8", want: TOKEN_FLOAT8},
 		{name: "success,SMALLSERIAL", input: "SMALLSERIAL", want: TOKEN_SMALLSERIAL},
 		{name: "success,SERIAL", input: "SERIAL", want: TOKEN_SERIAL},
 		{name: "success,TOKEN_BIGSERIAL", input: "BIGSERIAL", want: TOKEN_BIGSERIAL},

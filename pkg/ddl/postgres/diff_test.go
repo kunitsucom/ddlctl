@@ -168,7 +168,7 @@ func TestDiff(t *testing.T) {
 		before := &DDL{
 			Stmts: []Stmt{
 				&CreateIndexStmt{
-					Name: &ObjectName{Name: &Ident{Name: "table_name_idx_column_name", Raw: "table_name_idx_column_name"}},
+					Name: &Ident{Name: "table_name_idx_column_name", Raw: "table_name_idx_column_name"},
 					Columns: []*ColumnIdent{
 						{
 							Ident: &Ident{Name: "column_name", Raw: "column_name"},
@@ -183,7 +183,7 @@ func TestDiff(t *testing.T) {
 		expected := &DDL{
 			Stmts: []Stmt{
 				&DropIndexStmt{
-					Name: &ObjectName{Name: &Ident{Name: "table_name_idx_column_name", Raw: "table_name_idx_column_name"}},
+					Name: &Ident{Name: "table_name_idx_column_name", Raw: "table_name_idx_column_name"},
 				},
 			},
 		}
@@ -192,6 +192,9 @@ func TestDiff(t *testing.T) {
 		}
 		assert.Equal(t, `DROP INDEX table_name_idx_column_name;
 `, actual.String())
+
+		t.Logf("✅: %s: actual: %%#v: \n%#v", t.Name(), actual)
+		t.Logf("✅: %s: actual: %%s: \n%s", t.Name(), actual)
 	})
 
 	t.Run("success,before,Index", func(t *testing.T) {
@@ -200,7 +203,7 @@ func TestDiff(t *testing.T) {
 		before := &DDL{
 			Stmts: []Stmt{
 				&CreateIndexStmt{
-					Name: &ObjectName{Name: &Ident{Name: "table_name_idx_column_name", Raw: "table_name_idx_column_name"}},
+					Name: &Ident{Name: "table_name_idx_column_name", Raw: "table_name_idx_column_name"},
 					Columns: []*ColumnIdent{
 						{
 							Ident: &Ident{Name: "column_name", Raw: "column_name"},
@@ -215,7 +218,7 @@ func TestDiff(t *testing.T) {
 		expected := &DDL{
 			Stmts: []Stmt{
 				&DropIndexStmt{
-					Name: &ObjectName{Name: &Ident{Name: "table_name_idx_column_name", Raw: "table_name_idx_column_name"}},
+					Name: &Ident{Name: "table_name_idx_column_name", Raw: "table_name_idx_column_name"},
 				},
 			},
 		}
@@ -224,6 +227,9 @@ func TestDiff(t *testing.T) {
 		}
 		assert.Equal(t, `DROP INDEX table_name_idx_column_name;
 `, actual.String())
+
+		t.Logf("✅: %s: actual: %%#v: \n%#v", t.Name(), actual)
+		t.Logf("✅: %s: actual: %%s: \n%s", t.Name(), actual)
 	})
 
 	t.Run("success,before,Table", func(t *testing.T) {

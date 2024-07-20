@@ -216,7 +216,7 @@ ALTER TABLE "public.app_users" DROP CONSTRAINT users_pkey;
 ALTER TABLE "public.app_users" DROP CONSTRAINT users_group_id_fkey;
 -- -UNIQUE INDEX users_unique_name (name ASC)
 -- +
-DROP INDEX public.users_unique_name;
+DROP INDEX users_unique_name;
 -- -CONSTRAINT users_age_check CHECK ("age" >= 0)
 -- +
 ALTER TABLE "public.app_users" DROP CONSTRAINT users_age_check;
@@ -228,7 +228,7 @@ ALTER TABLE "public.app_users" ADD CONSTRAINT app_users_pkey PRIMARY KEY ("id");
 ALTER TABLE "public.app_users" ADD CONSTRAINT app_users_group_id_fkey FOREIGN KEY (group_id) REFERENCES "groups" ("id");
 -- -
 -- +UNIQUE INDEX app_users_unique_name (name ASC)
-CREATE UNIQUE INDEX public.app_users_unique_name ON "app_users" ("name");
+CREATE UNIQUE INDEX app_users_unique_name ON "public.app_users" ("name");
 -- -
 -- +CONSTRAINT app_users_age_check CHECK ("age" >= 0)
 ALTER TABLE "public.app_users" ADD CONSTRAINT app_users_age_check CHECK ("age" >= 0);

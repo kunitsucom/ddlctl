@@ -84,6 +84,8 @@ const (
 	TOKEN_DOUBLE            TokenType = "DOUBLE"
 	TOKEN_PRECISION         TokenType = "PRECISION"
 	TOKEN_DOUBLE_PRECISION  TokenType = "DOUBLE PRECISION"
+	TOKEN_FLOAT4            TokenType = "FLOAT4"
+	TOKEN_FLOAT8            TokenType = "FLOAT8"
 	TOKEN_SMALLSERIAL       TokenType = "SMALLSERIAL"
 	TOKEN_SERIAL            TokenType = "SERIAL"
 	TOKEN_BIGSERIAL         TokenType = "BIGSERIAL"
@@ -190,6 +192,10 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_DOUBLE
 	case "PRECISION":
 		return TOKEN_PRECISION
+	case "FLOAT4":
+		return TOKEN_FLOAT4
+	case "FLOAT8":
+		return TOKEN_FLOAT8
 	case "SMALLSERIAL":
 		return TOKEN_SMALLSERIAL
 	case "SERIAL":

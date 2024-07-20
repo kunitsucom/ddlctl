@@ -215,7 +215,7 @@ func (p *Parser) parseCreateIndexStmt() (*CreateIndexStmt, error) {
 		return nil, apperr.Errorf("checkCurrentToken: %w", err)
 	}
 
-	createIndexStmt.Name = NewObjectName(p.currentToken.Literal.Str)
+	createIndexStmt.Name = NewRawIdent(p.currentToken.Literal.Str)
 	errFmtPrefix := fmt.Sprintf("index_name=%s: ", createIndexStmt.Name.StringForDiff())
 
 	p.nextToken() // current = ON
@@ -230,7 +230,7 @@ func (p *Parser) parseCreateIndexStmt() (*CreateIndexStmt, error) {
 		return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 	}
 
-	createIndexStmt.TableName = NewObjectName(p.currentToken.Literal.Str).Name
+	createIndexStmt.TableName = NewObjectName(p.currentToken.Literal.Str)
 
 	p.nextToken() // current = USING or (
 
@@ -657,7 +657,7 @@ func (p *Parser) parseDataType() (*DataType, error) {
 		}
 		p.nextToken() // current = PRECISION
 		dataType.Name += " " + p.currentToken.Literal.String()
-		dataType.Type = TOKEN_DOUBLE_PRECISION
+		dataType.Type = TOKEN_FLOAT8
 	case TOKEN_CHARACTER:
 		dataType.Name = p.currentToken.Literal.String()
 		if err := p.checkPeekToken(TOKEN_VARYING); err != nil {
@@ -766,6 +766,7 @@ func isDataType(tokenType TokenType) bool {
 		TOKEN_INT2, TOKEN_INT4, TOKEN_INT8, //diff:ignore-line-postgres-cockroach
 		TOKEN_DECIMAL, TOKEN_NUMERIC,
 		TOKEN_REAL, TOKEN_DOUBLE, /* TOKEN_PRECISION, */
+		TOKEN_FLOAT4, TOKEN_FLOAT8,
 		TOKEN_SMALLSERIAL, TOKEN_SERIAL, TOKEN_BIGSERIAL,
 		TOKEN_UUID, TOKEN_JSONB,
 		TOKEN_CHARACTER, TOKEN_VARYING,

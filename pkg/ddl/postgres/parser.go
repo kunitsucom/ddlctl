@@ -215,7 +215,7 @@ func (p *Parser) parseCreateIndexStmt() (*CreateIndexStmt, error) {
 		return nil, apperr.Errorf("checkCurrentToken: %w", err)
 	}
 
-	createIndexStmt.Name = NewObjectName(p.currentToken.Literal.Str)
+	createIndexStmt.Name = NewRawIdent(p.currentToken.Literal.Str)
 	errFmtPrefix := fmt.Sprintf("index_name=%s: ", createIndexStmt.Name.StringForDiff())
 
 	p.nextToken() // current = ON
@@ -230,7 +230,7 @@ func (p *Parser) parseCreateIndexStmt() (*CreateIndexStmt, error) {
 		return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 	}
 
-	createIndexStmt.TableName = NewObjectName(p.currentToken.Literal.Str).Name
+	createIndexStmt.TableName = NewObjectName(p.currentToken.Literal.Str)
 
 	p.nextToken() // current = USING or (
 
