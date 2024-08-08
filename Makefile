@@ -104,6 +104,11 @@ act-go-test: act-check ## Run go-test workflow in act
 act-go-vuln: act-check ## Run go-vuln workflow in act
 	act pull_request --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest -W .github/workflows/go-vuln.yml
 
+.PHONY: build
+build:  ## Run goxz for build
+	@command -v goxz >/dev/null || go install github.com/Songmu/goxz/cmd/goxz@latest
+	goxz -d "${REPO_TMP_DIR}" -os=linux,darwin,windows -arch=amd64,arm64 -pv "`git describe --tags --abbrev=0`" -trimpath -build-ldflags "-s -w -X github.com/kunitsucom/util.go/version.version=${BUILD_VERSION} -X github.com/kunitsucom/util.go/version.revision=${BUILD_REVISION} -X github.com/kunitsucom/util.go/version.branch=${BUILD_BRANCH} -X github.com/kunitsucom/util.go/version.timestamp=${BUILD_TIMESTAMP}" ./cmd/ddlctl
+
 .PHONY: release
 release: ci ## Run goxz and gh release upload
 	@command -v goxz >/dev/null || go install github.com/Songmu/goxz/cmd/goxz@latest
