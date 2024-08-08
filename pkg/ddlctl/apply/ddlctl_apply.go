@@ -123,21 +123,26 @@ func Apply(ctx context.Context, dialect, dsn, ddlStr string) error {
 					continue
 				}
 				if _, err := db.ExecContext(ctx, q); err != nil {
-					// not error, not log, go next ddl
-					if errorz.Contains(err, "already exists") || errorz.Contains(err, "Duplicate column name") {
+					// If the error is one of the following, do not error. go to the next DDL;
+					switch {
+					case errorz.Contains(err, "already exists"),
+						errorz.Contains(err, "Duplicate column name"):
 						continue
 					}
+
+					err = apperr.Errorf("db.ExecContext: q=%s: %w", q, err)
 					outerErr = err
-					// error, but not log, go next ddl
+					// If the error is one of the following, error but not log. go to the next DDL;
 					if errorz.Contains(err, "Cannot add foreign key constraint") {
 						continue
 					}
-					// error and log, go next ddl
-					logs.Warn.Printf("db.ExecContext: %v", err)
+
+					// If the error is not one of the above, error and log. go to the next DDL;
+					logs.Warn.Printf(err.Error())
 				}
 			}
 			if outerErr != nil {
-				return apperr.Errorf("db.ExecContext: %w", err)
+				return err
 			}
 			return nil
 		}); err != nil {
@@ -150,14 +155,16 @@ func Apply(ctx context.Context, dialect, dsn, ddlStr string) error {
 			return apperr.Errorf("db.Conn: %w", err)
 		}
 		defer func() {
-			if cerr := conn.Close(); err == nil && cerr != nil {
-				err = apperr.Errorf("conn.Close: %w", cerr)
+			if err2 := conn.Close(); err == nil && err2 != nil {
+				err = apperr.Errorf("conn.Close: %w", err2)
 			}
 		}()
-		if _, err := conn.ExecContext(ctx, "START BATCH DDL"); err != nil {
-			return apperr.Errorf("conn.ExecContext: %w", err)
+		{
+			q := "START BATCH DDL"
+			if _, err := conn.ExecContext(ctx, q); err != nil {
+				return apperr.Errorf("conn.ExecContext: q=%s: %w", q, err)
+			}
 		}
-
 		commentTrimmedDDL := stringz.ReadLine(ddlStr, "\n", stringz.ReadLineFuncRemoveCommentLine("--"))
 		for _, q := range strings.Split(commentTrimmedDDL, ";\n") {
 			if len(q) == 0 {
@@ -165,16 +172,19 @@ func Apply(ctx context.Context, dialect, dsn, ddlStr string) error {
 				continue
 			}
 			if _, err := conn.ExecContext(ctx, q); err != nil {
-				return apperr.Errorf("conn.ExecContext: %w", err)
+				return apperr.Errorf("conn.ExecContext: q=%s: %w", q, err)
 			}
 		}
 
-		if _, err := conn.ExecContext(ctx, "RUN BATCH"); err != nil {
-			return apperr.Errorf("conn.ExecContext: %w", err)
+		{
+			q := "RUN BATCH"
+			if _, err := conn.ExecContext(ctx, q); err != nil {
+				return apperr.Errorf("conn.ExecContext: q=%s: %w", q, err)
+			}
 		}
 	default:
 		if _, err := db.ExecContext(ctx, ddlStr); err != nil {
-			return apperr.Errorf("db.ExecContext: %w", err)
+			return apperr.Errorf("db.ExecContext: q=%s: %w", ddlStr, err)
 		}
 	}
 
