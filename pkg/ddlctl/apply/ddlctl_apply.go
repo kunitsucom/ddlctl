@@ -3,6 +3,7 @@ package apply
 import (
 	"bufio"
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"os"
@@ -22,6 +23,7 @@ import (
 	"github.com/kunitsucom/ddlctl/pkg/ddlctl/diff"
 	"github.com/kunitsucom/ddlctl/pkg/internal/config"
 	"github.com/kunitsucom/ddlctl/pkg/internal/consts"
+	"github.com/kunitsucom/ddlctl/pkg/internal/util"
 	"github.com/kunitsucom/ddlctl/pkg/logs"
 )
 
@@ -113,42 +115,27 @@ func Apply(ctx context.Context, dialect, dsn, ddlStr string) error {
 
 	switch driverName {
 	case ddlmysql.DriverName:
-		ddls := strings.Split(ddlStr, ";\n")
-		retryer := retry.New(ctx, retry.NewConfig(time.Second, time.Second, retry.WithMaxRetries(len(ddls))))
-		if err := retryer.Do(func(ctx context.Context) error {
-			var outerErr error
-			for _, q := range ddls {
-				if len(q) == 0 {
-					// skip empty query
-					continue
-				}
-				if _, err := db.ExecContext(ctx, q); err != nil {
-					// If the error is one of the following, do not error. go to the next DDL;
-					switch {
-					case errorz.Contains(err, "already exists"),
-						errorz.Contains(err, "Duplicate column name"):
-						continue
-					}
-
-					err = apperr.Errorf("db.ExecContext: q=%s: %w", q, err)
-					outerErr = err
-					// If the error is one of the following, error but not log. go to the next DDL;
-					if errorz.Contains(err, "Cannot add foreign key constraint") {
-						continue
-					}
-
-					// If the error is not one of the above, error and log. go to the next DDL;
-					logs.Warn.Printf(err.Error())
-				}
-			}
-			if outerErr != nil {
-				return err
-			}
-			return nil
-		}); err != nil {
-			return apperr.Errorf("retry.Do: %w", err)
+		if err := splitExec(
+			ctx,
+			db,
+			ddlStr,
+			func(err error) bool {
+				return errorz.Contains(err, "already exists") || errorz.Contains(err, "Duplicate column name")
+			},
+			func(err error) bool { return errorz.Contains(err, "Cannot add foreign key constraint") },
+		); err != nil {
+			return apperr.Errorf("splitExec: %w", err)
 		}
-
+	case ddlcrdb.DriverName:
+		if err := splitExec(
+			ctx,
+			db,
+			ddlStr,
+			func(_ error) bool { return false }, // TODO: handle error
+			func(_ error) bool { return false }, // TODO: handle error
+		); err != nil {
+			return apperr.Errorf("splitExec: %w", err)
+		}
 	case ddlspanner.DriverName:
 		conn, err := db.Conn(ctx)
 		if err != nil {
@@ -201,4 +188,51 @@ func prompt() error {
 	default:
 		return apperr.Errorf("input=%q: %w", input, apperr.ErrCanceled)
 	}
+}
+
+func splitExec(
+	ctx context.Context,
+	db interface {
+		ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+	},
+	ddlStr string,
+	notErrorNotLogFunc func(err error) bool,
+	errorNotLogFunc func(err error) bool,
+) error {
+	ddls := strings.Split(util.RemoveCommentsAndEmptyLines("--", ddlStr), ";\n")
+	const interval = 500 * time.Millisecond
+	retryer := retry.New(ctx, retry.NewConfig(interval, interval, retry.WithMaxRetries(len(ddls))))
+	if err := retryer.Do(func(ctx context.Context) error {
+		var outerErr error
+		for _, q := range ddls {
+			if len(q) == 0 {
+				// skip empty query
+				continue
+			}
+			if _, err := db.ExecContext(ctx, q); err != nil {
+				// If the error is one of the following, do not error and not log. go to the next DDL;
+				if notErrorNotLogFunc(err) {
+					continue
+				}
+
+				err = apperr.Errorf("db.ExecContext: q=%s: %w", q, err)
+				outerErr = err
+				// If the error is one of the following, error but not log. go to the next DDL;
+				if errorNotLogFunc(err) {
+					continue
+				}
+
+				// If the error is not one of the above, error and log. go to the next DDL;
+				logs.Warn.Printf(err.Error())
+			}
+		}
+		if outerErr != nil {
+			return outerErr
+		}
+		return nil
+	}); err != nil {
+		return apperr.Errorf("retry.Do: %w", err)
+	}
+
+	return nil
 }
