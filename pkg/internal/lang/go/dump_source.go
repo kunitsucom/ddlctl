@@ -2,7 +2,7 @@ package ddlctlgo
 
 import (
 	"bytes"
-	goast "go/ast"
+	"go/ast"
 	"go/token"
 	"io"
 
@@ -16,19 +16,19 @@ func dumpDDLSource(fset *token.FileSet, ddlSrc []*ddlSource) {
 		logs.Trace.Print("-- CommentGroup --------------------------------------------------------------------------------------------------------------------------------")
 		{
 			commentGroupAST := bytes.NewBuffer(nil)
-			goast.Fprint(commentGroupAST, fset, r.CommentGroup, goast.NotNilFilter)
+			ast.Fprint(commentGroupAST, fset, r.CommentGroup, ast.NotNilFilter)
 			_, _ = logs.Trace.LineWriter("").Write(commentGroupAST.Bytes())
 		}
 		logs.Trace.Print("-- TypeSpec --------------------------------------------------------------------------------------------------------------------------------")
 		{
 			typeSpecAST := bytes.NewBuffer(nil)
-			goast.Fprint(typeSpecAST, fset, r.TypeSpec, goast.NotNilFilter)
+			ast.Fprint(typeSpecAST, fset, r.TypeSpec, ast.NotNilFilter)
 			_, _ = logs.Trace.LineWriter("").Write(typeSpecAST.Bytes())
 		}
 		logs.Trace.Print("-- StructType --------------------------------------------------------------------------------------------------------------------------------")
 		{
 			structTypeAST := bytes.NewBuffer(nil)
-			goast.Fprint(structTypeAST, fset, r.StructType, goast.NotNilFilter)
+			ast.Fprint(structTypeAST, fset, r.StructType, ast.NotNilFilter)
 			_, _ = logs.Trace.LineWriter("").Write(structTypeAST.Bytes())
 		}
 	}

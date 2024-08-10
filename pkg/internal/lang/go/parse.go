@@ -19,7 +19,7 @@ import (
 
 	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 	"github.com/kunitsucom/ddlctl/pkg/internal/config"
-	ddlast "github.com/kunitsucom/ddlctl/pkg/internal/generator"
+	"github.com/kunitsucom/ddlctl/pkg/internal/generator"
 	langutil "github.com/kunitsucom/ddlctl/pkg/internal/lang/util"
 	"github.com/kunitsucom/ddlctl/pkg/internal/util"
 	"github.com/kunitsucom/ddlctl/pkg/logs"
@@ -31,7 +31,7 @@ const (
 )
 
 //nolint:cyclop
-func Parse(ctx context.Context, src string) (*ddlast.DDL, error) {
+func Parse(ctx context.Context, src string) (*generator.DDL, error) {
 	// MEMO: get absolute path for parser.ParseFile()
 	sourceAbs := util.Abs(src)
 
@@ -40,7 +40,7 @@ func Parse(ctx context.Context, src string) (*ddlast.DDL, error) {
 		return nil, apperr.Errorf("os.Stat: %w", err)
 	}
 
-	ddl := ddlast.NewDDL(ctx)
+	ddl := generator.NewDDL(ctx)
 
 	if info.IsDir() {
 		if err := filepath.WalkDir(sourceAbs, walkDirFn(ctx, ddl)); err != nil {
@@ -62,7 +62,7 @@ func Parse(ctx context.Context, src string) (*ddlast.DDL, error) {
 //nolint:gochecknoglobals
 var fileSuffix = ".go"
 
-func walkDirFn(ctx context.Context, ddl *ddlast.DDL) func(path string, d os.DirEntry, err error) error {
+func walkDirFn(ctx context.Context, ddl *generator.DDL) func(path string, d os.DirEntry, err error) error {
 	return func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err //nolint:wrapcheck
@@ -88,7 +88,7 @@ func walkDirFn(ctx context.Context, ddl *ddlast.DDL) func(path string, d os.DirE
 }
 
 //nolint:cyclop,funlen,gocognit
-func parseFile(ctx context.Context, filename string) ([]ddlast.Stmt, error) {
+func parseFile(ctx context.Context, filename string) ([]generator.Stmt, error) {
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, filename, nil, parser.ParseComments)
 	if err != nil {
@@ -102,9 +102,9 @@ func parseFile(ctx context.Context, filename string) ([]ddlast.Stmt, error) {
 
 	dumpDDLSource(fset, ddlSrc)
 
-	stmts := make([]ddlast.Stmt, 0)
+	stmts := make([]generator.Stmt, 0)
 	for _, r := range ddlSrc {
-		createTableStmt := &ddlast.CreateTableStmt{}
+		createTableStmt := &generator.CreateTableStmt{}
 
 		// source
 		createTableStmt.SourceFile = r.Position.Filename
@@ -121,7 +121,7 @@ func parseFile(ctx context.Context, filename string) ([]ddlast.Stmt, error) {
 			if /* CREATE INDEX */ matches := langutil.StmtRegexCreateIndex.Regex.FindStringSubmatch(comment); len(matches) > langutil.StmtRegexCreateIndex.Index {
 				commentMatchedCreateIndex := comment
 				source := fset.Position(extractContainingCommentFromCommentGroup(r.CommentGroup, commentMatchedCreateIndex).Pos())
-				createIndexStmt := &ddlast.CreateIndexStmt{
+				createIndexStmt := &generator.CreateIndexStmt{
 					Comments:   []string{commentMatchedCreateIndex},
 					SourceFile: source.Filename,
 					SourceLine: source.Line,
@@ -134,11 +134,11 @@ func parseFile(ctx context.Context, filename string) ([]ddlast.Stmt, error) {
 			if /* CREATE TABLE */ matches := langutil.StmtRegexCreateTable.Regex.FindStringSubmatch(comment); len(matches) > langutil.StmtRegexCreateTable.Index {
 				createTableStmt.SetCreateTable(matches[langutil.StmtRegexCreateTable.Index])
 			} else if /* CONSTRAINT */ matches := langutil.StmtRegexCreateTableConstraint.Regex.FindStringSubmatch(comment); len(matches) > langutil.StmtRegexCreateTableConstraint.Index {
-				createTableStmt.Constraints = append(createTableStmt.Constraints, &ddlast.CreateTableConstraint{
+				createTableStmt.Constraints = append(createTableStmt.Constraints, &generator.CreateTableConstraint{
 					Constraint: matches[langutil.StmtRegexCreateTableConstraint.Index],
 				})
 			} else if /* OPTIONS */ matches := langutil.StmtRegexCreateTableOptions.Regex.FindStringSubmatch(comment); len(matches) > langutil.StmtRegexCreateTableOptions.Index {
-				createTableStmt.Options = append(createTableStmt.Options, &ddlast.CreateTableOption{
+				createTableStmt.Options = append(createTableStmt.Options, &generator.CreateTableOption{
 					Option: matches[langutil.StmtRegexCreateTableOptions.Index],
 				})
 			}
@@ -157,7 +157,7 @@ func parseFile(ctx context.Context, filename string) ([]ddlast.Stmt, error) {
 		// columns
 		if r.StructType != nil {
 			for _, field := range r.StructType.Fields.List {
-				column := &ddlast.CreateTableColumn{}
+				column := &generator.CreateTableColumn{}
 
 				tag := reflect.StructTag(strings.Trim(field.Tag.Value, "`"))
 

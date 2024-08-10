@@ -15,7 +15,7 @@ import (
 	"github.com/kunitsucom/ddlctl/pkg/apperr"
 	"github.com/kunitsucom/ddlctl/pkg/internal/config"
 	"github.com/kunitsucom/ddlctl/pkg/internal/fixture"
-	ddlast "github.com/kunitsucom/ddlctl/pkg/internal/generator"
+	"github.com/kunitsucom/ddlctl/pkg/internal/generator"
 )
 
 //nolint:paralleltest
@@ -226,7 +226,7 @@ func Test_walkDirFn(t *testing.T) {
 			require.NoError(t, err)
 		}
 
-		ddl := ddlast.NewDDL(ctx)
+		ddl := generator.NewDDL(ctx)
 		fn := walkDirFn(ctx, ddl)
 		{
 			err := fn("", nil, os.ErrPermission)
