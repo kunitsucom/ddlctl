@@ -27,11 +27,11 @@ func TestCreateIndexStmt_String(t *testing.T) {
 		t.Parallel()
 
 		stmt := &CreateIndexStmt{
-			Comment:     "test comment content",
-			IfNotExists: true,
-			Name:        &Ident{Name: "test", QuotationMark: `"`, Raw: `"test"`},
-			TableName:   &ObjectName{Name: &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`}},
-			Using:       []*Ident{{Name: "btree", QuotationMark: ``, Raw: `btree`}},
+			Comment:         "test comment content",
+			IfNotExists:     true,
+			Name:            &Ident{Name: "test", QuotationMark: `"`, Raw: `"test"`},
+			TableName:       &ObjectName{Name: &Ident{Name: "users", QuotationMark: `"`, Raw: `"users"`}},
+			UsingPreColumns: &Using{Value: &Expr{Idents: []*Ident{{Name: "btree", QuotationMark: ``, Raw: `btree`}}}},
 			Columns: []*ColumnIdent{
 				{
 					Ident: &Ident{Name: "id", QuotationMark: `"`, Raw: `"id"`},

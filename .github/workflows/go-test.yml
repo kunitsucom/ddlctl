@@ -161,7 +161,7 @@ jobs:
             direnv exec . make test
           fi
       - uses: codecov/codecov-action@v4 # ref. https://github.com/codecov/codecov-action#example-workflowyml-with-codecov-action
-        if: env.COVER
+        if: ${{ env.COVER == 'true' }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ${{ env.WORKDIR }}/coverage.txt

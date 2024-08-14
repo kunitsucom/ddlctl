@@ -360,7 +360,9 @@ ALTER TABLE public.users ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE NOT NULL
 `)).Parse()
 		require.NoError(t, err)
 
-		expected := `DROP INDEX users_idx_by_username;
+		expected := `-- -INDEX users_idx_by_username (username DESC)
+-- +INDEX users_idx_by_username (username ASC)
+DROP INDEX users_idx_by_username;
 CREATE INDEX users_idx_by_username ON public.users (username ASC);
 `
 		actual, err := Diff(before, after)
