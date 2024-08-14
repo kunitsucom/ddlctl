@@ -101,87 +101,87 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 		{
 			name:    "failure,invalid",
 			input:   `)invalid`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_INVALID",
 			input:   `CREATE INVALID;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_INVALID",
 			input:   `CREATE TABLE;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_IF_INVALID",
 			input:   `CREATE TABLE IF;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedPeekToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_IF_NOT_INVALID",
 			input:   `CREATE TABLE IF NOT;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedPeekToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_INVALID",
 			input:   `CREATE TABLE "users";`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_INVALID",
 			input:   `CREATE TABLE "users" ("id";`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_data_type_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36);`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_data_type_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36), enabled BOOL DEFAULT (FALSE);`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_data_type_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36), enabled BOOL DEFAULT (TRUE AND FALSE);`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_data_type_OPTIONS_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36), created_at TIMESTAMP OPTIONS (allow_commit_timestamp = true;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36), CONSTRAINT "invalid" NOT;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
-			name:    "failure,CREATE_TABLE_table_name_column_name_INVALID",
+			name:    "failure,CREATE_TABLE_table_name_column_name_data_type__INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36))(;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_COMMA_INVALID",
 			input:   `CREATE TABLE "users" ("id" TIMESTAMP CREATE`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_DATA_TYPE_INVALID",
 			input:   `CREATE TABLE "users" ("id" VARYING();`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_INVALID_NOT",
 			input:   `CREATE TABLE "users" ("id" STRING(36) NULL NOT;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedPeekToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_INVALID_DEFAULT",
 			input:   `CREATE TABLE "users" ("id" STRING(36) DEFAULT ("id")`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_INVALID_DEFAULT_OPEN_PAREN",
@@ -196,7 +196,7 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_INVALID_REFERENCES",
 			input:   `CREATE TABLE "users" ("id" STRING(36) REFERENCES NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedPeekToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_INVALID_REFERENCES_IDENTS",
@@ -206,148 +206,148 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_INVALID_CHECK",
 			input:   `CREATE TABLE "users" ("id" STRING(36) CHECK NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedPeekToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CHECK_INVALID_IDENTS",
 			input:   `CREATE TABLE "users" ("id" STRING(36) CHECK (NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_INVALID_IDENT",
 			input:   `CREATE TABLE "users" ("id" STRING(36), CONSTRAINT NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_CHECK_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36), CONSTRAINT constraint_name CHECK`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedPeekToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_CHECK_OPEN_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36), CONSTRAINT constraint_name CHECK (`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_INVALID_PRIMARY",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_OPEN_PAREN_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_OPEN_PAREN_column_name_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_INTERLEAVE_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), INTERLEAVE;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_INTERLEAVE_IN_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), INTERLEAVE IN;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_INTERLEAVE_IN_PARENT_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), INTERLEAVE IN PARENT;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_INTERLEAVE_IN_PARENT_ON_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), INTERLEAVE IN PARENT table_name ON;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_INTERLEAVE_IN_PARENT_ON_DELETE_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), INTERLEAVE IN PARENT table_name ON DELETE;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_INTERLEAVE_IN_PARENT_ON_DELETE_CASCADE_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), INTERLEAVE IN PARENT table_name ON DELETE CASCADE NOT;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_INTERLEAVE_IN_PARENT_ON_DELETE_NO_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), INTERLEAVE IN PARENT table_name ON DELETE NO;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		// ROW DELETION POLICY (OLDER_THAN(ExpiredDate, INTERVAL 0 DAY));
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_DELETION_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW DELETION;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_DELETION_POLICY_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW DELETION POLICY;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_DELETION_POLICY_(_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW DELETION POLICY (;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_DELETION_POLICY_(_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW DELETION POLICY (;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_DELETION_POLICY_OLDER_THAN_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW DELETION POLICY (OLDER_THAN;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_DELETION_POLICY_OLDER_THAN_OPEN_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW DELETION POLICY (OLDER_THAN(;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_DELETION_POLICY_OLDER_THAN_OPEN_column_name_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW DELETION POLICY (OLDER_THAN(ExpiredDate;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_DELETION_POLICY_OLDER_THAN_OPEN_column_name_COMMA_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW DELETION POLICY (OLDER_THAN(ExpiredDate,;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_DELETION_POLICY_OLDER_THAN_OPEN_column_name_COMMA_INTERVAL_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW DELETION POLICY (OLDER_THAN(ExpiredDate, INTERVAL;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_DELETION_POLICY_OLDER_THAN_OPEN_column_name_COMMA_INTERVAL_NUMBER_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW DELETION POLICY (OLDER_THAN(ExpiredDate, INTERVAL 0;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_DELETION_POLICY_OLDER_THAN_OPEN_column_name_COMMA_INTERVAL_NUMBER_DAY_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW DELETION POLICY (OLDER_THAN(ExpiredDate, INTERVAL 0 DAY;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_OPTION_PRIMARY_KEY_ROW_DELETION_POLICY_OLDER_THAN_OPEN_column_name_COMMA_INTERVAL_NUMBER_DAY_CLOSE_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36)) PRIMARY KEY (id), ROW DELETION POLICY (OLDER_THAN(ExpiredDate, INTERVAL 0 DAY);`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_INVALID_FOREIGN",
@@ -357,42 +357,37 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_INVALID_FOREIGN_KEY",
 			input:   `CREATE TABLE "users" ("id" STRING(36), FOREIGN KEY NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedPeekToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_INVALID_FOREIGN_KEY_OPEN_PAREN",
 			input:   `CREATE TABLE "users" ("id" STRING(36), FOREIGN KEY (NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_FOREIGN_KEY_IDENTS_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36), FOREIGN KEY ("group_id") NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_FOREIGN_KEY_IDENTS_REFERENCES_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36), FOREIGN KEY ("group_id") REFERENCES `,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_FOREIGN_KEY_IDENTS_REFERENCES_INVALID_IDENTS",
 			input:   `CREATE TABLE "users" ("id" STRING(36), FOREIGN KEY ("group_id") REFERENCES "groups" NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_FOREIGN_KEY_IDENTS_REFERENCES_INVALID_CLOSE_PAREN",
 			input:   `CREATE TABLE "users" ("id" STRING(36), FOREIGN KEY ("group_id") REFERENCES "groups" ("id")`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_UNIQUE_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36), UNIQUE NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
-		},
-		{
-			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_UNIQUE_INVALID",
-			input:   `CREATE TABLE "users" ("id" STRING(36), UNIQUE NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_UNIQUE_INDEX_INVALID",
@@ -402,67 +397,67 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_UNIQUE_INDEX_COLUMN_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36), UNIQUE INDEX users_idx_name (NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
-			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_UNIQUE_INVALID",
+			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_UNIQUE_INDEX_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36), UNIQUE INDEX NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_UNIQUE_IDENTS_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36), name STRING, UNIQUE ("id", name)`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_INDEX_INVALID",
 			input:   `CREATE INDEX NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_INDEX_IF_INVALID",
 			input:   `CREATE INDEX IF;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedPeekToken,
 		},
 		{
 			name:    "failure,CREATE_INDEX_IF_NOT_INVALID",
 			input:   `CREATE INDEX IF NOT;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedPeekToken,
 		},
 		{
 			name:    "failure,CREATE_INDEX_IF_NOT_EXISTS_INVALID",
 			input:   `CREATE INDEX IF NOT EXISTS;`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_INDEX_index_name_INVALID",
 			input:   `CREATE INDEX users_idx_username NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_INDEX_index_name_ON_INVALID",
 			input:   `CREATE INDEX users_idx_username ON NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_INDEX_index_name_ON_table_name_INVALID",
 			input:   `CREATE INDEX users_idx_username ON users NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_INDEX_index_name_ON_table_name_USING_INVALID",
 			input:   `CREATE INDEX users_idx_username ON users USING NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_INDEX_index_name_ON_table_name_USING_method_INVALID",
 			input:   `CREATE INDEX users_idx_username ON users USING btree NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_INDEX_index_name_ON_table_name_USING_method_OPEN_INVALID",
 			input:   `CREATE INDEX users_idx_username ON users USING btree (NOT)`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 	}
 
@@ -499,7 +494,7 @@ func TestParser_parseColumn(t *testing.T) {
 		t.Parallel()
 
 		_, _, err := NewParser(NewLexer(`NOT`)).parseColumn(&Ident{Name: "table_name", QuotationMark: `"`, Raw: `"table_name"`})
-		require.ErrorIs(t, err, ddl.ErrUnexpectedToken)
+		require.ErrorIs(t, err, ddl.ErrUnexpectedCurrentToken)
 	})
 
 	t.Run("failure,parseDataType", func(t *testing.T) {
@@ -510,7 +505,7 @@ func TestParser_parseColumn(t *testing.T) {
 		p.nextToken()
 		p.nextToken()
 		_, _, err := p.parseColumn(&Ident{Name: "table_name", QuotationMark: `"`, Raw: `"table_name"`})
-		require.ErrorIs(t, err, ddl.ErrUnexpectedToken)
+		require.ErrorIs(t, err, ddl.ErrUnexpectedCurrentToken)
 	})
 }
 
@@ -539,7 +534,7 @@ func TestParser_parseExpr(t *testing.T) {
 		p.nextToken()
 		p.nextToken()
 		_, err := p.parseExpr()
-		require.ErrorIs(t, err, ddl.ErrUnexpectedToken)
+		require.ErrorIs(t, err, ddl.ErrUnexpectedCurrentToken)
 	})
 
 	t.Run("failure,invalid2", func(t *testing.T) {
@@ -549,7 +544,7 @@ func TestParser_parseExpr(t *testing.T) {
 		p.nextToken()
 		p.nextToken()
 		_, err := p.parseExpr()
-		require.ErrorIs(t, err, ddl.ErrUnexpectedToken)
+		require.ErrorIs(t, err, ddl.ErrUnexpectedCurrentToken)
 	})
 }
 
@@ -563,6 +558,6 @@ func TestParser_parseDataType(t *testing.T) {
 		p.nextToken()
 		p.nextToken()
 		_, err := p.parseDataType()
-		require.ErrorIs(t, err, ddl.ErrUnexpectedToken)
+		require.ErrorIs(t, err, ddl.ErrUnexpectedCurrentToken)
 	})
 }
