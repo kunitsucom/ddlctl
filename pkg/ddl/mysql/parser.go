@@ -106,9 +106,17 @@ func (p *Parser) parseCreateStatement() (Stmt, error) { //nolint:ireturn
 
 	switch p.currentToken.Type { //nolint:exhaustive
 	case TOKEN_TABLE:
-		return p.parseCreateTableStmt()
+		stmt, err := p.parseCreateTableStmt()
+		if err != nil {
+			return nil, apperr.Errorf("parseCreateTableStmt: %w", err)
+		}
+		return stmt, nil
 	case TOKEN_INDEX, TOKEN_UNIQUE:
-		return p.parseCreateIndexStmt()
+		stmt, err := p.parseCreateIndexStmt()
+		if err != nil {
+			return nil, apperr.Errorf("parseCreateIndexStmt: %w", err)
+		}
+		return stmt, nil
 	default:
 		return nil, apperr.Errorf("currentToken=%#v: %w", p.currentToken, ddl.ErrUnexpectedToken)
 	}
