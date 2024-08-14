@@ -85,6 +85,12 @@ git-push-skip-local-ci:  ## Run git push with skip local CI
 	git push
 	-mv ${REPO_ROOT}/.git/hooks/pre-push{.bak,}
 
+.PHONY: git-force-push-skip-local-ci
+git-force-push-skip-local-ci:  ## Run git push with skip local CI
+	-mv ${REPO_ROOT}/.git/hooks/pre-push{,.bak}
+	git push -f
+	-mv ${REPO_ROOT}/.git/hooks/pre-push{.bak,}
+
 .PHONY: act-check
 act-check:
 	@if ! command -v act >/dev/null 2>&1; then \
