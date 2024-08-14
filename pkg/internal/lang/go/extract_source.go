@@ -3,7 +3,7 @@ package ddlctlgo
 import (
 	"context"
 	"fmt"
-	goast "go/ast"
+	"go/ast"
 	"go/token"
 	"regexp"
 	"sync"
@@ -18,10 +18,10 @@ import (
 type ddlSource struct {
 	Position token.Position
 	// TypeSpec is used to guess the table name if the CREATE TABLE annotation is not found.
-	TypeSpec *goast.TypeSpec
+	TypeSpec *ast.TypeSpec
 	// StructType is used to determine the column name. If the tag specified by --go-column-tag is not found, the field name is used.
-	StructType   *goast.StructType
-	CommentGroup *goast.CommentGroup
+	StructType   *ast.StructType
+	CommentGroup *ast.CommentGroup
 }
 
 //nolint:gochecknoglobals
@@ -47,10 +47,10 @@ func DDLTagGoCommentLineRegex() *regexp.Regexp {
 
 //
 //nolint:cyclop
-func extractDDLSourceFromDDLTagGo(_ context.Context, fset *token.FileSet, f *goast.File) ([]*ddlSource, error) {
+func extractDDLSourceFromDDLTagGo(_ context.Context, fset *token.FileSet, f *ast.File) ([]*ddlSource, error) {
 	ddlSrc := make([]*ddlSource, 0)
 
-	for commentedNode, commentGroups := range goast.NewCommentMap(fset, f, f.Comments) {
+	for commentedNode, commentGroups := range ast.NewCommentMap(fset, f, f.Comments) {
 		for _, commentGroup := range commentGroups {
 		CommentGroupLoop:
 			for _, commentLine := range commentGroup.List {
@@ -61,12 +61,12 @@ func extractDDLSourceFromDDLTagGo(_ context.Context, fset *token.FileSet, f *goa
 						Position:     fset.Position(commentLine.Pos()),
 						CommentGroup: commentGroup,
 					}
-					goast.Inspect(commentedNode, func(node goast.Node) bool {
+					ast.Inspect(commentedNode, func(node ast.Node) bool {
 						switch n := node.(type) {
-						case *goast.TypeSpec:
+						case *ast.TypeSpec:
 							s.TypeSpec = n
 							switch t := n.Type.(type) {
-							case *goast.StructType:
+							case *ast.StructType:
 								s.StructType = t
 								return false
 							default: // noop
