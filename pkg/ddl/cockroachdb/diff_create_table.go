@@ -6,6 +6,7 @@ import (
 	"github.com/kunitsucom/util.go/exp/diff/simplediff"
 
 	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
+	"github.com/kunitsucom/ddlctl/pkg/logs"
 
 	"github.com/kunitsucom/ddlctl/pkg/ddl"
 )
@@ -109,13 +110,16 @@ func DiffCreateTable(before, after *CreateTableStmt, opts ...DiffCreateTableOpti
 					result.Stmts = append( //diff:ignore-line-postgres-cockroach
 						result.Stmts, //diff:ignore-line-postgres-cockroach
 						&DropIndexStmt{ //diff:ignore-line-postgres-cockroach
-							Name: beforeConstraint.GetName(), //diff:ignore-line-postgres-cockroach
+							Comment: simplediff.Diff(beforeConstraint.String(), afterConstraint.String()).String(), //diff:ignore-line-postgres-cockroach
+							Name:    beforeConstraint.GetName(),                                                    //diff:ignore-line-postgres-cockroach
 						}, //diff:ignore-line-postgres-cockroach
 						&CreateIndexStmt{ //diff:ignore-line-postgres-cockroach
-							Unique:    ac.Unique,    //diff:ignore-line-postgres-cockroach
-							Name:      ac.GetName(), //diff:ignore-line-postgres-cockroach
-							TableName: after.Name,   //diff:ignore-line-postgres-cockroach
-							Columns:   ac.Columns,   //diff:ignore-line-postgres-cockroach
+							Unique:           ac.Unique,           //diff:ignore-line-postgres-cockroach
+							Name:             ac.GetName(),        //diff:ignore-line-postgres-cockroach
+							TableName:        after.Name,          //diff:ignore-line-postgres-cockroach
+							UsingPreColumns:  ac.UsingPreColumns,  //diff:ignore-line-postgres-cockroach
+							Columns:          ac.Columns,          //diff:ignore-line-postgres-cockroach
+							UsingPostColumns: ac.UsingPostColumns, //diff:ignore-line-postgres-cockroach
 						}, //diff:ignore-line-postgres-cockroach
 					) //diff:ignore-line-postgres-cockroach
 				default: //diff:ignore-line-postgres-cockroach
@@ -150,11 +154,13 @@ func DiffCreateTable(before, after *CreateTableStmt, opts ...DiffCreateTableOpti
 		case *IndexConstraint: //diff:ignore-line-postgres-cockroach
 			// CREATE INDEX index_name ON table_name (column_name); //diff:ignore-line-postgres-cockroach
 			result.Stmts = append(result.Stmts, &CreateIndexStmt{ //diff:ignore-line-postgres-cockroach
-				Comment:   simplediff.Diff("", ac.StringForDiff()).String(), //diff:ignore-line-postgres-cockroach
-				Unique:    ac.Unique,                                        //diff:ignore-line-postgres-cockroach
-				Name:      ac.GetName(),                                     //diff:ignore-line-postgres-cockroach
-				TableName: after.Name,                                       //diff:ignore-line-postgres-cockroach
-				Columns:   ac.Columns,                                       //diff:ignore-line-postgres-cockroach
+				Comment:          simplediff.Diff("", ac.StringForDiff()).String(), //diff:ignore-line-postgres-cockroach
+				Unique:           ac.Unique,                                        //diff:ignore-line-postgres-cockroach
+				Name:             ac.GetName(),                                     //diff:ignore-line-postgres-cockroach
+				TableName:        after.Name,                                       //diff:ignore-line-postgres-cockroach
+				UsingPreColumns:  ac.UsingPreColumns,                               //diff:ignore-line-postgres-cockroach
+				Columns:          ac.Columns,                                       //diff:ignore-line-postgres-cockroach
+				UsingPostColumns: ac.UsingPostColumns,                              //diff:ignore-line-postgres-cockroach
 			}) //diff:ignore-line-postgres-cockroach
 		default: //diff:ignore-line-postgres-cockroach
 			// ALTER TABLE table_name ADD CONSTRAINT constraint_name constraint;
@@ -181,6 +187,11 @@ func (config *DiffCreateTableConfig) diffCreateTableColumn(ddls *DDL, before, af
 	for _, beforeColumn := range before.Columns {
 		afterColumn := findColumnByName(beforeColumn.Name.Name, after.Columns)
 		if afterColumn == nil {
+			if beforeColumn.NotVisible && beforeColumn.As != nil && beforeColumn.As.Type == TOKEN_VIRTUAL {
+				// ref. https://www.cockroachlabs.com/docs/v24.2/hash-sharded-indexes
+				logs.Debug.Printf("🪲: If the column is a NOT VISIBLE VIRTUAL column, it may be a Hash-sharded Index. SKIP. ref. https://www.cockroachlabs.com/docs/v24.2/hash-sharded-indexes")
+				continue
+			}
 			// ALTER TABLE table_name DROP COLUMN column_name;
 			ddls.Stmts = append(ddls.Stmts, &AlterTableStmt{
 				Comment: simplediff.Diff(beforeColumn.String(), "").String(),

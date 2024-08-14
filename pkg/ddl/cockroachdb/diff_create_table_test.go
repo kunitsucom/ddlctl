@@ -371,7 +371,9 @@ ALTER TABLE "users" ADD CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id, na
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
-		expectedStr := `DROP INDEX users_unique_name;
+		expectedStr := `-- -UNIQUE INDEX users_unique_name ("name")
+-- +UNIQUE INDEX users_unique_name ("id" ASC, name ASC)
+DROP INDEX users_unique_name;
 CREATE UNIQUE INDEX users_unique_name ON "users" ("id" ASC, name ASC);
 `
 

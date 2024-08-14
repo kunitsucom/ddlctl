@@ -105,11 +105,15 @@ const (
 	// COLUMN.
 	TOKEN_DEFAULT TokenType = "DEFAULT"
 	TOKEN_NOT     TokenType = "NOT"
+	TOKEN_VISIBLE TokenType = "VISIBLE"
+	TOKEN_AS      TokenType = "AS"
 	TOKEN_ASC     TokenType = "ASC"
 	TOKEN_DESC    TokenType = "DESC"
 	TOKEN_CASCADE TokenType = "CASCADE"
 	TOKEN_NO      TokenType = "NO"
 	TOKEN_ACTION  TokenType = "ACTION"
+	TOKEN_STORED  TokenType = "STORED"
+	TOKEN_VIRTUAL TokenType = "VIRTUAL"
 
 	// CONSTRAINT.
 	TOKEN_CONSTRAINT TokenType = "CONSTRAINT"
@@ -228,6 +232,10 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_DEFAULT
 	case "NOT":
 		return TOKEN_NOT
+	case "VISIBLE":
+		return TOKEN_VISIBLE
+	case "AS":
+		return TOKEN_AS
 	case "ASC":
 		return TOKEN_ASC
 	case "DESC":
@@ -238,6 +246,10 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_NO
 	case "ACTION":
 		return TOKEN_ACTION
+	case "STORED":
+		return TOKEN_STORED
+	case "VIRTUAL":
+		return TOKEN_VIRTUAL
 	case "CONSTRAINT":
 		return TOKEN_CONSTRAINT
 	case "PRIMARY":

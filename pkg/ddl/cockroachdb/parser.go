@@ -181,6 +181,8 @@ LabelColumns:
 		case p.isCurrentToken(TOKEN_COMMA):
 			p.nextToken()
 			continue
+		case p.isCurrentToken(TOKEN_SEMICOLON):
+			break LabelColumns
 		case p.isCurrentToken(TOKEN_CLOSE_PAREN):
 			switch p.peekToken.Type { //nolint:exhaustive
 			case TOKEN_SEMICOLON, TOKEN_EOF:
@@ -243,8 +245,11 @@ func (p *Parser) parseCreateIndexStmt() (*CreateIndexStmt, error) {
 	p.nextToken() // current = USING or (
 
 	if p.isCurrentToken(TOKEN_USING) {
-		p.nextToken() // current = using_def
-		createIndexStmt.Using = append(createIndexStmt.Using, NewIdent(p.currentToken.Literal.Str, "", p.currentToken.Literal.Str))
+		using, err := p.parseUsing()
+		if err != nil {
+			return nil, apperr.Errorf(errFmtPrefix+"parseExpr: %w", err)
+		}
+		createIndexStmt.UsingPreColumns = using
 		p.nextToken() // current = (
 	}
 
@@ -258,6 +263,15 @@ func (p *Parser) parseCreateIndexStmt() (*CreateIndexStmt, error) {
 	}
 
 	createIndexStmt.Columns = idents
+
+	if p.isCurrentToken(TOKEN_USING) {
+		using, err := p.parseUsing()
+		if err != nil {
+			return nil, apperr.Errorf(errFmtPrefix+"parseExpr: %w", err)
+		}
+		createIndexStmt.UsingPostColumns = using
+		p.nextToken() // current = (
+	}
 
 	return createIndexStmt, nil
 }
@@ -289,11 +303,16 @@ func (p *Parser) parseColumn(tableName *Ident) (*Column, []Constraint, error) {
 		for {
 			switch p.currentToken.Type { //nolint:exhaustive
 			case TOKEN_NOT:
-				if err := p.checkPeekToken(TOKEN_NULL); err != nil {
-					return nil, nil, apperr.Errorf(errFmtPrefix+"checkPeekToken: %w", err)
+				switch {
+				case p.isPeekToken(TOKEN_NULL):
+					p.nextToken() // current = NULL
+					column.NotNull = true
+				case p.isPeekToken(TOKEN_VISIBLE):
+					p.nextToken() // current = VISIBLE
+					column.NotVisible = true
+				default:
+					return nil, nil, apperr.Errorf(errFmtPrefix+"currentToken=%#v, peekToken=%#v: %w", p.currentToken, p.peekToken, ddl.ErrUnexpectedPeekToken)
 				}
-				p.nextToken() // current = NULL
-				column.NotNull = true
 			case TOKEN_NULL:
 				column.NotNull = false
 			case TOKEN_DEFAULT:
@@ -303,6 +322,14 @@ func (p *Parser) parseColumn(tableName *Ident) (*Column, []Constraint, error) {
 					return nil, nil, apperr.Errorf(errFmtPrefix+"parseColumnDefault: %w", err)
 				}
 				column.Default = def
+				continue
+			case TOKEN_AS:
+				p.nextToken() // current = AS
+				as, err := p.parseColumnAs()
+				if err != nil {
+					return nil, nil, apperr.Errorf(errFmtPrefix+"parseColumnAs: %w", err)
+				}
+				column.As = as
 				continue
 			default:
 				break LabelDefaultNotNull
@@ -371,6 +398,86 @@ LabelDefault:
 	}
 
 	return def, nil
+}
+
+//nolint:cyclop
+func (p *Parser) parseColumnAs() (*As, error) {
+	as := new(As)
+
+LabelAs:
+	for {
+		switch typ := p.currentToken.Type; typ { //nolint:exhaustive
+		case TOKEN_IDENT:
+			as.Value = as.Value.Append(NewRawIdent(p.currentToken.Literal.String()))
+		case TOKEN_OPEN_PAREN:
+			ids, err := p.parseExpr()
+			if err != nil {
+				return nil, apperr.Errorf("parseExpr: %w", err)
+			}
+			as.Value = as.Value.Append(ids...)
+			continue
+		case TOKEN_STORED, TOKEN_VIRTUAL:
+			as.Type = typ
+		case TOKEN_NOT, TOKEN_COMMA, TOKEN_CLOSE_PAREN:
+			break LabelAs
+		default:
+			if isReservedValue(p.currentToken.Type) {
+				as.Value = as.Value.Append(NewIdent(string(p.currentToken.Type), "", p.currentToken.Literal.String()))
+				p.nextToken()
+				continue
+			}
+			if isOperator(p.currentToken.Type) {
+				as.Value = as.Value.Append(NewRawIdent(p.currentToken.Literal.Str))
+				p.nextToken()
+				continue
+			}
+			if isDataType(p.currentToken.Type) {
+				as.Value.Idents = append(as.Value.Idents, NewRawIdent(p.currentToken.Literal.Str))
+				p.nextToken()
+				continue
+			}
+			if isConstraint(p.currentToken.Type) {
+				break LabelAs
+			}
+			return nil, apperr.Errorf("currentToken=%#v, peekToken=%#v: %w", p.currentToken, p.peekToken, ddl.ErrUnexpectedCurrentToken)
+		}
+
+		p.nextToken()
+	}
+
+	return as, nil
+}
+
+//nolint:cyclop
+func (p *Parser) parseUsing() (*Using, error) {
+	using := new(Using)
+
+LabelAs:
+	for {
+		switch p.currentToken.Type { //nolint:exhaustive
+		case TOKEN_USING:
+			p.nextToken() // current = using_def
+			continue
+		case TOKEN_IDENT:
+			using.Value = using.Value.Append(NewRawIdent(p.currentToken.Literal.String()))
+		case TOKEN_WITH:
+			p.nextToken() // current = with_def
+			with, err := p.parseExpr()
+			if err != nil {
+				return nil, apperr.Errorf("parseExpr: %w", err)
+			}
+			using.With = &With{&Expr{with}}
+			continue
+		case TOKEN_NOT, TOKEN_COMMA, TOKEN_CLOSE_PAREN, TOKEN_VIRTUAL:
+			break LabelAs
+		default:
+			return nil, apperr.Errorf("currentToken=%#v, peekToken=%#v: %w", p.currentToken, p.peekToken, ddl.ErrUnexpectedCurrentToken)
+		}
+
+		p.nextToken()
+	}
+
+	return using, nil
 }
 
 //nolint:cyclop
@@ -628,6 +735,14 @@ func (p *Parser) parseTableConstraint(tableName *Ident) (Constraint, error) { //
 		}
 		c.Name = constraintName
 		c.Columns = idents
+		if p.isCurrentToken(TOKEN_USING) {
+			using, err := p.parseUsing()
+			if err != nil {
+				return nil, apperr.Errorf("parseExpr: %w", err)
+			}
+			c.UsingPostColumns = using
+			p.nextToken() // current = (
+		}
 		return c, nil
 	default:
 		return nil, apperr.Errorf("currentToken=%#v, peekToken=%#v: %w", p.currentToken, p.peekToken, ddl.ErrUnexpectedCurrentToken)

@@ -13,13 +13,14 @@ import (
 var _ Stmt = (*CreateIndexStmt)(nil)
 
 type CreateIndexStmt struct {
-	Comment     string
-	Unique      bool
-	IfNotExists bool
-	Name        *Ident
-	TableName   *ObjectName
-	Using       []*Ident
-	Columns     []*ColumnIdent
+	Comment          string
+	Unique           bool
+	IfNotExists      bool
+	Name             *Ident
+	TableName        *ObjectName
+	UsingPreColumns  *Using
+	Columns          []*ColumnIdent
+	UsingPostColumns *Using
 }
 
 func (s *CreateIndexStmt) GetNameForDiff() string {
@@ -45,11 +46,14 @@ func (s *CreateIndexStmt) String() string {
 		str += "IF NOT EXISTS "
 	}
 	str += s.Name.String() + " ON " + s.TableName.String()
-	if len(s.Using) > 0 {
-		str += " USING "
-		str += stringz.JoinStringers(" ", s.Using...)
+	if s.UsingPreColumns != nil {
+		str += " " + s.UsingPreColumns.String()
 	}
-	str += " (" + stringz.JoinStringers(", ", s.Columns...) + ");\n"
+	str += " (" + stringz.JoinStringers(", ", s.Columns...) + ")"
+	if s.UsingPostColumns != nil {
+		str += " " + s.UsingPostColumns.String()
+	}
+	str += ";\n"
 	return str
 }
 
@@ -60,7 +64,9 @@ func (s *CreateIndexStmt) StringForDiff() string {
 	}
 	str += "INDEX "
 	str += s.Name.StringForDiff() + " ON " + s.TableName.StringForDiff()
-	// TODO: add USING
+	if s.UsingPreColumns != nil {
+		str += " " + s.UsingPreColumns.String()
+	}
 	str += " ("
 	for i, c := range s.Columns {
 		if i > 0 {
@@ -68,7 +74,11 @@ func (s *CreateIndexStmt) StringForDiff() string {
 		}
 		str += c.StringForDiff()
 	}
-	str += ");\n"
+	str += ")"
+	if s.UsingPostColumns != nil {
+		str += " " + s.UsingPostColumns.String()
+	}
+	str += ";\n"
 	return str
 }
 

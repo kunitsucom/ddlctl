@@ -139,9 +139,11 @@ func (c *ForeignKeyConstraint) StringForDiff() string {
 
 // IndexConstraint represents a UNIQUE constraint. //diff:ignore-line-postgres-cockroach.
 type IndexConstraint struct { //diff:ignore-line-postgres-cockroach
-	Name    *Ident
-	Unique  bool //diff:ignore-line-postgres-cockroach
-	Columns []*ColumnIdent
+	Name             *Ident
+	Unique           bool //diff:ignore-line-postgres-cockroach
+	UsingPreColumns  *Using
+	Columns          []*ColumnIdent
+	UsingPostColumns *Using
 }
 
 var _ Constraint = (*IndexConstraint)(nil) //diff:ignore-line-postgres-cockroach
@@ -157,7 +159,13 @@ func (c *IndexConstraint) String() string { //diff:ignore-line-postgres-cockroac
 	if c.Name != nil { //diff:ignore-line-postgres-cockroach
 		str += "INDEX " + c.Name.String() + " " //diff:ignore-line-postgres-cockroach
 	}
+	if c.UsingPreColumns != nil {
+		str += " " + c.UsingPreColumns.String()
+	}
 	str += "(" + stringz.JoinStringers(", ", c.Columns...) + ")"
+	if c.UsingPostColumns != nil {
+		str += " " + c.UsingPostColumns.String()
+	}
 	return str
 }
 
@@ -169,6 +177,9 @@ func (c *IndexConstraint) StringForDiff() string { //diff:ignore-line-postgres-c
 	if c.Name != nil {
 		str += "INDEX " + c.Name.StringForDiff() + " " //diff:ignore-line-postgres-cockroach
 	}
+	if c.UsingPreColumns != nil {
+		str += " " + c.UsingPreColumns.String()
+	}
 	str += "("
 	for i, v := range c.Columns {
 		if i != 0 {
@@ -177,6 +188,9 @@ func (c *IndexConstraint) StringForDiff() string { //diff:ignore-line-postgres-c
 		str += v.StringForDiff()
 	}
 	str += ")"
+	if c.UsingPostColumns != nil {
+		str += " " + c.UsingPostColumns.String()
+	}
 	return str
 }
 
@@ -260,10 +274,12 @@ func (t *ObjectName) StringForDiff() string {
 }
 
 type Column struct {
-	Name     *Ident
-	DataType *DataType
-	Default  *Default
-	NotNull  bool
+	Name       *Ident
+	DataType   *DataType
+	Default    *Default
+	NotNull    bool
+	NotVisible bool
+	As         *As //diff:ignore-line-postgres-cockroach
 }
 
 type Default struct {
@@ -339,14 +355,68 @@ func (d *Default) StringForDiff() string {
 	return ""
 }
 
+type As struct {
+	Value *Expr
+	Type  TokenType
+}
+
+func (d *As) GoString() string { return internal.GoString(*d) }
+
+func (d *As) String() string {
+	var str string
+	if d == nil {
+		return ""
+	}
+
+	if d.Value != nil {
+		str += "AS " + d.Value.String()
+		if d.Type != "" {
+			str += " " + d.Type.String()
+		}
+		return str
+	}
+
+	return ""
+}
+
+func (d *As) StringForDiff() string {
+	if d == nil {
+		return ""
+	}
+
+	if e := d.Value; e != nil {
+		str := "AS "
+		for i, v := range d.Value.Idents {
+			if i != 0 {
+				str += " "
+			}
+			str += v.StringForDiff()
+		}
+
+		if d.Type != "" {
+			str += " " + d.Type.String()
+		}
+
+		return str
+	}
+
+	return ""
+}
+
 func (c *Column) String() string {
 	str := c.Name.String() + " " +
 		c.DataType.String()
+	if c.NotVisible {
+		str += " NOT VISIBLE"
+	}
 	if c.NotNull { //diff:ignore-line-postgres-cockroach
 		str += " NOT NULL" //diff:ignore-line-postgres-cockroach
 	} //diff:ignore-line-postgres-cockroach
 	if s := c.Default.String(); s != "" { //diff:ignore-line-postgres-cockroach
 		str += " " + s //diff:ignore-line-postgres-cockroach
+	}
+	if c.As != nil {
+		str += " " + c.As.String()
 	}
 	return str
 }

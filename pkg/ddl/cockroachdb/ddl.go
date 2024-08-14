@@ -148,3 +148,32 @@ func (s *DataType) StringForDiff() string {
 
 	return str
 }
+
+type Using struct {
+	Value *Expr
+	With  *With
+}
+
+func (u *Using) String() string {
+	if u == nil {
+		return ""
+	}
+
+	str := "USING " + u.Value.String()
+	if u.With != nil {
+		str += " " + u.With.String()
+	}
+	return str
+}
+
+type With struct {
+	Value *Expr
+}
+
+func (w *With) String() string {
+	if w == nil {
+		return ""
+	}
+
+	return "WITH " + w.Value.String()
+}
