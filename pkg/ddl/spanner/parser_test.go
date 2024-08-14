@@ -186,12 +186,12 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_INVALID_DEFAULT_OPEN_PAREN",
 			input:   `CREATE TABLE "users" ("id" STRING(36) DEFAULT ("id",`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_INVALID_PRIMARY_KEY",
 			input:   `CREATE TABLE "users" ("id" STRING(36) PRIMARY NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_INVALID_REFERENCES",
@@ -201,7 +201,7 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_INVALID_REFERENCES_IDENTS",
 			input:   `CREATE TABLE "users" ("id" STRING(36) REFERENCES "groups" (NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_INVALID_CHECK",
@@ -352,7 +352,7 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_INVALID_FOREIGN",
 			input:   `CREATE TABLE "users" ("id" STRING(36), FOREIGN NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedPeekToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_INVALID_FOREIGN_KEY",
@@ -397,7 +397,7 @@ CREATE TABLE IF NOT EXISTS complex_defaults (
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_UNIQUE_INDEX_INVALID",
 			input:   `CREATE TABLE "users" ("id" STRING(36), UNIQUE INDEX users_idx_name NOT`,
-			wantErr: ddl.ErrUnexpectedToken,
+			wantErr: ddl.ErrUnexpectedCurrentToken,
 		},
 		{
 			name:    "failure,CREATE_TABLE_table_name_column_name_CONSTRAINT_UNIQUE_INDEX_COLUMN_INVALID",
